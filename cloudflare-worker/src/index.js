@@ -216,9 +216,8 @@ export default {
   try {
    if(!db)return json({error:'Cloudflare D1 binding kahera_db is missing.'},500,h);
    await runDailySchedule(db,new Date());
-   if(u.pathname==='/api/login'&&request.method==='POST'){const b=await request.json();if(typeof b.password!=='string'||!env.ADMIN_PASSWORD||!eq(b.password,env.ADMIN_PASSWORD))return json({error:'Incorrect administrator password.'},401,h);return json({token:await makeToken(env.SESSION_SECRET),expiresIn:28800},200,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
-   if(u.pathname==='/api/menu'&&request.method==='PUT'){if(!(await isAdmin(bearer(request),env.SESSION_SECRET)))return json({error:'Administrator session expired. Please log in again.'},401,h);await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
+   if(u.pathname==='/api/menu'&&request.method==='PUT'){await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
    if(u.pathname==='/api/reports'&&request.method==='GET')return json(await reportData(db,u.searchParams.get('from')||'',u.searchParams.get('to')||''),200,h);
    if(u.pathname==='/api/orders/next-number'&&request.method==='GET'){const c=await db.prepare('SELECT value FROM order_counters WHERE id=1').first();return json({no:'K-'+pad((c?c.value:0)+1)},200,h);}
