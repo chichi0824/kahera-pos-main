@@ -232,6 +232,25 @@ tr.is-void td.num { text-decoration: line-through; }
 .menu-admin { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 14px; align-items: start; }
 .menu-admin td input, .menu-admin td select { padding: 6px 8px; }
 .menu-admin td.price input { width: 7em; text-align: right; font-family: var(--f-mono); }
+.menu-admin table { width: 100%; table-layout: fixed; }
+.menu-admin th, .menu-admin td { padding: 8px 7px; vertical-align: middle; }
+.menu-admin th:first-child { width: 32%; }
+.menu-admin th:nth-child(2) { width: 13%; }
+.menu-admin th:nth-child(3) { width: 25%; }
+.menu-admin th:nth-child(4) { width: 22%; }
+.menu-admin th:last-child { width: 8%; }
+.menu-item-editor { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.menu-item-editor .menu-thumb { flex: 0 0 48px; width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
+.menu-item-fields { display: grid; gap: 5px; min-width: 0; flex: 1; }
+.menu-item-fields input[data-f="name"] { width: 100%; min-width: 0; }
+.menu-item-fields .menu-image-input { width: 100%; min-width: 0; padding: 2px 0; font-size: .72rem; }
+.menu-pricing-cell { display: flex; flex-wrap: wrap; gap: 6px; }
+.menu-pricing-cell label { display: grid; gap: 3px; min-width: 65px; flex: 1; font-size: .72rem; color: var(--muted); }
+.menu-pricing-cell input { width: 100% !important; min-width: 0; text-align: right; font-family: var(--f-mono); }
+.menu-status-cell { display: flex; flex-wrap: wrap; gap: 8px 12px; }
+.menu-status-cell .check { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: .78rem; }
+.menu-status-cell .check input { width: 16px; height: 16px; }
+.menu-admin .drink-variants-cell { min-width: 0; }
 .form-grid { display: grid; gap: 10px; }
 .form-grid > label, .check { display: grid; gap: 4px; }
 .check { grid-template-columns: auto 1fr; align-items: center; gap: 8px; color: var(--ink); font-weight: 400; }
