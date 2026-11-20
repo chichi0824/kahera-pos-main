@@ -522,3 +522,41 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
   justify-self: end;
 }
 .variant-option:disabled { opacity: .48; cursor: not-allowed; text-decoration: line-through; }
+
+/* Final alignment for drink variants: pin the editor to the top of the row
+   and keep both status toggles on a single horizontal line. */
+.menu-admin table.data td.drink-variants-cell {
+  vertical-align: top;
+  padding-top: 12px;
+}
+.menu-admin table.data td.drink-variants-cell .variant-editor-list {
+  display: grid;
+  align-content: start;
+  gap: 9px;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  align-items: start;
+  grid-template-columns: minmax(0, 1fr) minmax(72px, .7fr);
+  grid-template-rows: auto auto;
+  row-gap: 6px;
+}
+.menu-admin table.data td.drink-variants-cell .variant-status {
+  grid-column: 1 / 2;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
+.menu-admin table.data td.drink-variants-cell .variant-status .check {
+  flex: 0 0 auto;
+  white-space: nowrap;
+  margin: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > button[data-variant-remove] {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+  justify-self: end;
+}
