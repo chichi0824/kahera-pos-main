@@ -103,6 +103,12 @@ async function orders(db,shiftId) {
   const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
   return (r.results||[]).map(rowOrder);
 }
+async function reportData(db,from,to) {
+  if(!/^\\d{4}-\\d{2}-\\d{2}$/.test(from)||!/^\\d{4}-\\d{2}-\\d{2}$/.test(to)||from>to)throw new Error('Choose a valid reporting date range.');
+  const days=await db.prepare("SELECT s.id,s.report_date AS date,s.started_at AS startedAt,s.ended_at AS endedAt,s.status,s.close_reason AS closeReason,COUNT(o.id) AS orderCount FROM shifts s LEFT JOIN orders o ON o.shift_id=s.id WHERE s.report_date BETWEEN ? AND ? GROUP BY s.id ORDER BY s.report_date").bind(from,to).all();
+  const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,s.report_date AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
+  return {days:days.results||[],orders:(rows.results||[]).map(r=>({...rowOrder(r),reportDate:r.reportDate||''}))};
+}
 function calculateTotals(lines, settings, kind, diners, holders) {
   const vatReg = settings.vatRegistered !== false;
   const gross = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
@@ -213,9 +219,8 @@ export default {
    if(u.pathname==='/api/login'&&request.method==='POST'){const b=await request.json();if(typeof b.password!=='string'||!env.ADMIN_PASSWORD||!eq(b.password,env.ADMIN_PASSWORD))return json({error:'Incorrect administrator password.'},401,h);return json({token:await makeToken(env.SESSION_SECRET),expiresIn:28800},200,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
    if(u.pathname==='/api/menu'&&request.method==='PUT'){if(!(await isAdmin(bearer(request),env.SESSION_SECRET)))return json({error:'Administrator session expired. Please log in again.'},401,h);await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
-   if(u.pathname==='/api/shifts/start'&&request.method==='POST'){const b=await request.json().catch(()=>({}));return json({shift:await ensureDailyReport(db,b.deviceId||'shared-device')},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
-   if(u.pathname==='/api/shifts/close'&&request.method==='POST'){const b=await request.json();if(!text(b.shiftId,80))return json({error:'Shift ID is required.'},400,h);const r=await db.prepare("UPDATE shifts SET status='closed',ended_at=? WHERE id=? AND status='open'").bind(new Date().toISOString(),b.shiftId).run();if(!r.meta||!r.meta.changes)return json({error:'This shift is already closed or no longer active. Refresh the POS.'},409,h);return json({ok:true},200,h);}
+   if(u.pathname==='/api/reports'&&request.method==='GET')return json(await reportData(db,u.searchParams.get('from')||'',u.searchParams.get('to')||''),200,h);
    if(u.pathname==='/api/orders/next-number'&&request.method==='GET'){const c=await db.prepare('SELECT value FROM order_counters WHERE id=1').first();return json({no:'K-'+pad((c?c.value:0)+1)},200,h);}
    if(u.pathname==='/api/orders'&&request.method==='GET')return json({orders:await orders(db,u.searchParams.get('shiftId')||'')},200,h);
    if(u.pathname==='/api/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOrder(db,b,b.deviceId||'unknown')},201,h);}
