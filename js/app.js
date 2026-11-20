@@ -782,7 +782,6 @@
     var savedTheme = store.get('theme', null);
     if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
     bind();
-    byId('tab-menu').hidden = true;
     renderAll();
     setView(S.view);
     tick(); setInterval(tick, 30000);
