@@ -71,6 +71,7 @@
     S.customFrom = S.reportDate;
     S.customTo = S.reportDate;
     S.reportOrders = [];
+    S.calendarOrders = [];
     S.reportDays = [];
     S.pendingOrder = null;
     S.cart = store.get('cart', null) || blankCart();
@@ -362,14 +363,14 @@
     $('reportLoading').hidden=false;
     return cloud.getReports(from,to).then(function(data){
       if(sequence!==reportLoadSequence)return;
-      S.reportDays=data.days||[];S.reportOrders=data.orders||[];
+      S.reportDays=data.days||[];S.calendarOrders=data.orders||[];S.reportOrders=S.calendarOrders.slice();
       var current=reportRange();S.reportOrders=S.reportOrders.filter(function(o){return o.reportDate>=current.from&&o.reportDate<=current.to;});
       $('reportLoading').hidden=true;renderShift();
     }).catch(function(error){if(sequence!==reportLoadSequence)return;$('reportLoading').hidden=true;toast('Could not load reports: '+error.message);});
   }
   function renderReportCalendar(){
     var month=monthBounds(S.calendarMonth),first=new Date(month.from+'T00:00:00Z'),offset=(first.getUTCDay()+6)%7,days=Number(month.to.slice(8)),salesByDate={};
-    S.reportOrders.forEach(function(o){var day=o.reportDate||'';if(!day)return;var s=salesByDate[day]||(salesByDate[day]={sales:0,count:0});if(o.status==='void')return;s.sales+=o.totals.total;s.count++;});
+    S.calendarOrders.forEach(function(o){var day=o.reportDate||'';if(!day)return;var s=salesByDate[day]||(salesByDate[day]={sales:0,count:0});if(o.status==='void')return;s.sales+=o.totals.total;s.count++;});
     var daysMeta={};S.reportDays.forEach(function(d){daysMeta[d.date]=d;});
     var html='<div class="calendar-weekdays">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return'<span>'+x+'</span>';}).join('')+'</div><div class="calendar-days">';
     for(var i=0;i<offset;i++)html+='<span class="calendar-blank"></span>';
