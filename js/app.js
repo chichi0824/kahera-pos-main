@@ -529,8 +529,9 @@
     if(isDrink&&!options.length){toast(m.name+' has no available sizes today');return;}
     if(options.length&&!variant){showVariantPicker(Object.assign({},m,{variants:options}));return;}
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
-    var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.price===price;})[0];
-    if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:price,fullPrice:price,halfPrice:null,portion:'full',variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
+    var fullPrice=chosen?chosen.price:m.price,halfPrice=chosen?null:m.halfPrice,portion='full';
+    var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.portion===portion&&x.price===fullPrice;})[0];
+    if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
     saveCart();renderCart();renderGrid(id);
   }
   var choosingItemId=null;
