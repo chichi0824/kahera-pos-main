@@ -38,13 +38,6 @@
       "available": true
     },
     {
-      "id": "m07",
-      "cat": "meals",
-      "name": "Tapsilog",
-      "price": 14500,
-      "available": true
-    },
-    {
       "id": "m08",
       "cat": "meals",
       "name": "Bangus Sisig",
