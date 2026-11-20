@@ -32,7 +32,7 @@ function validateMenu(b) {
     if(isDrinks&&(!variants.length||m.halfPrice!==null&&m.halfPrice!==undefined||m.price!==variants[0].price))throw new Error('Drinks must use individual variants only, without default or half-order prices.');
     if(variants.length>20)throw new Error('A menu item can have no more than 20 price options.');
     const variantIds=new Set(),variantNames=new Set();
-    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean'))throw new Error('A menu drink variant is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
+    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean')||!(v.soldOut===undefined||typeof v.soldOut==='boolean'))throw new Error('A menu drink variant is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
     items.add(m.id);
   }
   if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean')throw new Error('Store settings are invalid.');
