@@ -31,7 +31,7 @@ function validateMenu(b) {
     if(variants.length&&!isDrinks)throw new Error('Price options can only be added to Drinks items.');
     if(variants.length>20)throw new Error('A menu item can have no more than 20 price options.');
     const variantIds=new Set(),variantNames=new Set();
-    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000)throw new Error('A menu price option is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
+    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean'))throw new Error('A menu drink variant is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
     items.add(m.id);
   }
   if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean')throw new Error('Store settings are invalid.');
@@ -160,7 +160,7 @@ async function createOrder(db,b,deviceId) {
     let variantName = '';
     if (line.variantId) {
       const selected = variants.find(v => v.id === line.variantId);
-      if (!selected || line.optionPrice !== selected.price) throw new Error('A selected price option changed. Refresh the menu and review the cart.');
+      if (!selected || selected.available===false || line.optionPrice !== selected.price) throw new Error('A selected drink size is no longer available or its price changed. Refresh the menu and review the cart.');
       officialPrice = selected.price;
       variantName = selected.name;
     }
