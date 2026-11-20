@@ -291,3 +291,8 @@ dialog.admin-dlg::backdrop { background: rgba(10, 16, 13, .58); }
 .admin-card label { display: grid; gap: 6px; font-weight: 700; }
 .admin-card input { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; background: var(--bg); color: var(--ink); }
 .admin-card .err { min-height: 1.2em; color: var(--danger); font-size: .88rem; }
+
+/* Portion selector in the active order cart. */
+.portion-wrap { display: inline-flex; margin-top: 4px; }
+.portion-select { font: inherit; font-size: .78rem; padding: 3px 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); }
+.portion-label { display: inline-block; margin-top: 4px; font-size: .78rem; color: var(--muted); }
