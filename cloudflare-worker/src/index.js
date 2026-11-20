@@ -16,22 +16,22 @@ async function menu(db) {
   const s=await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if(!s)throw new Error('Shared menu is not initialized. Run migration 0002_seed_shared_menu.sql against the remote D1 database.');
   const c=await db.prepare('SELECT id,name FROM menu_categories ORDER BY sort_order,name').all();
-  const m=await db.prepare('SELECT id,category_id AS cat,name,price,half_price AS halfPrice,available FROM menu_items ORDER BY sort_order,name').all();
-  return {settings:JSON.parse(s.settings_json),categories:c.results||[],menu:(m.results||[]).map(x=>({...x,halfPrice:x.halfPrice===null?null:x.halfPrice,available:!!x.available}))};
+  const m=await db.prepare('SELECT id,category_id AS cat,name,price,half_price AS halfPrice,image_data AS image,available FROM menu_items ORDER BY sort_order,name').all();
+  return {settings:JSON.parse(s.settings_json),categories:c.results||[],menu:(m.results||[]).map(x=>({...x,halfPrice:x.halfPrice===null?null:x.halfPrice,image:x.image||'',available:!!x.available}))};
 }
 function validateMenu(b) {
   if(!b||!b.settings||!Array.isArray(b.categories)||!Array.isArray(b.menu))throw new Error('Menu payload is incomplete.');
   if(b.menu.length>500||b.categories.length>30)throw new Error('Menu exceeds the allowed limit.');
   const cats=new Set(),items=new Set();
   for(const c of b.categories){if(!c||!text(c.id,80)||!text(c.name,60)||cats.has(c.id))throw new Error('A menu category is invalid.');cats.add(c.id);}
-  for(const m of b.menu){if(!m||!text(m.id,80)||items.has(m.id)||!text(m.name,40)||!cats.has(m.cat)||!Number.isSafeInteger(m.price)||m.price<1||m.price>100000000||!(m.halfPrice===null||m.halfPrice===undefined||(Number.isSafeInteger(m.halfPrice)&&m.halfPrice>0&&m.halfPrice<=m.price))||typeof m.available!=='boolean')throw new Error('A menu item is invalid.');items.add(m.id);}
+  for(const m of b.menu){if(!m||!text(m.id,80)||items.has(m.id)||!text(m.name,40)||!cats.has(m.cat)||!Number.isSafeInteger(m.price)||m.price<1||m.price>100000000||!(m.halfPrice===null||m.halfPrice===undefined||(Number.isSafeInteger(m.halfPrice)&&m.halfPrice>0&&m.halfPrice<=m.price))||typeof m.available!=='boolean'||!(m.image===undefined||m.image===null||m.image===''||(typeof m.image==='string'&&m.image.length<=120000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(m.image))))throw new Error('A menu item is invalid.');items.add(m.id);}
   if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean')throw new Error('Store settings are invalid.');
 }
 async function saveMenu(db,b) {
   validateMenu(b);
   const q=[db.prepare('DELETE FROM menu_items'),db.prepare('DELETE FROM menu_categories'),db.prepare('INSERT OR REPLACE INTO store_settings(id,settings_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP)').bind(JSON.stringify(b.settings))];
   b.categories.forEach((c,i)=>q.push(db.prepare('INSERT INTO menu_categories(id,name,sort_order) VALUES(?,?,?)').bind(c.id,c.name.trim(),i)));
-  b.menu.forEach((m,i)=>q.push(db.prepare('INSERT INTO menu_items(id,category_id,name,price,half_price,available,sort_order) VALUES(?,?,?,?,?,?,?)').bind(m.id,m.cat,m.name.trim(),m.price,m.halfPrice||null,m.available?1:0,i)));
+  b.menu.forEach((m,i)=>q.push(db.prepare('INSERT INTO menu_items(id,category_id,name,price,half_price,image_data,available,sort_order) VALUES(?,?,?,?,?,?,?,?)').bind(m.id,m.cat,m.name.trim(),m.price,m.halfPrice||null,m.image||null,m.available?1:0,i)));
   await db.batch(q);
 }
 async function currentShift(db){return db.prepare("SELECT id,device_id,started_at,ended_at,status FROM shifts WHERE status='open' LIMIT 1").first();}
