@@ -147,8 +147,8 @@ async function createOrder(db,b,deviceId) {
     const portion = line.portion === 'half' ? 'half' : 'full';
     const officialPrice = portion === 'half' ? item.halfPrice : item.price;
     if (officialPrice === null || officialPrice === undefined) throw new Error('A half-order price is not configured for this menu item.');
-    if (!Number.isSafeInteger(line.price) || line.price !== officialPrice) throw new Error('A menu price changed. Refresh the menu and review the cart.');
-    menuRows.push({ id: item.id, name: item.name, price: officialPrice, qty: line.qty, portion: portion });
+    if (!Number.isSafeInteger(line.price) || line.price < 1 || line.price > 100000000) throw new Error('An adjusted item price is invalid.');
+    menuRows.push({ id: item.id, name: item.name, price: line.price, qty: line.qty, portion: portion });
   }
   const settingsRow = await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if (!settingsRow) throw new Error('The shared menu is not initialized.');
