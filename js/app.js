@@ -119,7 +119,8 @@
     var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
     var disabled=!!m.soldOut||(isDrink&&!availableVariants.length);
     var priceLabel=isDrink?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No sizes available'):M.peso(m.price);
-    return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(disabled?', sold out':'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(disabled?'<span class="sold-out-tag">Sold Out</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
+    var statusLabel=m.soldOut?'Sold Out':(isDrink&&!availableVariants.length?'No sizes':'');
+    return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(statusLabel?', '+statusLabel.toLowerCase():'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
   }
 
   function qtyInCart(id) {
