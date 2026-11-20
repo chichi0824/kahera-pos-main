@@ -409,7 +409,7 @@
     var top=s.topItems;
     $('topItems').innerHTML=top.length?'<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>'+top.map(function(i){return'<tr><td>'+esc(i.name)+'<small class="portion-breakdown">Full '+i.fullQty+' · Half '+i.halfQty+'</small></td><td class="num mono">'+i.qty+'</td><td class="num mono">'+M.peso(i.amount)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No item sales in this period.</td></tr></tbody>';
     var orders=S.reportOrders.slice().sort(function(x,y){return y.ts-x.ts;});
-    $('reportOrdersTable').innerHTML=orders.length?'<thead><tr><th>Order</th><th>Date / Time</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>'+orders.map(function(o){return'<tr class="'+(o.status==='void'?'is-void':'')+'"><td class="mono">'+esc(o.no)+'</td><td>'+new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</td><td>'+METHOD_LABEL[o.method]+'</td><td>'+(o.status==='void'?'Voided':'Paid')+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No transactions found for this period.</td></tr></tbody>';
+    $('reportOrdersTable').innerHTML=orders.length?'<thead><tr><th>Order</th><th>Date / Time</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>'+orders.map(function(o){return'<tr class="'+(o.status==='void'?'is-void':'')+'"><td class="mono">'+esc(o.no)+'</td><td>'+new Date(o.ts).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</td><td>'+METHOD_LABEL[o.method]+'</td><td>'+(o.status==='void'?'Voided':'Paid')+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No transactions found for this period.</td></tr></tbody>';
     $('reportTransactionCount').textContent=orders.length+' transaction'+(orders.length===1?'':'s');
   }
   function changeReportPeriod(delta){
@@ -444,17 +444,6 @@
     } catch (e) { fallback(); }
   }
 
-  function downloadCsv() {
-    var csv = M.toCSV(S.orders);
-    var blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
-    var a = document.createElement('a');
-    var d = new Date();
-    a.href = URL.createObjectURL(blob);
-    a.download = 'kahera-shift-' + d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0') + '.csv';
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(function () { URL.revokeObjectURL(a.href); }, 1000);
-    toast('CSV saved. If nothing downloaded, use Copy CSV.');
-  }
 
   // ---------- menu admin ----------
   function compressMenuImage(file) {
