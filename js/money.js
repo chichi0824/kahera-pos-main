@@ -140,7 +140,7 @@
       s.vatRemoved += o.totals.vatRemoved;
       s.net += o.totals.total;
       s.byMethod[o.method] = (s.byMethod[o.method] || 0) + o.totals.total;
-      var h = new Date(o.ts).getHours();
+      var h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', hourCycle: 'h23' }).format(new Date(o.ts)));
       s.byHour[h] = (s.byHour[h] || 0) + o.totals.total;
       o.lines.forEach(function (l) {
         var key = l.id || l.name;
