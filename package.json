@@ -1,7 +1,7 @@
 {
   "name": "kahera-pos",
   "version": "1.1.0",
-  "description": "Karinderya-ready point-of-sale with a GitHub-backed shared menu and administrator controls.",
+  "description": "Karinderya-ready point-of-sale with a Cloudflare D1 shared menu, orders, shifts and administrator controls.",
   "private": true,
   "scripts": {
     "test": "node tests/money.test.js",
