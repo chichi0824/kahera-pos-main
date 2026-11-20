@@ -38,13 +38,6 @@
       "available": true
     },
     {
-      "id": "m06",
-      "cat": "meals",
-      "name": "Pork Sinigang",
-      "price": 16500,
-      "available": true
-    },
-    {
       "id": "m07",
       "cat": "meals",
       "name": "Tapsilog",
