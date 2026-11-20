@@ -131,9 +131,9 @@
     var isDrink=isDrinksCategory(m.cat),hasOptions=isDrink&&Array.isArray(m.variants)&&m.variants.length;
     var availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
-    var disabled=!!m.soldOut||(isDrink&&!availableVariants.length);
+    var disabled=(!isDrink&&!!m.soldOut)||(isDrink&&!availableVariants.length);
     var priceLabel=isDrink?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No sizes available'):M.peso(m.price);
-    var hasListedSoldOut=hasOptions&&m.variants.some(function(v){return v.available!==false&&v.soldOut;});var statusLabel=m.soldOut?'Sold Out':(isDrink&&!availableVariants.length?(hasListedSoldOut?'All sizes sold out':'No sizes'):'');
+    var hasListedSoldOut=hasOptions&&m.variants.some(function(v){return v.available!==false&&v.soldOut;});var statusLabel=!isDrink&&m.soldOut?'Sold Out':(isDrink&&!availableVariants.length?(hasListedSoldOut?'All sizes sold out':'No sizes'):'');
     return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(statusLabel?', '+statusLabel.toLowerCase():'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
   }
 
@@ -483,7 +483,7 @@
         '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
         '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
         (isDrinksCategory(m.cat)?'<td class="drink-variants-cell">'+renderVariantEditor(m.variants)+'</td>':'<td class="menu-pricing-cell"><label><span>Full ₱</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half ₱</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="—" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label></td>') +
-        '<td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>' +
+        (isDrinksCategory(m.cat)?'<td><span class="muted">Managed per variant</span></td>':'<td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>') +
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
     });
@@ -521,7 +521,7 @@
   // ---------- cart mutations ----------
   function addItem(id,variant){
     if(!S.shift||S.shift.status!=='open'){toast('No daily report is open. Sales are disabled.');return;}
-    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(m.soldOut){toast(m.name+' is sold out');return;}
+    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(!isDrinksCategory(m.cat)&&m.soldOut){toast(m.name+' is sold out');return;}
     var isDrink=isDrinksCategory(m.cat),options=isDrink&&Array.isArray(m.variants)?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     if(isDrink&&!options.length){toast(m.name+' has no available sizes today');return;}
     if(options.length&&!variant){showVariantPicker(Object.assign({},m,{variants:options}));return;}
