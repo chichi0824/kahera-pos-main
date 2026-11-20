@@ -804,7 +804,7 @@
     if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
     SAMPLE.settings = remote.settings;
     SAMPLE.categories = remote.categories;
-    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;m.variants=isDrinksCategory(m.cat)?(m.variants||[]):[];return m;});
+    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;m.variants=remote.categories.some(function(c){return c.id===m.cat&&/^(drinks?|beverages?)$/i.test(String(c.name).trim());})?(m.variants||[]):[];return m;});
     startApp();
   }).catch(function (err) {
     startApp();
