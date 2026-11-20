@@ -83,7 +83,6 @@
             aria-controls="view-menu"
             aria-selected="false"
             data-view="menu"
-            hidden
           >
             Menu
           </button>
@@ -99,9 +98,6 @@
         </nav>
         <div class="top-tools">
           <span class="clock" data-k="clock">--:--</span>
-          <button type="button" class="btn small" data-k="adminAccess">
-            Admin login
-          </button>
           <button
             type="button"
             class="icon-btn"
@@ -588,34 +584,6 @@ npx serve .       # or open index.html</pre
         </div>
         <a class="btn primary" href="#k-order" data-k="mGo">Review order</a>
       </div>
-
-      <dialog
-        id="adminDlg"
-        class="admin-dlg"
-        data-k="adminDlg"
-        aria-labelledby="adminTitle"
-      >
-        <form class="admin-card" data-k="adminForm">
-          <h2 id="adminTitle">Administrator login</h2>
-          <p>Enter the administrator password to manage the shared menu.</p>
-          <label for="adminPassword"
-            >Administrator password<input
-              id="adminPassword"
-              type="password"
-              autocomplete="current-password"
-              required
-          /></label>
-          <p class="err" data-k="adminErr" role="alert"></p>
-          <div class="dlg-actions">
-            <button type="button" class="btn" data-k="adminCancel">
-              Cancel
-            </button>
-            <button type="submit" class="btn primary" data-k="adminSubmit">
-              Sign in
-            </button>
-          </div>
-        </form>
-      </dialog>
 
       <dialog class="slip-dlg" data-k="slipDlg" aria-label="Order slip">
         <div class="slip" data-k="slip"></div>
