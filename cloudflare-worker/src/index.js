@@ -34,12 +34,58 @@ async function saveMenu(db,b) {
   b.menu.forEach((m,i)=>q.push(db.prepare('INSERT INTO menu_items(id,category_id,name,price,half_price,image_data,available,sort_order) VALUES(?,?,?,?,?,?,?,?)').bind(m.id,m.cat,m.name.trim(),m.price,m.halfPrice||null,m.image||null,m.available?1:0,i)));
   await db.batch(q);
 }
-async function currentShift(db){return db.prepare("SELECT id,device_id,started_at,ended_at,status FROM shifts WHERE status='open' LIMIT 1").first();}
-async function ensureShift(db,deviceId) {
-  let s=await currentShift(db);if(s)return s;
-  try{await db.prepare("INSERT INTO shifts(id,device_id,started_at,status) VALUES(?,?,?,'open')").bind(uuid(),deviceId||'shared-device',new Date().toISOString()).run();}
-  catch(e){s=await currentShift(db);if(s)return s;throw e;}
+function manilaParts(date=new Date()) {
+  const parts=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(date);
+  const out={};parts.forEach(p=>{if(p.type!=='literal')out[p.type]=p.value;});
+  return {date:out.year+'-'+out.month+'-'+out.day,hour:Number(out.hour),minute:Number(out.minute)};
+}
+function isWeekday(dateText) {
+  const day=new Date(dateText+'T00:00:00Z').getUTCDay();
+  return day>=1&&day<=5;
+}
+async function currentShift(db) {
+  return db.prepare("SELECT id,device_id,started_at,ended_at,status,report_date,close_reason FROM shifts WHERE status='open' LIMIT 1").first();
+}
+async function ensureDailyReport(db,deviceId,now=new Date()) {
+  const local=manilaParts(now);
+  if(!isWeekday(local.date)||local.hour<7)return currentShift(db);
+  let active=await currentShift(db);
+  if(active && active.report_date===local.date)return active;
+  if(active && (!active.report_date || active.report_date<local.date)) {
+    await db.prepare("UPDATE shifts SET status='closed',ended_at=?,close_reason='automatic_midnight' WHERE id=? AND status='open'")
+      .bind(now.toISOString(),active.id).run();
+    active=null;
+  }
+  const alreadyCreated=await db.prepare("SELECT id,status FROM shifts WHERE report_date=? LIMIT 1").bind(local.date).first();
+  if(alreadyCreated)return currentShift(db);
+  try {
+    await db.prepare("INSERT INTO shifts(id,device_id,started_at,status,report_date) VALUES(?,?,?,'open',?)")
+      .bind(uuid(),deviceId||'scheduled-opening',now.toISOString(),local.date).run();
+  } catch(error) {
+    active=await currentShift(db);
+    if(active)return active;
+    throw error;
+  }
   return currentShift(db);
+}
+async function runDailySchedule(db,now=new Date()) {
+  const local=manilaParts(now);
+  const active=await currentShift(db);
+  if(active && active.report_date && active.report_date<local.date) {
+    await db.prepare("UPDATE shifts SET status='closed',ended_at=?,close_reason='automatic_midnight' WHERE id=? AND status='open'")
+      .bind(now.toISOString(),active.id).run();
+  }
+  if(isWeekday(local.date) && local.hour>=7) {
+    const alreadyCreated=await db.prepare("SELECT id FROM shifts WHERE report_date=? LIMIT 1").bind(local.date).first();
+    if(!alreadyCreated && !(await currentShift(db))) {
+      try {
+        await db.prepare("INSERT INTO shifts(id,device_id,started_at,status,report_date) VALUES(?,?,?,'open',?)")
+          .bind(uuid(),'scheduled-opening',now.toISOString(),local.date).run();
+      } catch(error) {
+        if(!(await currentShift(db)))throw error;
+      }
+    }
+  }
 }
 function rowOrder(r){const o=JSON.parse(r.payload_json);o.status=r.status;if(r.voided_at)o.voidedAt=Date.parse(r.voided_at);return o;}
 async function orders(db,shiftId) {
@@ -110,7 +156,8 @@ async function createOrder(db,b,deviceId) {
   const totals = calculateTotals(menuRows, settings, b.totals.discountKind, b.totals.diners, b.totals.idHolders);
   if (b.totals.total !== totals.total || b.totals.discountKind !== totals.discountKind) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
   if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
-  const shift = await ensureShift(db,deviceId);
+  const shift = await currentShift(db);
+  if(!shift || shift.status!=='open') throw new Error('No daily report is open. Sales are disabled until the next report opens.');
   const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
   if (!counter) throw new Error('Order counter is missing. Run the D1 migration.');
   const ts=Date.now(), no='K-'+pad(counter.value);
@@ -143,10 +190,11 @@ export default {
   const h=cors(origin),u=new URL(request.url),db=env.kahera_db;
   try {
    if(!db)return json({error:'Cloudflare D1 binding kahera_db is missing.'},500,h);
+   await runDailySchedule(db,new Date());
    if(u.pathname==='/api/login'&&request.method==='POST'){const b=await request.json();if(typeof b.password!=='string'||!env.ADMIN_PASSWORD||!eq(b.password,env.ADMIN_PASSWORD))return json({error:'Incorrect administrator password.'},401,h);return json({token:await makeToken(env.SESSION_SECRET),expiresIn:28800},200,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
    if(u.pathname==='/api/menu'&&request.method==='PUT'){if(!(await isAdmin(bearer(request),env.SESSION_SECRET)))return json({error:'Administrator session expired. Please log in again.'},401,h);await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
-   if(u.pathname==='/api/shifts/start'&&request.method==='POST'){const b=await request.json().catch(()=>({}));return json({shift:await ensureShift(db,b.deviceId||'shared-device')},200,h);}
+   if(u.pathname==='/api/shifts/start'&&request.method==='POST'){const b=await request.json().catch(()=>({}));return json({shift:await ensureDailyReport(db,b.deviceId||'shared-device')},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
    if(u.pathname==='/api/shifts/close'&&request.method==='POST'){const b=await request.json();if(!text(b.shiftId,80))return json({error:'Shift ID is required.'},400,h);const r=await db.prepare("UPDATE shifts SET status='closed',ended_at=? WHERE id=? AND status='open'").bind(new Date().toISOString(),b.shiftId).run();if(!r.meta||!r.meta.changes)return json({error:'This shift is already closed or no longer active. Refresh the POS.'},409,h);return json({ok:true},200,h);}
    if(u.pathname==='/api/orders/next-number'&&request.method==='GET'){const c=await db.prepare('SELECT value FROM order_counters WHERE id=1').first();return json({no:'K-'+pad((c?c.value:0)+1)},200,h);}
@@ -155,6 +203,9 @@ export default {
    const v=u.pathname.match(/^\/api\/orders\/([^/]+)\/void$/);
    if(v&&request.method==='POST'){const oid=decodeURIComponent(v[1]);const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(oid).first();if(!r)return json({error:'Order not found.'},404,h);if(r.status==='void')return json({order:rowOrder(r)},200,h);const o=rowOrder(r);o.status='void';o.voidedAt=Date.now();await db.prepare("UPDATE orders SET status='void',voided_at=?,payload_json=? WHERE id=?").bind(new Date(o.voidedAt).toISOString(),JSON.stringify(o),oid).run();return json({order:o},200,h);}
    return json({error:'Not found.'},404,h);
-  } catch(e){return json({error:e.message||'Unexpected server error.'},500,h);}
+  } catch(e){const message=e.message||'Unexpected server error.';return json({error:message},message.indexOf('No daily report is open')===0?409:500,h);}
+ },
+ async scheduled(controller,env) {
+   await runDailySchedule(env.kahera_db,new Date(controller.scheduledTime));
  }
 };
