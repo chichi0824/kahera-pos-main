@@ -29,7 +29,6 @@
   function timeOf(ts) { return new Date(ts).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }); }
   var CAT_COLORS = ['#c2410c', '#136a48', '#7c3aed', '#0369a1', '#a16207', '#be185d'];
   var METHOD_LABEL = { cash: 'Cash', ewallet: 'E-wallet', card: 'Card' };
-  var DISC_LABEL = { none: '', senior: 'Senior', pwd: 'PWD' };
 
   var toastTimer;
   function toast(msg) {
@@ -43,7 +42,7 @@
   // ---------- state ----------
   var S = {};
   function blankCart() {
-    return { type: 'dine', table: '', lines: [], disc: 'none', diners: 1, ids: 1 };
+    return { type: 'dine', table: '', lines: [] };
   }
   function load() {
     // Only the active cart and display preferences stay on this device.
@@ -59,14 +58,18 @@
     S.shift = null;
     S.pendingOrder = null;
     S.cart = store.get('cart', null) || blankCart();
+    if (!Array.isArray(S.cart.lines)) S.cart.lines = [];
+    S.cart.lines.forEach(function (line) {
+      line.portion = line.portion === 'half' ? 'half' : 'full';
+      line.fullPrice = line.fullPrice || (line.portion === 'full' ? line.price : line.price * 2);
+      line.halfPrice = line.halfPrice || null;
+    });
     S.view = store.get('view', 'register');
     S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash';
   }
   function saveCart() { store.set('cart', S.cart); }
   function totals() {
-    return M.computeTotals(S.cart.lines, {
-      vatRegistered: S.settings.vatRegistered, discount: S.cart.disc, diners: S.cart.diners, idHolders: S.cart.ids
-    });
+    return M.computeTotals(S.cart.lines, { vatRegistered: S.settings.vatRegistered });
   }
   function nextNo() { return S.nextNo || 'K-0001'; }
 
@@ -137,8 +140,13 @@
       $('lines').innerHTML = '<li class="empty">Tap a menu item to start an order.</li>';
     } else {
       $('lines').innerHTML = c.lines.map(function (l, i) {
+        var portionControl = l.halfPrice
+          ? '<label class="portion-wrap"><span class="sr-only">Portion</span><select class="portion-select" data-portion="' + i + '" aria-label="Portion for ' + esc(l.name) + '">' +
+            '<option value="full"' + (l.portion === 'full' ? ' selected' : '') + '>Full</option>' +
+            '<option value="half"' + (l.portion === 'half' ? ' selected' : '') + '>Half</option></select></label>'
+          : '<span class="portion-label">Full</span>';
         return '<li class="line">' +
-          '<span class="l-name">' + esc(l.name) + '<span class="l-each">' + M.peso(l.price) + ' each</span></span>' +
+          '<span class="l-name">' + esc(l.name) + portionControl + '<span class="l-each">' + M.peso(l.price) + ' each</span></span>' +
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
@@ -146,14 +154,6 @@
           '</li>';
       }).join('');
     }
-
-    // Discount controls
-    $('disc').querySelectorAll('[data-v]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-v') === c.disc)); });
-    byId('k-diners').value = c.diners;
-    byId('k-ids').value = c.ids;
-    var tag = $('discTag');
-    tag.hidden = c.disc === 'none';
-    tag.textContent = c.disc === 'none' ? '' : DISC_LABEL[c.disc] + ' ' + Math.min(c.ids, c.diners) + '/' + c.diners;
 
     renderTotals();
     renderMobileBar();
@@ -272,7 +272,7 @@
     h += '<div class="row"><span>' + esc(o.no) + '</span><span>' + new Date(o.ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</span></div>';
     h += '<div class="row"><span>' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · Table ' + esc(o.table) : '') : 'Take-out') + '</span><span>' + METHOD_LABEL[o.method] + '</span></div><hr>';
     o.lines.forEach(function (l) {
-      h += '<div class="row"><span>' + l.qty + ' × ' + esc(l.name) + '</span><span>' + M.peso(l.price * l.qty, { symbol: false }) + '</span></div>';
+      h += '<div class="row"><span>' + l.qty + ' × ' + (l.portion === 'half' ? 'Half ' : '') + esc(l.name) + '</span><span>' + M.peso(l.price * l.qty, { symbol: false }) + '</span></div>';
     });
     h += '<hr><div class="row"><span>Subtotal</span><span>' + M.peso(t.gross, { symbol: false }) + '</span></div>';
     if (t.discountKind !== 'none') {
@@ -309,10 +309,10 @@
       var isVoid = o.status === 'void';
       h += '<tr class="' + (isVoid ? 'is-void' : '') + '">' +
         '<td class="mono">' + esc(o.no) + (isVoid ? ' <span class="pill void">Void</span>' : '') +
-          (o.totals.discountKind !== 'none' ? ' <span class="pill disc">' + DISC_LABEL[o.totals.discountKind] + '</span>' : '') + '</td>' +
+          '</td>' +
         '<td class="mono">' + timeOf(o.ts) + '</td>' +
         '<td class="hide-sm">' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · T' + esc(o.table) : '') : 'Take-out') + '</td>' +
-        '<td class="hide-sm">' + o.lines.map(function (l) { return l.qty + '× ' + esc(l.name); }).join(', ') + '</td>' +
+        '<td class="hide-sm">' + o.lines.map(function (l) { return l.qty + '× ' + (l.portion === 'half' ? 'Half ' : '') + esc(l.name); }).join(', ') + '</td>' +
         '<td class="hide-sm">' + METHOD_LABEL[o.method] + '</td>' +
         '<td class="num mono">' + M.peso(o.totals.total) + '</td>' +
         '<td class="num"><div class="row-actions">' +
@@ -333,7 +333,7 @@
     $('kpis').innerHTML = [
       ['Net sales', M.peso(s.net), s.count + ' paid orders'],
       ['Average ticket', M.peso(s.avgTicket), 'per paid order'],
-      ['Senior/PWD given', M.peso(s.discounts + s.vatRemoved), M.peso(s.discounts) + ' discount + ' + M.peso(s.vatRemoved) + ' VAT'],
+      ['Items sold', String(s.topItems.reduce(function (n, item) { return n + item.qty; }, 0)), 'total quantity'],
       ['Voided', String(s.voided), s.voided === 1 ? 'order' : 'orders']
     ].map(function (k) {
       return '<div class="panel kpi"><span class="eyebrow">' + k[0] + '</span><b>' + k[1] + '</b><small>' + k[2] + '</small></div>';
@@ -418,12 +418,13 @@
       return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('');
     };
     $('newCat').innerHTML = catOpts(S.categories[0].id);
-    var h = '<thead><tr><th>Item</th><th class="hide-sm">Category</th><th class="num">Price ₱</th><th>On sale</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Item</th><th class="hide-sm">Category</th><th class="num">Full ₱</th><th class="num">Half ₱</th><th>On sale</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     S.menu.forEach(function (m) {
       h += '<tr data-item="' + esc(m.id) + '">' +
         '<td><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"></td>' +
         '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
-        '<td class="num price"><input aria-label="Price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></td>' +
+        '<td class="num price"><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></td>' +
+        '<td class="num price"><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="Optional" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></td>' +
         '<td><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span class="sr-only">Available</span></label></td>' +
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
@@ -459,9 +460,9 @@
     var m = S.menu.filter(function (x) { return x.id === id; })[0];
     if (!m) return;
     if (!m.available) { toast(m.name + ' is marked sold out'); return; }
-    var l = S.cart.lines.filter(function (x) { return x.id === id; })[0];
+    var l = S.cart.lines.filter(function (x) { return x.id === id && x.portion === 'full'; })[0];
     if (l) l.qty = Math.min(99, l.qty + 1);
-    else S.cart.lines.push({ id: m.id, name: m.name, price: m.price, qty: 1 });
+    else S.cart.lines.push({ id: m.id, name: m.name, price: m.price, fullPrice: m.price, halfPrice: m.halfPrice || null, portion: 'full', qty: 1 });
     saveCart(); renderCart(); renderGrid(id);
   }
   function stepLine(i, d) {
@@ -523,30 +524,14 @@
       var b = e.target.closest('[data-line]');
       if (b) stepLine(+b.getAttribute('data-line'), +b.getAttribute('data-d'));
     });
-
-    $('disc').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-v]');
-      if (!b) return;
-      S.cart.disc = b.getAttribute('data-v');
-      if (S.cart.disc !== 'none' && S.cart.ids < 1) S.cart.ids = 1;
+    $('lines').addEventListener('change', function (e) {
+      var sel = e.target.closest('[data-portion]');
+      if (!sel) return;
+      var line = S.cart.lines[+sel.getAttribute('data-portion')];
+      if (!line || !line.halfPrice) return;
+      line.portion = sel.value === 'half' ? 'half' : 'full';
+      line.price = line.portion === 'half' ? line.halfPrice : line.fullPrice;
       saveCart(); renderCart();
-    });
-    $('discBox').addEventListener('click', function (e) {
-      var b = e.target.closest('[data-step]');
-      if (!b) return;
-      e.preventDefault();
-      var key = b.getAttribute('data-step'), d = +b.getAttribute('data-d');
-      if (key === 'diners') { S.cart.diners = Math.max(1, Math.min(99, S.cart.diners + d)); S.cart.ids = Math.min(S.cart.ids, S.cart.diners); }
-      else { S.cart.ids = Math.max(0, Math.min(S.cart.diners, S.cart.ids + d)); }
-      saveCart(); renderCart();
-    });
-    ['k-diners', 'k-ids'].forEach(function (id) {
-      byId(id).addEventListener('change', function (e) {
-        var v = parseInt(e.target.value, 10);
-        if (id === 'k-diners') { S.cart.diners = isNaN(v) ? 1 : Math.max(1, Math.min(99, v)); S.cart.ids = Math.min(S.cart.ids, S.cart.diners); }
-        else S.cart.ids = isNaN(v) ? 0 : Math.max(0, Math.min(S.cart.diners, v));
-        saveCart(); renderCart();
-      });
     });
 
     $('clear').addEventListener('click', function () {
@@ -627,6 +612,13 @@
         var c = M.toCentavos(e.target.value);
         if (isNaN(c) || c <= 0) { toast('Enter a price like 65 or 65.50'); e.target.value = (m.price / 100).toFixed(2); return; }
         m.price = c; e.target.value = (c / 100).toFixed(2);
+        if (m.halfPrice && m.halfPrice > m.price) { m.halfPrice = null; toast('Half-order price cleared because it cannot exceed the full price.'); }
+      }
+      if (f === 'halfPrice') {
+        var hp = e.target.value.trim() === '' ? null : M.toCentavos(e.target.value);
+        if (hp !== null && (isNaN(hp) || hp <= 0 || hp > m.price)) { toast('Half-order price must be greater than zero and no more than the full price.'); e.target.value = m.halfPrice ? (m.halfPrice / 100).toFixed(2) : ''; return; }
+        m.halfPrice = hp;
+        e.target.value = hp === null ? '' : (hp / 100).toFixed(2);
       }
       saveMenu();
     });
@@ -641,12 +633,15 @@
     $('addForm').addEventListener('submit', function (e) {
       e.preventDefault();
       var name = byId('k-newname').value.trim(), price = M.toCentavos(byId('k-newprice').value);
+      var halfRaw = byId('k-newhalfprice').value.trim();
+      var halfPrice = halfRaw ? M.toCentavos(halfRaw) : null;
       if (!name) { $('addErr').textContent = 'Give the item a name.'; return; }
-      if (isNaN(price) || price <= 0) { $('addErr').textContent = 'Enter a price in pesos, like 65 or 65.50.'; return; }
+      if (isNaN(price) || price <= 0) { $('addErr').textContent = 'Enter a full-order price in pesos, like 150 or 150.50.'; return; }
+      if (halfRaw && (isNaN(halfPrice) || halfPrice <= 0 || halfPrice > price)) { $('addErr').textContent = 'Half-order price must be greater than zero and no more than the full price.'; return; }
       $('addErr').textContent = '';
-      S.menu.push({ id: 'u' + Date.now().toString(36), cat: byId('k-newcat').value, name: name, price: price, available: true });
+      S.menu.push({ id: 'u' + Date.now().toString(36), cat: byId('k-newcat').value, name: name, price: price, halfPrice: halfPrice, available: true });
       saveMenu().then(function () { renderMenuAdmin(); });
-      byId('k-newname').value = ''; byId('k-newprice').value = '';
+      byId('k-newname').value = ''; byId('k-newprice').value = ''; byId('k-newhalfprice').value = '';
     });
     $('adminAccess').addEventListener('click', function () {
       if (S.isAdmin) {
