@@ -157,11 +157,9 @@ async function createOrder(db,b,deviceId) {
     let variantName = '';
     if (line.variantId) {
       const selected = variants.find(v => v.id === line.variantId);
-      if (!selected || line.price !== selected.price) throw new Error('A selected price option changed. Refresh the menu and review the cart.');
+      if (!selected || line.optionPrice !== selected.price) throw new Error('A selected price option changed. Refresh the menu and review the cart.');
       officialPrice = selected.price;
       variantName = selected.name;
-    } else if (variants.length && !line.variantId) {
-      // Legacy/default-priced orders remain supported; new variant-enabled items are normally selected via an option.
     }
     if (officialPrice === null || officialPrice === undefined) throw new Error('A half-order price is not configured for this menu item.');
     if (!Number.isSafeInteger(line.price) || line.price < 1 || line.price > 100000000) throw new Error('An adjusted item price is invalid.');
