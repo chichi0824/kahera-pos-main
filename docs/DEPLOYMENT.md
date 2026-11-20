@@ -58,9 +58,9 @@ GitHub Pages serves over HTTPS, so the service worker and "Add to Home Screen" w
 1. Open the live URL in Chrome (Android) or Safari (iPad).
 2. Chrome: menu **⋮ → Add to Home screen / Install app**. Safari: **Share → Add to Home Screen**.
 3. Open it once while online so the service worker caches everything. After that it works offline.
-4. Go to **Menu** and replace the sample items, business name and VAT setting, then **Shift → Start new shift** to clear the sample orders.
+4. Use **Admin login** to open the Menu tab. Menu and store-setting changes are committed to GitHub through the Cloudflare Worker. Cashiers refresh after GitHub Pages finishes publishing.
 
-Data is saved in that tablet's browser only. Export the CSV at the end of each shift as your backup.
+The shared menu is stored in GitHub. Orders, cart, shift data and theme remain local to each browser/device. Export the CSV at the end of each shift as your backup. See `cloudflare-worker/README.md` for the secure menu backend setup.
 
 ## 5. Releasing a new version
 

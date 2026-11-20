@@ -34,11 +34,12 @@
       <button role="tab" id="tab-register" aria-controls="view-register" aria-selected="true" data-view="register">Register</button>
       <button role="tab" id="tab-orders" aria-controls="view-orders" aria-selected="false" data-view="orders">Orders <span class="count" data-k="orderCount">0</span></button>
       <button role="tab" id="tab-shift" aria-controls="view-shift" aria-selected="false" data-view="shift">Shift</button>
-      <button role="tab" id="tab-menu" aria-controls="view-menu" aria-selected="false" data-view="menu">Menu</button>
+      <button role="tab" id="tab-menu" aria-controls="view-menu" aria-selected="false" data-view="menu" hidden>Menu</button>
       <button role="tab" id="tab-about" aria-controls="view-about" aria-selected="false" data-view="about">About</button>
     </nav>
     <div class="top-tools">
       <span class="clock" data-k="clock">--:--</span>
+      <button type="button" class="btn small" data-k="adminAccess">Admin login</button>
       <button type="button" class="icon-btn" data-k="theme" aria-label="Switch light or dark theme" title="Theme">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8"></circle><path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"></path></svg>
       </button>
@@ -165,8 +166,8 @@
     <!-- MENU -->
     <section id="view-menu" class="view" role="tabpanel" aria-labelledby="tab-menu" hidden>
       <div class="view-head">
-        <div><p class="eyebrow">Saved in this browser</p><h2>Menu &amp; settings</h2></div>
-        <div class="actions-row" data-k="resetWrap"><button type="button" class="btn small danger" data-k="reset">Reset sample data</button></div>
+        <div><p class="eyebrow">Central menu · GitHub</p><h2>Menu &amp; settings</h2></div>
+        <p class="hint">Changes are committed to the official menu file. Cashier devices receive them after refreshing.</p>
       </div>
       <div class="menu-admin" style="margin-top:12px">
         <div class="panel table-wrap">
@@ -215,7 +216,7 @@
             <li>Senior/PWD discount pro-rated per diner, with VAT exemption</li>
             <li>Cash change with quick-bill buttons; e-wallet and card reference numbers</li>
             <li>Order slip, void with confirmation, shift report and CSV export</li>
-            <li>Menu editor, offline PWA, light and dark themes</li>
+            <li>Administrator-only shared menu editor, offline PWA, light and dark themes</li>
           </ul>
         </div>
         <div class="panel card-pad">
@@ -223,7 +224,7 @@
           <ul>
             <li>Plain HTML, CSS and JavaScript. No framework, no build step</li>
             <li><code>money.js</code>: pure functions in integer centavos, unit-tested in Node</li>
-            <li><code>localStorage</code> with an in-memory fallback</li>
+            <li>GitHub-backed shared menu via Cloudflare Worker; sales and cart data remain device-local</li>
             <li>Service worker + web manifest for offline use and "Add to Home Screen"</li>
           </ul>
         </div>
@@ -233,7 +234,7 @@
 cd kahera-pos
 npm test          # runs the money tests
 npx serve .       # or open index.html</pre>
-          <p>Deploy the folder as-is to GitHub Pages, Netlify, Vercel or Cloudflare Pages. No server or database needed.</p>
+          <p>Host the frontend on GitHub Pages and deploy the companion Cloudflare Worker for secure shared-menu updates.</p>
         </div>
         <div class="panel card-pad">
           <h3>Client pitch</h3>
@@ -253,6 +254,19 @@ npx serve .       # or open index.html</pre>
     <a class="btn primary" href="#k-order" data-k="mGo">Review order</a>
   </div>
 
+  <dialog id="adminDlg" class="admin-dlg" data-k="adminDlg" aria-labelledby="adminTitle">
+    <form class="admin-card" data-k="adminForm">
+      <h2 id="adminTitle">Administrator login</h2>
+      <p>Enter the administrator password to manage the shared menu.</p>
+      <label for="adminPassword">Administrator password<input id="adminPassword" type="password" autocomplete="current-password" required></label>
+      <p class="err" data-k="adminErr" role="alert"></p>
+      <div class="dlg-actions">
+        <button type="button" class="btn" data-k="adminCancel">Cancel</button>
+        <button type="submit" class="btn primary" data-k="adminSubmit">Sign in</button>
+      </div>
+    </form>
+  </dialog>
+
   <dialog class="slip-dlg" data-k="slipDlg" aria-label="Order slip">
     <div class="slip" data-k="slip"></div>
     <div class="dlg-actions">
@@ -266,6 +280,7 @@ npx serve .       # or open index.html</pre>
 <script src="js/money.js"></script>
 <script src="js/store.js"></script>
 <script src="js/menu-sample.js"></script>
+<script src="js/cloud.js"></script>
 <script src="js/app.js"></script>
 <!--BUILD:REPO-ONLY-->
 <script>

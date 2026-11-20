@@ -11,6 +11,7 @@
 
   var M = window.KaheraMoney;
   var store = window.KaheraStore;
+  var cloud = window.KaheraCloud;
   var SAMPLE = window.KAHERA_SAMPLE;
   var root = document.getElementById('kahera');
   if (!root || !M || !store || !SAMPLE) return;
@@ -48,7 +49,8 @@
     var now = Date.now(), seq = 0;
     var find = function (id) { return menu.filter(function (m) { return m.id === id; })[0]; };
     var orders = SAMPLE.orders.map(function (row) {
-      var lines = row[3].map(function (p) { var m = find(p[0]); return { id: m.id, name: m.name, price: m.price, qty: p[1] }; });
+      var lines = row[3].map(function (p) { var m = find(p[0]); return m ? { id: m.id, name: m.name, price: m.price, qty: p[1] } : null; }).filter(Boolean);
+      if (!lines.length) return null;
       var totals = M.computeTotals(lines, { vatRegistered: settings.vatRegistered, discount: row[5], diners: row[6], idHolders: row[7] });
       var tendered = row[4] === 'cash' ? M.quickCash(totals.total)[1] || totals.total : totals.total;
       seq++;
@@ -57,13 +59,16 @@
         totals: totals, method: row[4], tendered: tendered, change: tendered - totals.total,
         ref: row[4] === 'cash' ? '' : 'SAMPLE-' + (4000 + seq * 137), status: 'paid', sample: true
       };
-    });
+    }).filter(Boolean);
     return { orders: orders, seq: seq };
   }
   function load() {
-    S.settings = store.get('settings', null) || clone(SAMPLE.settings);
+    // Menu and store settings are centrally loaded from GitHub; never use stale browser copies.
+    store.remove('menu'); store.remove('settings');
+    S.settings = clone(SAMPLE.settings);
     S.categories = clone(SAMPLE.categories);
-    S.menu = store.get('menu', null) || clone(SAMPLE.menu);
+    S.menu = clone(SAMPLE.menu);
+    S.isAdmin = false;
     S.orders = store.get('orders', null);
     S.seq = store.get('seq', 0);
     if (!S.orders) {
@@ -94,6 +99,7 @@
 
   // ---------- views ----------
   function setView(v) {
+    if (v === 'menu' && !S.isAdmin) { v = 'register'; toast('Administrator login is required to manage the menu.'); }
     S.view = v; store.set('view', v);
     root.querySelectorAll('[data-view]').forEach(function (b) {
       var on = b.getAttribute('data-view') === v;
@@ -419,7 +425,6 @@
   }
 
   // ---------- menu admin ----------
-  var pendingReset = false;
   function renderMenuAdmin() {
     byId('k-biz').value = S.settings.bizName;
     byId('k-biznote').value = S.settings.bizNote;
@@ -439,12 +444,19 @@
         '</tr>';
     });
     $('menuTable').innerHTML = h + '</tbody>';
-    var rw = $('resetWrap');
-    rw.innerHTML = pendingReset
-      ? '<span class="confirm">Replace menu, settings and orders with the sample? <button type="button" class="btn small danger" data-reset-yes>Reset</button><button type="button" class="btn small" data-reset-no>Cancel</button></span>'
-      : '<button type="button" class="btn small danger" data-k="reset">Reset sample data</button>';
   }
-  function saveMenu() { store.set('menu', S.menu); renderGrid(); }
+  var menuSaveChain = Promise.resolve();
+  function saveMenu() {
+    var payload = { settings: clone(S.settings), categories: clone(S.categories), menu: clone(S.menu) };
+    menuSaveChain = menuSaveChain.catch(function () {}).then(function () { return cloud.saveMenu(payload); });
+    return menuSaveChain.then(function () {
+      renderGrid();
+      toast('Menu saved to GitHub. Cashiers will see it after refreshing.');
+    }).catch(function (err) {
+      toast('Menu was not saved: ' + err.message);
+      renderMenuAdmin(); renderGrid();
+    });
+  }
 
   function renderBrand() {
     $('biz').textContent = S.settings.bizName + ' · ' + S.settings.bizNote;
@@ -612,12 +624,11 @@
     });
 
     $('settingsForm').addEventListener('submit', function (e) { e.preventDefault(); });
-    $('settingsForm').addEventListener('input', function () {
+    $('settingsForm').addEventListener('change', function () {
       S.settings.bizName = byId('k-biz').value.trim() || 'My Store';
       S.settings.bizNote = byId('k-biznote').value.trim();
       S.settings.vatRegistered = byId('k-vat').checked;
-      store.set('settings', S.settings);
-      renderBrand(); renderTotals();
+      renderBrand(); renderTotals(); saveMenu();
     });
     $('menuTable').addEventListener('change', function (e) {
       var f = e.target.getAttribute('data-f');
@@ -633,7 +644,7 @@
         if (isNaN(c) || c <= 0) { toast('Enter a price like 65 or 65.50'); e.target.value = (m.price / 100).toFixed(2); return; }
         m.price = c; e.target.value = (c / 100).toFixed(2);
       }
-      saveMenu(); toast('Saved ' + m.name);
+      saveMenu();
     });
     $('menuTable').addEventListener('click', function (e) {
       var b = e.target.closest('[data-del]');
@@ -641,7 +652,7 @@
       var id = b.getAttribute('data-del');
       var m = S.menu.filter(function (x) { return x.id === id; })[0];
       S.menu = S.menu.filter(function (x) { return x.id !== id; });
-      saveMenu(); renderMenuAdmin(); if (m) toast('Removed ' + m.name);
+      saveMenu().then(function () { renderMenuAdmin(); if (m) toast('Removed ' + m.name); });
     });
     $('addForm').addEventListener('submit', function (e) {
       e.preventDefault();
@@ -650,19 +661,39 @@
       if (isNaN(price) || price <= 0) { $('addErr').textContent = 'Enter a price in pesos, like 65 or 65.50.'; return; }
       $('addErr').textContent = '';
       S.menu.push({ id: 'u' + Date.now().toString(36), cat: byId('k-newcat').value, name: name, price: price, available: true });
-      saveMenu(); renderMenuAdmin();
+      saveMenu().then(function () { renderMenuAdmin(); });
       byId('k-newname').value = ''; byId('k-newprice').value = '';
-      toast('Added ' + name);
     });
-    $('resetWrap').addEventListener('click', function (e) {
-      if (e.target.closest('[data-k="reset"]')) { pendingReset = true; renderMenuAdmin(); }
-      if (e.target.closest('[data-reset-no]')) { pendingReset = false; renderMenuAdmin(); }
-      if (e.target.closest('[data-reset-yes]')) {
-        ['settings', 'menu', 'orders', 'seq', 'cart'].forEach(store.remove);
-        pendingReset = false; load(); S.view = 'menu'; renderAll(); renderMenuAdmin();
-        toast('Sample data restored');
+    $('adminAccess').addEventListener('click', function () {
+      if (S.isAdmin) {
+        cloud.logout(); S.isAdmin = false;
+        byId('tab-menu').hidden = true;
+        $('adminAccess').textContent = 'Admin login';
+        if (S.view === 'menu') setView('register');
+        toast('Administrator logged out.');
+      } else {
+        byId('adminPassword').value = '';
+        $('adminErr').textContent = '';
+        byId('adminDlg').showModal();
+        byId('adminPassword').focus();
       }
     });
+    $('adminForm').addEventListener('submit', function (e) {
+      e.preventDefault();
+      var button = $('adminSubmit');
+      button.disabled = true; $('adminErr').textContent = 'Checking password…';
+      cloud.login(byId('adminPassword').value).then(function () {
+        S.isAdmin = true;
+        byId('tab-menu').hidden = false;
+        $('adminAccess').textContent = 'Admin logout';
+        byId('adminDlg').close();
+        renderMenuAdmin(); setView('menu');
+        toast('Administrator access granted.');
+      }).catch(function (err) {
+        $('adminErr').textContent = err.message || 'Unable to sign in.';
+      }).finally(function () { button.disabled = false; });
+    });
+    $('adminCancel').addEventListener('click', function () { byId('adminDlg').close(); });
 
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
@@ -678,11 +709,24 @@
   }
 
   // ---------- boot ----------
-  load();
-  var savedTheme = store.get('theme', null);
-  if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
-  bind();
-  renderAll();
-  setView(S.view);
-  tick(); setInterval(tick, 30000);
+  function startApp() {
+    load();
+    var savedTheme = store.get('theme', null);
+    if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+    bind();
+    byId('tab-menu').hidden = true;
+    renderAll();
+    setView(S.view);
+    tick(); setInterval(tick, 30000);
+  }
+  cloud.getMenu().then(function (remote) {
+    if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
+    SAMPLE.settings = remote.settings;
+    SAMPLE.categories = remote.categories;
+    SAMPLE.menu = remote.menu;
+    startApp();
+  }).catch(function (err) {
+    startApp();
+    toast('Using starter menu: ' + err.message);
+  });
 })();

@@ -280,3 +280,14 @@ tr.is-void td.num { text-decoration: line-through; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+
+/* Administrator sign-in */
+dialog.admin-dlg { border: 1px solid var(--line); border-radius: 16px; padding: 0; width: min(420px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,.24); }
+dialog.admin-dlg::backdrop { background: rgba(10, 16, 13, .58); }
+.admin-card { display: grid; gap: 14px; padding: 22px; }
+.admin-card h2 { font-family: var(--f-display); font-size: 1.35rem; }
+.admin-card p { color: var(--muted); }
+.admin-card label { display: grid; gap: 6px; font-weight: 700; }
+.admin-card input { width: 100%; border: 1px solid var(--line); border-radius: 9px; padding: 11px 12px; background: var(--bg); color: var(--ink); }
+.admin-card .err { min-height: 1.2em; color: var(--danger); font-size: .88rem; }

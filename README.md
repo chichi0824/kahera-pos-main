@@ -35,7 +35,8 @@
 | --- | --- |
 | UI | Semantic HTML, modern CSS (grid, custom properties), vanilla JavaScript (ES5-compatible IIFEs) |
 | Money math | `js/money.js`: pure functions, integer centavos, UMD so it runs in browsers and Node |
-| Storage | `localStorage` behind `js/store.js` with an in-memory fallback |
+| Menu storage | GitHub-backed `js/menu-sample.js` through a secure Cloudflare Worker |
+| Local operations | Orders, cart, shift data and theme remain in browser `localStorage` |
 | Offline | Service worker (`sw.js`) + `manifest.webmanifest` |
 | Tests | Plain Node `assert` (`npm test`), no dependencies |
 | Fonts | Bricolage Grotesque, Atkinson Hyperlegible, JetBrains Mono (Google Fonts, with system fallbacks) |
@@ -103,6 +104,10 @@ Example: ₱1,120 bill, 4 diners, 1 senior, VAT-registered → share ₱280, les
 | Colors, fonts, radius | CSS custom properties at the top of `css/styles.css` |
 | Offline cache version | `CACHE` in `sw.js` (bump it on every release) |
 | Storage key prefix | `PREFIX` in `js/store.js` |
+
+## Shared menu setup
+
+The shared menu requires the Cloudflare Worker in `cloudflare-worker/`. Follow its README to configure secrets and deploy it, then set the Worker URL in `js/cloud.js`. Menu reads are public for cashier devices; menu writes require the administrator password. Orders and shifts remain device-local.
 
 ## Deployment
 

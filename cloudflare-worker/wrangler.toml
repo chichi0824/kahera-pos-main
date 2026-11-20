@@ -1,0 +1,9 @@
+name = "kahera-menu-api"
+main = "src/index.js"
+compatibility_date = "2026-11-20"
+
+[vars]
+GITHUB_OWNER = "chichi0824"
+GITHUB_REPO = "kahera-pos-main"
+GITHUB_BRANCH = "main"
+APP_ORIGINS = "https://chichi0824.github.io"
