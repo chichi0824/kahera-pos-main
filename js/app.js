@@ -46,6 +46,13 @@
   function blankCart() {
     return { type: 'dine', table: '', lines: [] };
   }
+  function manilaToday(){return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Manila',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());}
+  function dateShift(dateText,days){var d=new Date(dateText+'T00:00:00Z');d.setUTCDate(d.getUTCDate()+days);return d.toISOString().slice(0,10);}
+  function dateParts(dateText){return dateText.split('-').map(Number);}
+  function dateMonth(dateText){return dateText.slice(0,7);}
+  function monthBounds(monthText){var p=monthText.split('-').map(Number),last=new Date(Date.UTC(p[0],p[1],0)).getUTCDate();return{from:monthText+'-01',to:monthText+'-'+String(last).padStart(2,'0')};}
+  function reportRange(){var d=S.reportDate,p=dateParts(d),from=d,to=d;if(S.reportMode==='week'){var weekday=new Date(d+'T00:00:00Z').getUTCDay(),monday=weekday===0?-6:1-weekday;from=dateShift(d,monday);to=dateShift(from,6);}else if(S.reportMode==='month'){var m=monthBounds(d.slice(0,7));from=m.from;to=m.to;}else if(S.reportMode==='year'){from=p[0]+'-01-01';to=p[0]+'-12-31';}else if(S.reportMode==='custom'){from=S.customFrom||d;to=S.customTo||d;if(from>to){var swap=from;from=to;to=swap;}}return{from:from,to:to};}
+  function formatDate(dateText,opts){return new Date(dateText+'T00:00:00Z').toLocaleDateString('en-PH',Object.assign({timeZone:'UTC',month:'short',day:'numeric',year:'numeric'},opts||{}));}
   function load() {
     // Only the active cart and display preferences stay on this device.
     // Legacy browser orders are left untouched as a local backup; the POS now reads shared orders from D1.
@@ -58,6 +65,13 @@
     S.seq = 0;
     S.nextNo = 'K-0001';
     S.shift = null;
+    S.reportMode = 'day';
+    S.reportDate = manilaToday();
+    S.calendarMonth = S.reportDate.slice(0,7);
+    S.customFrom = S.reportDate;
+    S.customTo = S.reportDate;
+    S.reportOrders = [];
+    S.reportDays = [];
     S.pendingOrder = null;
     S.cart = store.get('cart', null) || blankCart();
     if (!Array.isArray(S.cart.lines)) S.cart.lines = [];
@@ -86,7 +100,7 @@
     });
     root.querySelectorAll('.view').forEach(function (sec) { sec.hidden = sec.id !== 'view-' + v; });
     if (v === 'orders') renderOrders();
-    if (v === 'shift') renderShift();
+    if (v === 'shift') loadReportData();
     if (v === 'menu') renderMenuAdmin();
     renderMobileBar();
   }
@@ -335,58 +349,71 @@
   }
   function findOrder(no) { return S.orders.filter(function (o) { return o.no === no; })[0]; }
 
-  // ---------- shift ----------
-  var pendingShift = false;
-  function renderShift() {
-    var s = M.summarize(S.orders);
-    $('kpis').innerHTML = [
-      ['Net sales', M.peso(s.net), s.count + ' paid orders'],
-      ['Average ticket', M.peso(s.avgTicket), 'per paid order'],
-      ['Items sold', String(s.topItems.reduce(function (n, item) { return n + item.qty; }, 0)), 'total quantity'],
-      ['Voided', String(s.voided), s.voided === 1 ? 'order' : 'orders']
-    ].map(function (k) {
-      return '<div class="panel kpi"><span class="eyebrow">' + k[0] + '</span><b>' + k[1] + '</b><small>' + k[2] + '</small></div>';
-    }).join('');
-
-    // Hourly bars: from the first to the last hour with sales (at least 6 columns).
-    var hours = Object.keys(s.byHour).map(Number);
-    var lo = hours.length ? Math.min.apply(null, hours) : 7;
-    var hi = hours.length ? Math.max.apply(null, hours) : 12;
-    while (hi - lo < 5) { if (lo > 0) lo--; if (hi - lo < 5 && hi < 23) hi++; }
-    var max = 0, h, bars = '', labels = '';
-    for (h = lo; h <= hi; h++) max = Math.max(max, s.byHour[h] || 0);
-    for (h = lo; h <= hi; h++) {
-      var v = s.byHour[h] || 0, pct = max ? Math.round(v / max * 100) : 0;
-      var lab = (h % 12 || 12) + (h < 12 ? 'a' : 'p');
-      bars += '<div class="bar' + (v ? '' : ' zero') + '" style="height:' + Math.max(pct, 1) + '%" title="' + lab + ': ' + M.peso(v) + '">' +
-        (v ? '<span>' + (v >= 100000 ? '₱' + (v / 100000).toFixed(1) + 'k' : '₱' + Math.round(v / 100)) + '</span>' : '') + '</div>';
-      labels += '<span>' + lab + '</span>';
-    }
-    $('bars').innerHTML = bars;
-    $('barLabels').innerHTML = labels;
-
-    $('split').innerHTML = ['cash', 'ewallet', 'card'].map(function (m) {
-      var v = s.byMethod[m] || 0, pct = s.net ? Math.round(v / s.net * 100) : 0;
-      return '<div class="split-row"><span>' + METHOD_LABEL[m] + '</span><span class="split-track"><span class="split-fill" style="width:' + pct + '%;display:block"></span></span><b>' + M.peso(v) + ' · ' + pct + '%</b></div>';
-    }).join('');
-
-    var top = s.topItems.slice(0, 6);
-    $('topItems').innerHTML = top.length
-      ? '<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>' +
-        top.map(function (i) { return '<tr><td>' + esc(i.name) + '<small class="portion-breakdown">Full ' + i.fullQty + ' · Half ' + i.halfQty + '</small></td><td class="num mono">' + i.qty + '</td><td class="num mono">' + M.peso(i.amount) + '</td></tr>'; }).join('') + '</tbody>'
-      : '<tbody><tr><td class="empty">Sales will appear here after the first order.</td></tr></tbody>';
-
-    var ns = $('newShift');
-    var wrap = $('shiftActions');
-    var old = wrap.querySelector('.confirm');
-    if (old) old.remove();
-    ns.hidden = !S.shift || S.shift.status !== 'open' || pendingShift;
-    if (pendingShift) {
-      var c = document.createElement('span');
-      c.className = 'confirm';
-      c.innerHTML = 'Close today’s report now? Sales will stop until the next weekday report opens. <button type="button" class="btn small danger" data-shift-yes>Close report</button><button type="button" class="btn small" data-shift-no>Cancel</button>';
-      wrap.appendChild(c);
-    }
+  // ---------- calendar-based reporting ----------
+  var reportLoadSequence=0;
+  function loadReportData(){
+    var sequence=++reportLoadSequence,period=reportRange(),month=monthBounds(S.calendarMonth);
+    var from=period.from<month.from?period.from:month.from,to=period.to>month.to?period.to:month.to;
+    $('reportRangeLabel').textContent=formatDate(period.from)+(period.from===period.to?'':' – '+formatDate(period.to));
+    $('reportCalendarTitle').textContent=new Date(S.calendarMonth+'-01T00:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'long',year:'numeric'});
+    $('customRange').hidden=S.reportMode!=='custom';
+    byId('reportFrom').value=S.customFrom;byId('reportTo').value=S.customTo;
+    $('reportPeriodModes').querySelectorAll('[data-report-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-report-mode')===S.reportMode));});
+    $('reportLoading').hidden=false;
+    return cloud.getReports(from,to).then(function(data){
+      if(sequence!==reportLoadSequence)return;
+      S.reportDays=data.days||[];S.reportOrders=data.orders||[];
+      var current=reportRange();S.reportOrders=S.reportOrders.filter(function(o){return o.reportDate>=current.from&&o.reportDate<=current.to;});
+      $('reportLoading').hidden=true;renderShift();
+    }).catch(function(error){if(sequence!==reportLoadSequence)return;$('reportLoading').hidden=true;toast('Could not load reports: '+error.message);});
+  }
+  function renderReportCalendar(){
+    var month=monthBounds(S.calendarMonth),first=new Date(month.from+'T00:00:00Z'),offset=(first.getUTCDay()+6)%7,days=Number(month.to.slice(8)),salesByDate={};
+    S.reportOrders.forEach(function(o){var day=o.reportDate||'';if(!day)return;var s=salesByDate[day]||(salesByDate[day]={sales:0,count:0});if(o.status==='void')return;s.sales+=o.totals.total;s.count++;});
+    var daysMeta={};S.reportDays.forEach(function(d){daysMeta[d.date]=d;});
+    var html='<div class="calendar-weekdays">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return'<span>'+x+'</span>';}).join('')+'</div><div class="calendar-days">';
+    for(var i=0;i<offset;i++)html+='<span class="calendar-blank"></span>';
+    for(var n=1;n<=days;n++){var date=S.calendarMonth+'-'+String(n).padStart(2,'0'),summary=salesByDate[date],meta=daysMeta[date],selected=date===S.reportDate,hasSales=!!(summary&&summary.count);html+='<button type="button" class="calendar-day'+(selected?' selected':'')+(hasSales?' has-sales':'')+(meta?' has-report':'')+'" data-calendar-date="'+date+'" aria-label="'+formatDate(date)+', '+(summary?M.peso(summary.sales)+' sales':'no sales')+'"><span>'+n+'</span>'+(hasSales?'<small>'+M.peso(summary.sales,{symbol:false})+'</small>':(meta?'<i></i>':''))+'</button>';}
+    html+='</div>';$('reportCalendar').innerHTML=html;
+  }
+  function renderShift(){
+    var s=M.summarize(S.reportOrders),itemsSold=s.topItems.reduce(function(n,item){return n+item.qty;},0),range=reportRange();
+    renderReportCalendar();
+    $('reportKpis').innerHTML=[
+      ['Net sales',M.peso(s.net),s.count+' paid orders'],
+      ['Gross sales',M.peso(s.gross),'before discounts'],
+      ['Paid orders',String(s.count),'completed transactions'],
+      ['Average order',M.peso(s.avgTicket),'per paid order'],
+      ['Items sold',String(itemsSold),'total quantity'],
+      ['Voided orders',String(s.voided),'excluded from sales'],
+      ['Discounts',M.peso(s.discounts),'Senior / PWD'],
+      ['VAT removed',M.peso(s.vatRemoved),'discounted sales']
+    ].map(function(k){return'<div class="panel kpi"><span class="eyebrow">'+k[0]+'</span><b>'+k[1]+'</b><small>'+k[2]+'</small></div>';}).join('');
+    var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12;
+    while(hi-lo<5){if(lo>0)lo--;if(hi-lo<5&&hi<23)hi++;}
+    var max=0,h,bars='',labels='';for(h=lo;h<=hi;h++)max=Math.max(max,s.byHour[h]||0);
+    for(h=lo;h<=hi;h++){var v=s.byHour[h]||0,pct=max?Math.round(v/max*100):0,lab=(h%12||12)+(h<12?'a':'p');bars+='<div class="bar'+(v?'':' zero')+'" style="height:'+Math.max(pct,1)+'%" title="'+lab+': '+M.peso(v)+'">'+(v?'<span>'+(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100))+'</span>':'')+'</div>';labels+='<span>'+lab+'</span>';}
+    $('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
+    $('split').innerHTML=['cash','ewallet','card'].map(function(m){var v=s.byMethod[m]||0,pct=s.net?Math.round(v/s.net*100):0;return'<div class="split-row"><span>'+METHOD_LABEL[m]+'</span><span class="split-track"><span class="split-fill" style="width:'+pct+'%;display:block"></span></span><b>'+M.peso(v)+' · '+pct+'%</b></div>';}).join('');
+    var top=s.topItems;
+    $('topItems').innerHTML=top.length?'<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>'+top.map(function(i){return'<tr><td>'+esc(i.name)+'<small class="portion-breakdown">Full '+i.fullQty+' · Half '+i.halfQty+'</small></td><td class="num mono">'+i.qty+'</td><td class="num mono">'+M.peso(i.amount)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No item sales in this period.</td></tr></tbody>';
+    var orders=S.reportOrders.slice().sort(function(x,y){return y.ts-x.ts;});
+    $('reportOrdersTable').innerHTML=orders.length?'<thead><tr><th>Order</th><th>Date / Time</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>'+orders.map(function(o){return'<tr class="'+(o.status==='void'?'is-void':'')+'"><td class="mono">'+esc(o.no)+'</td><td>'+new Date(o.ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</td><td>'+METHOD_LABEL[o.method]+'</td><td>'+(o.status==='void'?'Voided':'Paid')+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No transactions found for this period.</td></tr></tbody>';
+    $('reportTransactionCount').textContent=orders.length+' transaction'+(orders.length===1?'':'s');
+  }
+  function changeReportPeriod(delta){
+    if(S.reportMode==='day')S.reportDate=dateShift(S.reportDate,delta);
+    else if(S.reportMode==='week')S.reportDate=dateShift(S.reportDate,delta*7);
+    else if(S.reportMode==='month'){var p=dateParts(S.reportDate),d=new Date(Date.UTC(p[0],p[1]-1+delta,1));S.reportDate=d.toISOString().slice(0,10);}
+    else if(S.reportMode==='year'){var y=dateParts(S.reportDate);S.reportDate=(y[0]+delta)+'-'+S.reportDate.slice(5);}
+    else {S.reportDate=dateShift(S.reportDate,delta);}
+    S.calendarMonth=dateMonth(S.reportDate);if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();
+  }
+  function copyReportCsv(){copyText(M.toCSV(S.reportOrders),'Report CSV copied. Paste it into a spreadsheet.');}
+  function downloadCsv(){
+    var csv=M.toCSV(S.reportOrders),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),range=reportRange();
+    a.href=URL.createObjectURL(blob);a.download='victorias-report-'+range.from+'-to-'+range.to+'.csv';document.body.appendChild(a);a.click();a.remove();
+    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);toast('Report CSV saved.');
   }
 
   function copyText(text, okMsg) {
@@ -483,7 +510,7 @@
     var notice = $('reportNotice');
     if (notice) {
       notice.hidden = !!(S.shift && S.shift.status === 'open');
-      if (!notice.hidden) notice.textContent = 'No daily report is open. Sales are disabled. Reports open automatically at 7:00 AM, Monday to Friday.';
+      if (!notice.hidden) notice.textContent = 'The register opens automatically when today’s business report starts at 7:00 AM, Monday to Friday.';
     }
   }
 
@@ -656,16 +683,16 @@
       }
     });
 
-    $('copyCsv').addEventListener('click', function () { copyText(M.toCSV(S.orders), 'CSV copied. Paste it into a spreadsheet.'); });
-    $('dlCsv').addEventListener('click', downloadCsv);
-    $('newShift').addEventListener('click', function () { pendingShift = true; renderShift(); });
-    $('shiftActions').addEventListener('click', function (e) {
-      if (e.target.closest('[data-shift-no]')) { pendingShift = false; renderShift(); }
-      if (e.target.closest('[data-shift-yes]')) {
-        pendingShift = false;
-        cloud.closeShift(S.shift && S.shift.id).then(function () { return refreshSharedData(); }).then(function () { toast('Daily report closed. Orders remain saved.'); }).catch(function (error) { toast('Could not close the report: ' + error.message); });
-      }
-    });
+    $('copyCsv').addEventListener('click',copyReportCsv);
+    $('dlCsv').addEventListener('click',downloadCsv);
+    $('reportPeriodModes').addEventListener('click',function(e){var b=e.target.closest('[data-report-mode]');if(!b)return;S.reportMode=b.getAttribute('data-report-mode');if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();});
+    $('reportCalendar').addEventListener('click',function(e){var b=e.target.closest('[data-calendar-date]');if(!b)return;S.reportDate=b.getAttribute('data-calendar-date');S.reportMode='day';S.calendarMonth=dateMonth(S.reportDate);loadReportData();});
+    $('calendarPrev').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-2,1));S.calendarMonth=d.toISOString().slice(0,7);loadReportData();});
+    $('calendarNext').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1],1));S.calendarMonth=d.toISOString().slice(0,7);loadReportData();});
+    $('reportPrev').addEventListener('click',function(){changeReportPeriod(-1);});
+    $('reportNext').addEventListener('click',function(){changeReportPeriod(1);});
+    $('reportToday').addEventListener('click',function(){S.reportDate=manilaToday();S.calendarMonth=dateMonth(S.reportDate);S.reportMode='day';loadReportData();});
+    $('applyCustomRange').addEventListener('click',function(){var from=byId('reportFrom').value,to=byId('reportTo').value;if(!from||!to){toast('Choose both start and end dates.');return;}if(from>to){toast('Start date must be before end date.');return;}S.customFrom=from;S.customTo=to;S.reportDate=from;S.calendarMonth=dateMonth(from);S.reportMode='custom';loadReportData();});
 
     $('settingsForm').addEventListener('submit', function (e) { e.preventDefault(); });
     $('settingsForm').addEventListener('change', function () {
@@ -805,7 +832,7 @@
       S.nextNo = results[1];
       renderBrand();
       if (S.view === 'orders') renderOrders();
-      if (S.view === 'shift') renderShift();
+      if (S.view === 'shift') loadReportData();
       renderCart();
     }).finally(function () { refreshInFlight = false; });
   }
