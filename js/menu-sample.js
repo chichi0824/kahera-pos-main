@@ -66,13 +66,6 @@
       "available": true
     },
     {
-      "id": "m12",
-      "cat": "merienda",
-      "name": "Ensaymada",
-      "price": 4500,
-      "available": true
-    },
-    {
       "id": "m13",
       "cat": "merienda",
       "name": "Banana Cue",
