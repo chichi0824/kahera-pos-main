@@ -85,7 +85,7 @@ function validateOrder(b) {
     if (!line || !text(line.id, 80) || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99) throw new Error('An order item is invalid.');
   }
   if (!b.totals || !['none', 'senior', 'pwd'].includes(b.totals.discountKind) ||
-      !Number.isInteger(b.totals.diners) || !Number.isInteger(b.totals.idHolders)) throw new Error('Discount details are invalid.');
+      !Number.isInteger(b.totals.diners) || b.totals.diners < 1 || b.totals.diners > 99 || !Number.isInteger(b.totals.idHolders) || b.totals.idHolders < 0 || b.totals.idHolders > b.totals.diners) throw new Error('Discount details are invalid.');
   if (!['cash', 'ewallet', 'card'].includes(b.method) ||
       !Number.isSafeInteger(b.tendered) || b.tendered < 1) throw new Error('Payment details are invalid.');
   if (b.method !== 'cash' && !text(b.ref, 40)) throw new Error('Payment reference is required.');
@@ -105,7 +105,7 @@ async function createOrder(db,b,deviceId) {
   if (!settingsRow) throw new Error('The shared menu is not initialized.');
   const settings = JSON.parse(settingsRow.settings_json);
   const totals = calculateTotals(menuRows, settings, b.totals.discountKind, b.totals.diners, b.totals.idHolders);
-  if (b.totals.total !== totals.total) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
+  if (b.totals.total !== totals.total || b.totals.discountKind !== totals.discountKind) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
   if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
   const shift = await ensureShift(db,deviceId);
   const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
