@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m08",
-      "cat": "meals",
-      "name": "Bangus Sisig",
-      "price": 15000,
-      "available": true
-    },
-    {
       "id": "m09",
       "cat": "meals",
       "name": "Pancit Bihon (for 2)",
