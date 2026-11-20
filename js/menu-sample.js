@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m13",
-      "cat": "merienda",
-      "name": "Banana Cue",
-      "price": 2000,
-      "available": true
-    },
-    {
       "id": "m14",
       "cat": "extras",
       "name": "Extra Rice",
