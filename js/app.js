@@ -271,7 +271,7 @@
     h += '<div class="row"><span>' + esc(o.no) + '</span><span>' + new Date(o.ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</span></div>';
     h += '<div class="row"><span>' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · Table ' + esc(o.table) : '') : 'Take-out') + '</span><span>' + METHOD_LABEL[o.method] + '</span></div><hr>';
     o.lines.forEach(function (l) {
-      h += '<div class="row"><span>' + l.qty + ' × ' + (l.portion === 'half' ? 'Half ' : '') + esc(l.name) + '</span><span>' + M.peso(l.price * l.qty, { symbol: false }) + '</span></div>';
+      h += '<div class="row"><span>' + l.qty + ' × ' + (l.variantName ? esc(l.name) + ' · ' + esc(l.variantName) : (l.portion === 'half' ? 'Half ' : '') + esc(l.name)) + '</span><span>' + M.peso(l.price * l.qty, { symbol: false }) + '</span></div>';
     });
     h += '<hr><div class="row"><span>Subtotal</span><span>' + M.peso(t.gross, { symbol: false }) + '</span></div>';
     if (t.discountKind !== 'none') {
@@ -311,7 +311,7 @@
           '</td>' +
         '<td class="mono">' + timeOf(o.ts) + '</td>' +
         '<td class="hide-sm">' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · T' + esc(o.table) : '') : 'Take-out') + '</td>' +
-        '<td class="hide-sm">' + o.lines.map(function (l) { return l.qty + '× ' + (l.portion === 'half' ? 'Half ' : '') + esc(l.name); }).join(', ') + '</td>' +
+        '<td class="hide-sm">' + o.lines.map(function (l) { return l.qty + '× ' + (l.variantName ? esc(l.name) + ' · ' + esc(l.variantName) : (l.portion === 'half' ? 'Half ' : '') + esc(l.name)); }).join(', ') + '</td>' +
         '<td class="hide-sm">' + METHOD_LABEL[o.method] + '</td>' +
         '<td class="num mono">' + M.peso(o.totals.total) + '</td>' +
         '<td class="num"><div class="row-actions">' +
@@ -452,7 +452,7 @@
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
     });
-    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="7" class="empty">No items in this category yet.</td></tr></tbody>';
+    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="8" class="empty">No items in this category yet.</td></tr></tbody>';
   }
   var menuSaveChain = Promise.resolve();
   function saveMenu() {
