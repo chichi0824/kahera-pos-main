@@ -693,7 +693,7 @@
         return;
       }
       if (f === 'name') { var n = e.target.value.trim(); if (n) m.name = n; else e.target.value = m.name; }
-      if (f === 'cat') {m.cat = e.target.value;if(!isDrinksCategory(m.cat))m.variants=[];else{m.halfPrice=null;if(m.variants&&m.variants.length)m.price=m.variants[0].price;}}
+      if (f === 'cat') {m.cat = e.target.value;if(!isDrinksCategory(m.cat))m.variants=[];else{m.halfPrice=null;if(!m.variants||!m.variants.length)m.variants=[{id:'vregular-'+Date.now().toString(36),name:'Regular',price:m.price,available:true}];m.price=m.variants[0].price;}}
       if (f === 'available') m.available = e.target.checked;
       if (f === 'soldOut') m.soldOut = e.target.checked;
       if (f === 'cat' && !isDrinksCategory(m.cat)) m.variants = [];
@@ -813,7 +813,7 @@
     if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
     SAMPLE.settings = remote.settings;
     SAMPLE.categories = remote.categories;
-    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;var drink=remote.categories.some(function(c){return c.id===m.cat&&(/^(drinks?|beverages?)$/i.test(String(c.name).trim())||/^(drinks?|beverages?)$/i.test(String(c.id).trim()));});m.variants=drink?(m.variants||[]).map(function(v){v.available=v.available!==false;return v;}):[];if(drink){m.halfPrice=null;if(m.variants.length)m.price=m.variants[0].price;}return m;});
+    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;var drink=remote.categories.some(function(c){return c.id===m.cat&&(/^(drinks?|beverages?)$/i.test(String(c.name).trim())||/^(drinks?|beverages?)$/i.test(String(c.id).trim()));});m.variants=drink?(m.variants||[]).map(function(v){v.available=v.available!==false;return v;}):[];if(drink){if(!m.variants.length)m.variants=[{id:'vregular-'+m.id,name:'Regular',price:m.price,available:true}];m.halfPrice=null;m.price=m.variants[0].price;}return m;});
     startApp();
   }).catch(function (err) {
     startApp();
