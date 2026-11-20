@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m02",
-      "cat": "drinks",
-      "name": "Iced Spanish Latte",
-      "price": 12000,
-      "available": true
-    },
-    {
       "id": "m03",
       "cat": "drinks",
       "name": "Tablea Hot Choco",
