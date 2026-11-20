@@ -75,7 +75,7 @@
             aria-selected="false"
             data-view="shift"
           >
-            Shift
+            Daily Reports
           </button>
           <button
             role="tab"
@@ -132,6 +132,7 @@
           aria-labelledby="tab-register"
         >
           <div class="catalog">
+            <p class="report-notice" data-k="reportNotice" role="status" hidden></p>
             <div class="catalog-tools">
               <label class="search" for="k-search"
                 ><span class="sr-only">Search the menu</span>
@@ -289,7 +290,7 @@
         >
           <div class="view-head">
             <div>
-              <p class="eyebrow">This shift</p>
+              <p class="eyebrow">Current daily report</p>
               <h2>Orders</h2>
             </div>
             <p data-k="ordersNote"></p>
@@ -309,8 +310,8 @@
         >
           <div class="view-head">
             <div>
-              <p class="eyebrow">Shift report · not a BIR Z-reading</p>
-              <h2>Shift summary</h2>
+              <p class="eyebrow">Daily sales report · not a BIR Z-reading</p>
+              <h2>Daily report</h2>
             </div>
             <div class="actions-row" data-k="shiftActions">
               <button type="button" class="btn small" data-k="copyCsv">
@@ -320,7 +321,7 @@
                 Download CSV
               </button>
               <button type="button" class="btn small danger" data-k="newShift">
-                Start new shift
+                Close report now
               </button>
             </div>
           </div>
