@@ -1,67 +1,30 @@
-/** Kahera cloud menu client. Configure API_URL after deploying the Worker. */
+/** Kahera cloud client: shared menu, orders and shifts use Cloudflare D1. */
 (function (root) {
   "use strict";
   var API_URL = "https://kahera-menu-api.kahera-menu-api.workers.dev";
-  var token = null;
-
-  function request(path, options) {
-    if (!API_URL || API_URL.indexOf("YOUR-KAHERA-WORKER") !== -1) {
-      return Promise.reject(
-        new Error("Cloudflare Worker URL has not been configured yet."),
-      );
-    }
-    options = options || {};
-    options.headers = options.headers || {};
-    options.headers["Content-Type"] = "application/json";
-    if (token) options.headers.Authorization = "Bearer " + token;
-    return fetch(API_URL.replace(/\/$/, "") + path, options).then(
-      function (response) {
-        return response
-          .json()
-          .catch(function () {
-            return {};
-          })
-          .then(function (body) {
-            if (!response.ok)
-              throw new Error(
-                body.error || "Request failed (" + response.status + ").",
-              );
-            return body;
-          });
-      },
-    );
+  var token = null, DEVICE_KEY = "kahera:v1:device-id";
+  function uuid() { return root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : "k-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2); }
+  function getDeviceId() {
+    try { var saved=root.localStorage.getItem(DEVICE_KEY);if(saved)return saved;var created=uuid();root.localStorage.setItem(DEVICE_KEY,created);return created; }
+    catch(_){return uuid();}
   }
-
-  root.KaheraCloud = {
-    getMenu: function () {
-      return request("/api/menu", { method: "GET", cache: "no-store" });
-    },
-    login: function (password) {
-      return request("/api/login", {
-        method: "POST",
-        body: JSON.stringify({ password: password }),
-      }).then(function (body) {
-        if (!body.token)
-          throw new Error("The server did not return an admin session.");
-        token = body.token;
-        return true;
-      });
-    },
-    logout: function () {
-      token = null;
-    },
-    isAdmin: function () {
-      return !!token;
-    },
-    saveMenu: function (payload) {
-      if (!token)
-        return Promise.reject(
-          new Error("Please log in as administrator first."),
-        );
-      return request("/api/menu", {
-        method: "PUT",
-        body: JSON.stringify(payload),
-      });
-    },
+  function request(path,options) {
+    options=options||{};options.headers=options.headers||{};options.headers["Content-Type"]="application/json";
+    if(token)options.headers.Authorization="Bearer "+token;
+    return fetch(API_URL.replace(/\/$/,"")+path,options).then(function(r){return r.json().catch(function(){return {};}).then(function(b){if(!r.ok)throw new Error(b.error||"Request failed ("+r.status+").");return b;});});
+  }
+  root.KaheraCloud={
+    getDeviceId:getDeviceId,newId:uuid,
+    getMenu:function(){return request("/api/menu",{method:"GET",cache:"no-store"});},
+    login:function(password){return request("/api/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){if(!b.token)throw new Error("The server did not return an administrator session.");token=b.token;return true;});},
+    logout:function(){token=null;},isAdmin:function(){return !!token;},
+    saveMenu:function(payload){if(!token)return Promise.reject(new Error("Please log in as administrator first."));return request("/api/menu",{method:"PUT",body:JSON.stringify(payload)});},
+    startShift:function(deviceId){return request("/api/shifts/start",{method:"POST",body:JSON.stringify({deviceId:deviceId||getDeviceId()})}).then(function(b){return b.shift;});},
+    getCurrentShift:function(){return request("/api/shifts/current",{method:"GET",cache:"no-store"}).then(function(b){return b.shift;});},
+    closeShift:function(shiftId){return request("/api/shifts/close",{method:"POST",body:JSON.stringify({shiftId:shiftId})});},
+    getOrders:function(shiftId){return request("/api/orders"+(shiftId?"?shiftId="+encodeURIComponent(shiftId):""),{method:"GET",cache:"no-store"}).then(function(b){return b.orders||[];});},
+    getNextNo:function(){return request("/api/orders/next-number",{method:"GET",cache:"no-store"}).then(function(b){return b.no;});},
+    createOrder:function(order){var payload=Object.assign({},order,{id:order.id||uuid(),deviceId:order.deviceId||getDeviceId()});return request("/api/orders",{method:"POST",body:JSON.stringify(payload)}).then(function(b){return b.order;});},
+    voidOrder:function(orderId){return request("/api/orders/"+encodeURIComponent(orderId)+"/void",{method:"POST",body:"{}"}).then(function(b){return b.order;});}
   };
-})(typeof window !== "undefined" ? window : this);
+})(typeof window!=="undefined"?window:this);
