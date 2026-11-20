@@ -143,7 +143,8 @@
       var h = new Date(o.ts).getHours();
       s.byHour[h] = (s.byHour[h] || 0) + o.totals.total;
       o.lines.forEach(function (l) {
-        var it = items[l.name] || (items[l.name] = { name: l.name, qty: 0, amount: 0 });
+        var itemName = (l.portion === 'half' ? 'Half ' : '') + l.name;
+        var it = items[itemName] || (items[itemName] = { name: itemName, qty: 0, amount: 0 });
         it.qty += l.qty;
         it.amount += l.price * l.qty;
       });
@@ -168,7 +169,7 @@
       var p = function (c) { return (c / 100).toFixed(2); };
       return [
         o.no, new Date(o.ts).toISOString(), o.type, o.table || '',
-        o.lines.map(function (l) { return l.qty + 'x ' + l.name; }).join('; '),
+        o.lines.map(function (l) { return l.qty + 'x ' + (l.portion === 'half' ? 'Half ' : '') + l.name; }).join('; '),
         p(o.totals.gross), o.totals.discountKind, p(o.totals.discount), p(o.totals.vatRemoved),
         p(o.totals.total), o.method, o.ref || '', o.status
       ].map(csvCell).join(',');
