@@ -393,3 +393,7 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
   .custom-report-range { grid-template-columns: minmax(0,1fr); }
   .custom-report-range button { grid-column: auto; }
 }
+
+.report-calendar .calendar-day small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.report-summary .bars { overflow-x: auto; grid-auto-columns: minmax(24px,1fr); }
+.report-summary .bar-labels { overflow-x: auto; grid-auto-columns: minmax(24px,1fr); }
