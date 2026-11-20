@@ -60,7 +60,7 @@
     S.settings = clone(SAMPLE.settings);
     S.categories = clone(SAMPLE.categories);
     S.menu = clone(SAMPLE.menu);
-    S.isAdmin = false;
+    S.isAdmin = true;
     S.orders = [];
     S.seq = 0;
     S.nextNo = 'K-0001';
@@ -92,7 +92,6 @@
 
   // ---------- views ----------
   function setView(v) {
-    if (v === 'menu' && !S.isAdmin) { v = 'register'; toast('Administrator login is required to manage the menu.'); }
     S.view = v; store.set('view', v);
     root.querySelectorAll('[data-view]').forEach(function (b) {
       var on = b.getAttribute('data-view') === v;
@@ -764,37 +763,6 @@
       .then(function(){renderMenuAdmin();byId('k-newname').value='';byId('k-newprice').value='';byId('k-newhalfprice').value='';byId('k-newvariants').querySelector('.variant-editor-list').innerHTML='';byId('k-newimage').value='';updateNewVariantControl();})
         .catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
-    $('adminAccess').addEventListener('click', function () {
-      if (S.isAdmin) {
-        cloud.logout(); S.isAdmin = false;
-        byId('tab-menu').hidden = true;
-        $('adminAccess').textContent = 'Admin login';
-        if (S.view === 'menu') setView('register');
-        toast('Administrator logged out.');
-      } else {
-        byId('adminPassword').value = '';
-        $('adminErr').textContent = '';
-        byId('adminDlg').showModal();
-        byId('adminPassword').focus();
-      }
-    });
-    $('adminForm').addEventListener('submit', function (e) {
-      e.preventDefault();
-      var button = $('adminSubmit');
-      button.disabled = true; $('adminErr').textContent = 'Checking password…';
-      cloud.login(byId('adminPassword').value).then(function () {
-        S.isAdmin = true;
-        byId('tab-menu').hidden = false;
-        $('adminAccess').textContent = 'Admin logout';
-        byId('adminDlg').close();
-        renderMenuAdmin(); setView('menu');
-        toast('Administrator access granted.');
-      }).catch(function (err) {
-        $('adminErr').textContent = err.message || 'Unable to sign in.';
-      }).finally(function () { button.disabled = false; });
-    });
-    $('adminCancel').addEventListener('click', function () { byId('adminDlg').close(); });
-
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
       var cur = de.getAttribute('data-theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
