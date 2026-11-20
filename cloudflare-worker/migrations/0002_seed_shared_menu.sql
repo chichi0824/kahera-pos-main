@@ -11,7 +11,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_shifts_one_open
 ON shifts(status) WHERE status = 'open';
 
 INSERT OR IGNORE INTO store_settings (id, settings_json)
-VALUES (1, '{"bizName":"Kapehan sa Lantaw","bizNote":"Sample café · Valencia City, Bukidnon","vatRegistered":true}');
+VALUES (1, '{"bizName":"Karinderya ng","bizNote":"Sta. Cruz, Laguna","vatRegistered":true}');
 
 INSERT OR IGNORE INTO menu_categories (id, name, sort_order) VALUES
 ('drinks', 'Drinks', 0),
