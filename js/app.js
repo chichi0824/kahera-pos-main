@@ -101,6 +101,7 @@
     if(n==='ulam'||n==='meals')return 0;if(n==='merienda')return 1;if(n==='extra'||n==='extras')return 2;if(n==='drinks'||n==='drink')return 3;return 4;
   }
   function orderedCategories(){return S.categories.slice().sort(function(x,y){return categoryRank(x)-categoryRank(y)||x.name.localeCompare(y.name);});}
+  function categoryLabel(c){return String(c.name).toLowerCase()==='extras'?'Extra':c.name;}
   function renderCats(){
     var html='<button type="button" class="chip" data-cat="all" aria-pressed="'+(S.cat==='all')+'">All</button>';
     orderedCategories().forEach(function(c){html+='<button type="button" class="chip" data-cat="'+esc(c.id)+'" aria-pressed="'+(S.cat===c.id)+'">'+esc(c.name)+'</button>';});
@@ -123,7 +124,7 @@
     if(S.cat!=='all'){$('grid').innerHTML=visible.map(function(m){return renderTile(m,bumpId);}).join('');return;}
     $('grid').innerHTML=orderedCategories().map(function(cat){
       var items=visible.filter(function(m){return m.cat===cat.id;});if(!items.length)return '';
-      return '<section class="category-section"><header class="category-heading"><h3>'+esc(cat.name)+'</h3><span>'+items.length+(items.length===1?' item':' items')+'</span></header><div class="grid category-grid">'+items.map(function(m){return renderTile(m,bumpId);}).join('')+'</div></section>';
+      return '<section class="category-section"><header class="category-heading"><h3>'+esc(categoryLabel(cat))+'</h3><span>'+items.length+(items.length===1?' item':' items')+'</span></header><div class="grid category-grid">'+items.map(function(m){return renderTile(m,bumpId);}).join('')+'</div></section>';
     }).join('');
   }
 
@@ -490,7 +491,7 @@
     if(Array.isArray(m.variants)&&m.variants.length&&!variant){showVariantPicker(m);return;}
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
     var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.price===price;})[0];
-    if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:price,fullPrice:price,halfPrice:null,portion:'full',variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',qty:1});
+    if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:price,fullPrice:price,halfPrice:null,portion:'full',variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
     saveCart();renderCart();renderGrid(id);
   }
   var choosingItemId=null;
