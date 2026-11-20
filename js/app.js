@@ -710,6 +710,7 @@
         e.target.value = hp === null ? '' : (hp / 100).toFixed(2);
       }
       
+      if(f==='cat'){saveMenu().then(renderMenuAdmin);return;}
       saveMenu();
     });
     $('menuTable').addEventListener('click', function (e) {
