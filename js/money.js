@@ -143,9 +143,11 @@
       var h = new Date(o.ts).getHours();
       s.byHour[h] = (s.byHour[h] || 0) + o.totals.total;
       o.lines.forEach(function (l) {
-        var itemName = (l.portion === 'half' ? 'Half ' : '') + l.name;
-        var it = items[itemName] || (items[itemName] = { name: itemName, qty: 0, amount: 0 });
+        var key = l.id || l.name;
+        var it = items[key] || (items[key] = { name: l.name, qty: 0, fullQty: 0, halfQty: 0, amount: 0 });
         it.qty += l.qty;
+        if (l.portion === 'half') it.halfQty += l.qty;
+        else it.fullQty += l.qty;
         it.amount += l.price * l.qty;
       });
     });
