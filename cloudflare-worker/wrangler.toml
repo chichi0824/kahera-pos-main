@@ -7,3 +7,8 @@ GITHUB_OWNER = "chichi0824"
 GITHUB_REPO = "kahera-pos-main"
 GITHUB_BRANCH = "main"
 APP_ORIGINS = "https://chichi0824.github.io"
+
+[[d1_databases]]
+binding = "kahera_db"
+database_name = "kahera-db"
+database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"
