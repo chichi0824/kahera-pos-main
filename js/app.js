@@ -351,8 +351,9 @@
   function findOrder(no) { return S.orders.filter(function (o) { return o.no === no; })[0]; }
 
   // ---------- calendar-based reporting ----------
-  var reportLoadSequence=0;
+  var reportLoadSequence=0,lastReportRefresh=0;
   function loadReportData(){
+    lastReportRefresh=Date.now();
     var sequence=++reportLoadSequence,period=reportRange(),month=monthBounds(S.calendarMonth);
     var from=period.from<month.from?period.from:month.from,to=period.to>month.to?period.to:month.to;
     $('reportRangeLabel').textContent=formatDate(period.from)+(period.from===period.to?'':' – '+formatDate(period.to));
@@ -832,7 +833,7 @@
       S.nextNo = results[1];
       renderBrand();
       if (S.view === 'orders') renderOrders();
-      if (S.view === 'shift') loadReportData();
+      if (S.view === 'shift' && reportRange().to >= manilaToday() && Date.now()-lastReportRefresh>30000) loadReportData();
       renderCart();
     }).finally(function () { refreshInFlight = false; });
   }
