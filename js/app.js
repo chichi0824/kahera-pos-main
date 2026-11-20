@@ -253,11 +253,13 @@
       ref = byId('k-ref').value.trim();
       if (ref.length < 4) { err.textContent = 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
     }
-    if (!S.pendingOrder) {
-      S.pendingOrder = {
-        id: cloud.newId(), type: S.cart.type, table: S.cart.type === 'dine' ? S.cart.table : '',
-        lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered, ref: ref
-      };
+    var orderSnapshot = {
+      type: S.cart.type, table: S.cart.type === 'dine' ? S.cart.table : '',
+      lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered, ref: ref
+    };
+    var fingerprint = JSON.stringify(orderSnapshot);
+    if (!S.pendingOrder || S.pendingOrder.fingerprint !== fingerprint) {
+      S.pendingOrder = Object.assign({ id: cloud.newId(), fingerprint: fingerprint }, orderSnapshot);
     }
     S.savingSale = true;
     $('complete').disabled = true;
