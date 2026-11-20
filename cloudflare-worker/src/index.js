@@ -29,6 +29,7 @@ function validateMenu(b) {
     const variants=Array.isArray(m.variants)?m.variants:[];
     const isDrinks=/^(drinks?|beverages?)$/i.test(String(cats.get(m.cat)).trim())||/^(drinks?|beverages?)$/i.test(String(m.cat).trim());
     if(variants.length&&!isDrinks)throw new Error('Price options can only be added to Drinks items.');
+    if(isDrinks&&(!variants.length||m.halfPrice!==null&&m.halfPrice!==undefined||m.price!==variants[0].price))throw new Error('Drinks must use individual variants only, without default or half-order prices.');
     if(variants.length>20)throw new Error('A menu item can have no more than 20 price options.');
     const variantIds=new Set(),variantNames=new Set();
     for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean'))throw new Error('A menu drink variant is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
