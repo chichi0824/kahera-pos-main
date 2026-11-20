@@ -477,19 +477,17 @@
     updateNewVariantControl();
     $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(categoryLabel(c)) + '</button>'; }).join('');
     var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
-    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Price / Drink variants</th><th class="num">Half ₱</th><th>Available today</th><th>Sold out</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Item</th><th class="hide-sm">Category</th><th>Pricing / Variants</th><th>Status</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     visibleMenu.forEach(function (m) {
       h += '<tr data-item="' + esc(m.id) + '">' +
-        '<td><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"></td>' +
-        '<td class="menu-photo-cell">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<input type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></td>' +
+        '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
         '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
-        (isDrinksCategory(m.cat)?'<td colspan="2" class="drink-variants-cell">'+renderVariantEditor(m.variants)+'</td>':'<td class="num price"><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></td><td class="num price"><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="Optional" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></td>') +
-        '<td><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label></td>' +
-        '<td><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></td>' +
+        (isDrinksCategory(m.cat)?'<td class="drink-variants-cell">'+renderVariantEditor(m.variants)+'</td>':'<td class="menu-pricing-cell"><label><span>Full ₱</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half ₱</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="—" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label></td>') +
+        '<td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>' +
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
     });
-    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="8" class="empty">No items in this category yet.</td></tr></tbody>';
+    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="5" class="empty">No items in this category yet.</td></tr></tbody>';
   }
   var menuSaveChain = Promise.resolve();
   function saveMenu() {
