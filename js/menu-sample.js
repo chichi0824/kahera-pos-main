@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m10",
-      "cat": "merienda",
-      "name": "Turon",
-      "price": 2500,
-      "available": true
-    },
-    {
       "id": "m11",
       "cat": "merienda",
       "name": "Puto Maya & Sikwate",
