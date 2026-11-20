@@ -336,3 +336,14 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
 .variant-option:hover { border-color: var(--accent); background: var(--accent-soft); }
 .variant-option b { font-family: var(--f-mono); white-space: nowrap; }
 @media (max-width: 560px) { .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* Individual drink variant editor */
+.drink-variants-cell { min-width: 290px; }
+.drink-variant-manager { display: grid; gap: 8px; }
+.variant-editor-list { display: grid; gap: 7px; }
+.variant-edit-row { display: grid; grid-template-columns: minmax(70px,1fr) minmax(65px,.65fr) auto auto; gap: 7px; align-items: center; }
+.variant-edit-row input:not([type="checkbox"]) { min-width: 0; width: 100%; padding: 7px 8px; font-size: .82rem; }
+.variant-edit-row .check { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; font-size: .76rem; }
+.variant-edit-row .check input { width: 16px; height: 16px; }
+.variant-edit-row .btn { padding: 5px 8px; }
+@media (max-width: 560px) { .variant-edit-row { grid-template-columns: minmax(70px,1fr) minmax(65px,.7fr); } .variant-edit-row .check { grid-column: 1; } .variant-edit-row .btn { grid-column: 2; justify-self: end; } }
