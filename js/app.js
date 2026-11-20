@@ -45,26 +45,10 @@
   function blankCart() {
     return { type: 'dine', table: '', lines: [], disc: 'none', diners: 1, ids: 1 };
   }
-  function seedOrders(menu, settings) {
-    var now = Date.now(), seq = 0;
-    var find = function (id) { return menu.filter(function (m) { return m.id === id; })[0]; };
-    var orders = SAMPLE.orders.map(function (row) {
-      var lines = row[3].map(function (p) { var m = find(p[0]); return m ? { id: m.id, name: m.name, price: m.price, qty: p[1] } : null; }).filter(Boolean);
-      if (!lines.length) return null;
-      var totals = M.computeTotals(lines, { vatRegistered: settings.vatRegistered, discount: row[5], diners: row[6], idHolders: row[7] });
-      var tendered = row[4] === 'cash' ? M.quickCash(totals.total)[1] || totals.total : totals.total;
-      seq++;
-      return {
-        no: 'K-' + pad(seq), ts: now - row[0] * 60000, type: row[1], table: row[2], lines: lines,
-        totals: totals, method: row[4], tendered: tendered, change: tendered - totals.total,
-        ref: row[4] === 'cash' ? '' : 'SAMPLE-' + (4000 + seq * 137), status: 'paid', sample: true
-      };
-    }).filter(Boolean);
-    return { orders: orders, seq: seq };
-  }
   function load() {
     // Only the active cart and display preferences stay on this device.
-    store.remove('orders'); store.remove('seq'); store.remove('menu'); store.remove('settings');
+    // Legacy browser orders are left untouched as a local backup; the POS now reads shared orders from D1.
+    store.remove('menu'); store.remove('settings');
     S.settings = clone(SAMPLE.settings);
     S.categories = clone(SAMPLE.categories);
     S.menu = clone(SAMPLE.menu);
