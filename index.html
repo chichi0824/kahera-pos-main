@@ -370,8 +370,9 @@
             </p>
           </div>
           <div class="menu-admin" style="margin-top: 12px">
-            <div class="panel table-wrap">
-              <table class="data" data-k="menuTable"></table>
+            <div class="panel menu-list-panel">
+              <div class="menu-admin-filters" data-k="menuAdminFilters" role="group" aria-label="Filter menu by category"></div>
+              <div class="table-wrap"><table class="data" data-k="menuTable"></table></div>
             </div>
             <div class="form-grid">
               <form class="panel card-pad" data-k="settingsForm">
@@ -415,6 +416,8 @@
                     inputmode="decimal"
                     placeholder="75.00"
                 /></label>
+                <label for="k-newimage">Item photo (optional)<input id="k-newimage" type="file" accept="image/*" /></label>
+                <p class="hint">Photos are resized and compressed before saving.</p>
                 <p class="err" data-k="addErr" role="alert"></p>
                 <button class="btn primary" type="submit">Add to menu</button>
               </form>
