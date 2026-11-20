@@ -415,7 +415,7 @@
   function compressMenuImage(file) {
     return new Promise(function (resolve, reject) {
       if (!file) { resolve(''); return; }
-      if (!/^image\\//.test(file.type)) { reject(new Error('Choose an image file.')); return; }
+      if (!/^image\//.test(file.type)) { reject(new Error('Choose an image file.')); return; }
       if (file.size > 8 * 1024 * 1024) { reject(new Error('Choose an image smaller than 8 MB.')); return; }
       var url = URL.createObjectURL(file), img = new Image();
       img.onload = function () {
