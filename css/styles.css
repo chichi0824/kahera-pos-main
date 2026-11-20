@@ -296,3 +296,19 @@ dialog.admin-dlg::backdrop { background: rgba(10, 16, 13, .58); }
 .portion-wrap { display: inline-flex; margin-top: 4px; }
 .portion-select { font: inherit; font-size: .78rem; padding: 3px 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--panel); color: var(--ink); }
 .portion-label { display: inline-block; margin-top: 4px; font-size: .78rem; color: var(--muted); }
+
+
+/* Category management and menu photos */
+.menu-list-panel { overflow: hidden; }
+.menu-admin-filters { display: flex; flex-wrap: wrap; gap: 7px; padding: 12px; border-bottom: 1px solid var(--line); }
+.menu-admin-filters .chip { border: 1px solid var(--line); background: var(--surface); color: var(--muted); border-radius: 999px; padding: 6px 12px; font-size: .84rem; font-weight: 700; }
+.menu-admin-filters .chip[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); border-color: var(--accent); }
+.tile { overflow: hidden; }
+.tile-photo { display: block; width: 100%; height: 92px; object-fit: cover; border-radius: 9px; margin-bottom: 8px; }
+.tile-photo.placeholder { display: grid; place-items: center; background: var(--surface-2); font-size: 2rem; }
+.tile.has-photo { padding-top: 8px; }
+.menu-photo-cell { min-width: 112px; }
+.menu-thumb { display: block; width: 64px; height: 48px; object-fit: cover; border-radius: 7px; background: var(--surface-2); margin-bottom: 5px; }
+.menu-thumb.placeholder { display: grid; place-items: center; font-size: 1.3rem; }
+.menu-photo-cell input[type="file"] { max-width: 145px; font-size: .72rem; }
+@media (max-width: 560px) { .tile-photo { height: 76px; } .menu-photo-cell input[type="file"] { max-width: 112px; } }
