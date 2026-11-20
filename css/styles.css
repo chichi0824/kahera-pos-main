@@ -377,6 +377,32 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
 .variant-edit-row .btn { padding: 5px 8px; }
 @media (max-width: 560px) { .variant-edit-row { grid-template-columns: minmax(70px,1fr) minmax(65px,.7fr); } .variant-edit-row .check { grid-column: 1; } .variant-edit-row .btn { grid-column: 2; justify-self: end; } }
 
+/* Keep menu pricing content inside its own flexible table column */
+.menu-admin table.data col.menu-col-item { width: 30%; }
+.menu-admin table.data col.menu-col-category { width: 12%; }
+.menu-admin table.data col.menu-col-pricing { width: 30%; }
+.menu-admin table.data col.menu-col-status { width: 22%; }
+.menu-admin table.data col.menu-col-delete { width: 6%; }
+.menu-admin table.data td.drink-variants-cell,
+.menu-admin table.data td.menu-pricing-cell { width: auto; min-width: 0; max-width: 0; }
+.menu-admin table.data .variant-editor-list,
+.menu-admin table.data .variant-edit-row { width: 100%; min-width: 0; }
+.menu-admin table.data .variant-edit-row {
+  grid-template-columns: minmax(0, 1fr) minmax(0, .75fr);
+  gap: 6px;
+}
+.menu-admin table.data .variant-edit-row .check { min-width: 0; }
+.menu-admin table.data .variant-edit-row .btn { justify-self: end; }
+.menu-admin table.data .menu-pricing-cell label { min-width: 0; flex: 1 1 40%; }
+@media (max-width: 760px) {
+  .menu-admin table.data { min-width: 660px; }
+  .menu-admin table.data col.menu-col-item { width: 28%; }
+  .menu-admin table.data col.menu-col-category { width: 12%; }
+  .menu-admin table.data col.menu-col-pricing { width: 32%; }
+  .menu-admin table.data col.menu-col-status { width: 22%; }
+  .menu-admin table.data col.menu-col-delete { width: 6%; }
+}
+
 
 /* ---------- Calendar-based reporting ---------- */
 .report-period-toolbar { padding: 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
