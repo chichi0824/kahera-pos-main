@@ -452,3 +452,44 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
 .report-calendar .calendar-day small { max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
 .report-summary .bars { overflow-x: auto; grid-auto-columns: minmax(24px,1fr); }
 .report-summary .bar-labels { overflow-x: auto; grid-auto-columns: minmax(24px,1fr); }
+
+/* Fix menu table cells: keep the pricing TD in the table layout.
+   The generic flex rule belongs on its contents, not on the TD itself. */
+.menu-admin table.data td.menu-pricing-cell,
+.menu-admin table.data td.drink-variants-cell {
+  display: table-cell;
+  width: auto;
+  min-width: 0;
+  max-width: none;
+  vertical-align: middle;
+}
+.menu-admin table.data td.menu-pricing-cell {
+  white-space: normal;
+}
+.menu-admin table.data td.menu-pricing-cell > label {
+  display: inline-grid;
+  width: calc(50% - 5px);
+  min-width: 0;
+  vertical-align: middle;
+  margin: 0;
+  flex: none;
+}
+.menu-admin table.data td.menu-pricing-cell > label + label {
+  margin-left: 6px;
+}
+.menu-admin table.data td.menu-pricing-cell input {
+  display: block;
+  width: 100% !important;
+  min-width: 0;
+  max-width: 100%;
+}
+.menu-admin table.data td.drink-variants-cell .variant-editor-list,
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row input:not([type="checkbox"]) {
+  min-width: 0;
+  max-width: 100%;
+}
