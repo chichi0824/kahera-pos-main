@@ -405,21 +405,23 @@
                   >Category<select id="k-newcat" data-k="newCat"></select
                 ></label>
                 <label for="k-newprice"
-                  >Default price (₱, optional if price options are added)<input
+                  >Default price (non-drinks only)<input
                     id="k-newprice"
                     inputmode="decimal"
                     placeholder="150.00"
                 /></label>
                 <label for="k-newhalfprice"
-                  >Half-order price (₱, optional)<input
+                  >Half-order price (non-drinks only, optional)<input
                     id="k-newhalfprice"
                     inputmode="decimal"
                     placeholder="75.00"
                 /></label>
-                <label for="k-newvariants">Drink price options (Drinks category only)
-                  <textarea id="k-newvariants" rows="4" placeholder="Bote | 20&#10;Mismo | 25&#10;Kasalo | 35&#10;1.5L | 85"></textarea>
-                </label>
-                <p class="hint">For Drinks only. Add one size per line using Name | Price. If you add options, the first option can be used as the default price.</p>
+                <div id="k-newvariants" class="drink-variant-manager" hidden>
+                  <strong>Drink variants</strong>
+                  <p class="hint">Add each size separately, set its price, and choose whether it is available today.</p>
+                  <div class="variant-editor-list"></div>
+                  <button type="button" class="btn small" data-variant-add>Add variant</button>
+                </div>
                 <label for="k-newimage">Item photo (optional)<input id="k-newimage" type="file" accept="image/*" /></label>
                 <p class="hint">Photos are resized and compressed before saving.</p>
                 <p class="err" data-k="addErr" role="alert"></p>
