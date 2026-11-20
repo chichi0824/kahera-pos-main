@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m03",
-      "cat": "drinks",
-      "name": "Tablea Hot Choco",
-      "price": 7500,
-      "available": true
-    },
-    {
       "id": "m08",
       "cat": "meals",
       "name": "Bangus Sisig",
