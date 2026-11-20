@@ -18,7 +18,7 @@
       },
       {
         id: "meals",
-        name: "Rice meals",
+        name: "Ulam",
       },
       {
         id: "merienda",
