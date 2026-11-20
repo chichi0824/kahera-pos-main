@@ -104,7 +104,7 @@
   function categoryLabel(c){return String(c.name).toLowerCase()==='extras'?'Extra':c.name;}
   function renderCats(){
     var html='<button type="button" class="chip" data-cat="all" aria-pressed="'+(S.cat==='all')+'">All</button>';
-    orderedCategories().forEach(function(c){html+='<button type="button" class="chip" data-cat="'+esc(c.id)+'" aria-pressed="'+(S.cat===c.id)+'">'+esc(c.name)+'</button>';});
+    orderedCategories().forEach(function(c){html+='<button type="button" class="chip" data-cat="'+esc(c.id)+'" aria-pressed="'+(S.cat===c.id)+'">'+esc(categoryLabel(c))+'</button>';});
     $('cats').innerHTML=html;
   }
   function renderTile(m,bumpId){
@@ -434,11 +434,11 @@
     byId('k-biznote').value = S.settings.bizNote;
     byId('k-vat').checked = !!S.settings.vatRegistered;
     var catOpts = function (sel) {
-      return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('');
+      return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(categoryLabel(c)) + '</option>'; }).join('');
     };
     var defaultCat = S.categories.filter(function (c) { return c.id === 'meals' || c.name.toLowerCase() === 'ulam'; })[0] || S.categories[0];
     $('newCat').innerHTML = catOpts(defaultCat.id);
-    $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(c.name) + '</button>'; }).join('');
+    $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(categoryLabel(c)) + '</button>'; }).join('');
     var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
     var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Default ₱</th><th class="num">Half ₱</th><th>Price options <small>(Name | Price)</small></th><th>Available</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     visibleMenu.forEach(function (m) {
