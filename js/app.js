@@ -63,29 +63,18 @@
     return { orders: orders, seq: seq };
   }
   function load() {
-    // Menu and store settings are centrally loaded from GitHub; never use stale browser copies.
-    store.remove('menu'); store.remove('settings');
+    // Only the active cart and display preferences stay on this device.
+    store.remove('orders'); store.remove('seq'); store.remove('menu'); store.remove('settings');
     S.settings = clone(SAMPLE.settings);
     S.categories = clone(SAMPLE.categories);
     S.menu = clone(SAMPLE.menu);
     S.isAdmin = false;
-    S.orders = store.get('orders', null);
-    S.seq = store.get('seq', 0);
-    if (!S.orders) {
-      var seeded = seedOrders(S.menu, S.settings);
-      S.orders = seeded.orders; S.seq = seeded.seq;
-      store.set('orders', S.orders); store.set('seq', S.seq);
-    }
-    S.cart = store.get('cart', null);
-    if (!S.cart) {
-      // Open in a realistic working state: a table already ordering.
-      S.cart = blankCart();
-      S.cart.table = '4';
-      S.cart.lines = [
-        { id: 'm05', name: 'Chicken Adobo', price: 13500, qty: 1 },
-        { id: 'm01', name: 'Kapeng Barako', price: 6500, qty: 2 }
-      ].filter(function (l) { return S.menu.some(function (m) { return m.id === l.id; }); });
-    }
+    S.orders = [];
+    S.seq = 0;
+    S.nextNo = 'K-0001';
+    S.shift = null;
+    S.pendingOrder = null;
+    S.cart = store.get('cart', null) || blankCart();
     S.view = store.get('view', 'register');
     S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash';
   }
@@ -95,7 +84,7 @@
       vatRegistered: S.settings.vatRegistered, discount: S.cart.disc, diners: S.cart.diners, idHolders: S.cart.ids
     });
   }
-  function nextNo() { return 'K-' + pad(S.seq + 1); }
+  function nextNo() { return S.nextNo || 'K-0001'; }
 
   // ---------- views ----------
   function setView(v) {
@@ -254,7 +243,7 @@
 
   function completeSale() {
     var t = totals(), err = $('payErr');
-    if (!S.cart.lines.length) return;
+    if (!S.cart.lines.length || S.savingSale) return;
     var tendered = t.total, ref = '';
     if (S.method === 'cash') {
       tendered = M.toCentavos(byId('k-tendered').value);
@@ -264,19 +253,29 @@
       ref = byId('k-ref').value.trim();
       if (ref.length < 4) { err.textContent = 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
     }
-    S.seq += 1;
-    var order = {
-      no: 'K-' + pad(S.seq), ts: Date.now(), type: S.cart.type, table: S.cart.type === 'dine' ? S.cart.table : '',
-      lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered,
-      change: tendered - t.total, ref: ref, status: 'paid'
-    };
-    S.orders.push(order);
-    store.set('orders', S.orders); store.set('seq', S.seq);
-    S.cart = blankCart(); saveCart();
-    openPay(false);
-    S.method = 'cash';
-    renderAll();
-    showSlip(order);
+    if (!S.pendingOrder) {
+      S.pendingOrder = {
+        id: cloud.newId(), type: S.cart.type, table: S.cart.type === 'dine' ? S.cart.table : '',
+        lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered, ref: ref
+      };
+    }
+    S.savingSale = true;
+    $('complete').disabled = true;
+    err.textContent = 'Saving sale…';
+    cloud.createOrder(S.pendingOrder).then(function (order) {
+      S.orders.push(order);
+      S.nextNo = 'K-' + pad((parseInt(String(order.no).replace('K-', ''), 10) || 0) + 1);
+      S.pendingOrder = null;
+      S.cart = blankCart(); saveCart();
+      openPay(false); S.method = 'cash';
+      renderAll(); showSlip(order);
+      refreshSharedData();
+    }).catch(function (error) {
+      err.textContent = 'Sale was not saved. Your cart is safe. ' + error.message;
+    }).finally(function () {
+      S.savingSale = false;
+      $('complete').disabled = false;
+    });
   }
 
   function showSlip(o) {
@@ -390,7 +389,7 @@
     if (pendingShift) {
       var c = document.createElement('span');
       c.className = 'confirm';
-      c.innerHTML = 'Clear all ' + S.orders.length + ' orders? <button type="button" class="btn small danger" data-shift-yes>Clear</button><button type="button" class="btn small" data-shift-no>Cancel</button>';
+      c.innerHTML = 'Close this shared shift? Previous orders will remain saved. <button type="button" class="btn small danger" data-shift-yes>Close shift</button><button type="button" class="btn small" data-shift-no>Cancel</button>';
       wrap.appendChild(c);
     }
   }
@@ -451,7 +450,7 @@
     menuSaveChain = menuSaveChain.catch(function () {}).then(function () { return cloud.saveMenu(payload); });
     return menuSaveChain.then(function () {
       renderGrid();
-      toast('Menu saved to GitHub. Cashiers will see it after refreshing.');
+      toast('Menu saved to the shared database. Cashiers will see it shortly.');
     }).catch(function (err) {
       toast('Menu was not saved: ' + err.message);
       renderMenuAdmin(); renderGrid();
@@ -606,8 +605,8 @@
       if (t.hasAttribute('data-void-no')) { pendingVoid = null; renderOrders(); }
       if (t.hasAttribute('data-void-yes')) {
         var o = findOrder(t.getAttribute('data-void-yes'));
-        if (o) { o.status = 'void'; o.voidedAt = Date.now(); store.set('orders', S.orders); toast(o.no + ' voided'); }
-        pendingVoid = null; renderOrders(); renderBrand();
+        if (o) { cloud.voidOrder(o.id).then(function (updated) { S.orders = S.orders.map(function (x) { return x.id === updated.id ? updated : x; }); renderOrders(); renderShift(); renderBrand(); toast(updated.no + ' voided'); }).catch(function (error) { toast('Could not void order: ' + error.message); }); }
+        pendingVoid = null; renderOrders();
       }
     });
 
@@ -617,9 +616,8 @@
     $('shiftActions').addEventListener('click', function (e) {
       if (e.target.closest('[data-shift-no]')) { pendingShift = false; renderShift(); }
       if (e.target.closest('[data-shift-yes]')) {
-        S.orders = []; store.set('orders', S.orders);
-        pendingShift = false; renderShift(); renderBrand();
-        toast('New shift started. Order numbers continue from ' + nextNo() + '.');
+        pendingShift = false;
+        cloud.closeShift(S.shift && S.shift.id).then(function () { return cloud.startShift(cloud.getDeviceId()); }).then(function (shift) { S.shift = shift; return refreshSharedData(); }).then(function () { toast('New shared shift started. Previous orders remain in history.'); }).catch(function (error) { toast('Could not start a new shift: ' + error.message); });
       }
     });
 
@@ -718,7 +716,27 @@
     renderAll();
     setView(S.view);
     tick(); setInterval(tick, 30000);
+    refreshSharedData().catch(function (error) { toast('Cloud sync unavailable: ' + error.message); });
+    setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
   }
+
+  var refreshInFlight = false;
+  function refreshSharedData() {
+    if (refreshInFlight) return Promise.resolve();
+    refreshInFlight = true;
+    return cloud.startShift(cloud.getDeviceId()).then(function (shift) {
+      S.shift = shift;
+      return Promise.all([cloud.getOrders(shift.id), cloud.getNextNo()]);
+    }).then(function (results) {
+      S.orders = results[0];
+      S.nextNo = results[1];
+      renderBrand();
+      if (S.view === 'orders') renderOrders();
+      if (S.view === 'shift') renderShift();
+      renderCart();
+    }).finally(function () { refreshInFlight = false; });
+  }
+
   cloud.getMenu().then(function (remote) {
     if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
     SAMPLE.settings = remote.settings;
