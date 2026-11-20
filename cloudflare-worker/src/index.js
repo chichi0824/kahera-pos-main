@@ -16,22 +16,22 @@ async function menu(db) {
   const s=await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if(!s)throw new Error('Shared menu is not initialized. Run migration 0002_seed_shared_menu.sql against the remote D1 database.');
   const c=await db.prepare('SELECT id,name FROM menu_categories ORDER BY sort_order,name').all();
-  const m=await db.prepare('SELECT id,category_id AS cat,name,price,available FROM menu_items ORDER BY sort_order,name').all();
-  return {settings:JSON.parse(s.settings_json),categories:c.results||[],menu:(m.results||[]).map(x=>({...x,available:!!x.available}))};
+  const m=await db.prepare('SELECT id,category_id AS cat,name,price,half_price AS halfPrice,available FROM menu_items ORDER BY sort_order,name').all();
+  return {settings:JSON.parse(s.settings_json),categories:c.results||[],menu:(m.results||[]).map(x=>({...x,halfPrice:x.halfPrice===null?null:x.halfPrice,available:!!x.available}))};
 }
 function validateMenu(b) {
   if(!b||!b.settings||!Array.isArray(b.categories)||!Array.isArray(b.menu))throw new Error('Menu payload is incomplete.');
   if(b.menu.length>500||b.categories.length>30)throw new Error('Menu exceeds the allowed limit.');
   const cats=new Set(),items=new Set();
   for(const c of b.categories){if(!c||!text(c.id,80)||!text(c.name,60)||cats.has(c.id))throw new Error('A menu category is invalid.');cats.add(c.id);}
-  for(const m of b.menu){if(!m||!text(m.id,80)||items.has(m.id)||!text(m.name,40)||!cats.has(m.cat)||!Number.isSafeInteger(m.price)||m.price<1||m.price>100000000||typeof m.available!=='boolean')throw new Error('A menu item is invalid.');items.add(m.id);}
+  for(const m of b.menu){if(!m||!text(m.id,80)||items.has(m.id)||!text(m.name,40)||!cats.has(m.cat)||!Number.isSafeInteger(m.price)||m.price<1||m.price>100000000||!(m.halfPrice===null||m.halfPrice===undefined||(Number.isSafeInteger(m.halfPrice)&&m.halfPrice>0&&m.halfPrice<=m.price))||typeof m.available!=='boolean')throw new Error('A menu item is invalid.');items.add(m.id);}
   if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean')throw new Error('Store settings are invalid.');
 }
 async function saveMenu(db,b) {
   validateMenu(b);
   const q=[db.prepare('DELETE FROM menu_items'),db.prepare('DELETE FROM menu_categories'),db.prepare('INSERT OR REPLACE INTO store_settings(id,settings_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP)').bind(JSON.stringify(b.settings))];
   b.categories.forEach((c,i)=>q.push(db.prepare('INSERT INTO menu_categories(id,name,sort_order) VALUES(?,?,?)').bind(c.id,c.name.trim(),i)));
-  b.menu.forEach((m,i)=>q.push(db.prepare('INSERT INTO menu_items(id,category_id,name,price,available,sort_order) VALUES(?,?,?,?,?,?)').bind(m.id,m.cat,m.name.trim(),m.price,m.available?1:0,i)));
+  b.menu.forEach((m,i)=>q.push(db.prepare('INSERT INTO menu_items(id,category_id,name,price,half_price,available,sort_order) VALUES(?,?,?,?,?,?,?)').bind(m.id,m.cat,m.name.trim(),m.price,m.halfPrice||null,m.available?1:0,i)));
   await db.batch(q);
 }
 async function currentShift(db){return db.prepare("SELECT id,device_id,started_at,ended_at,status FROM shifts WHERE status='open' LIMIT 1").first();}
@@ -82,7 +82,7 @@ function validateOrder(b) {
   if (!b || !text(b.id, 80) || !['dine', 'take'].includes(b.type) ||
       !Array.isArray(b.lines) || !b.lines.length || b.lines.length > 50) throw new Error('Order details are incomplete.');
   for (const line of b.lines) {
-    if (!line || !text(line.id, 80) || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99) throw new Error('An order item is invalid.');
+    if (!line || !text(line.id, 80) || !['full','half'].includes(line.portion || 'full') || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99) throw new Error('An order item is invalid.');
   }
   if (!b.totals || !['none', 'senior', 'pwd'].includes(b.totals.discountKind) ||
       !Number.isInteger(b.totals.diners) || b.totals.diners < 1 || b.totals.diners > 99 || !Number.isInteger(b.totals.idHolders) || b.totals.idHolders < 0 || b.totals.idHolders > b.totals.diners) throw new Error('Discount details are invalid.');
@@ -96,10 +96,13 @@ async function createOrder(db,b,deviceId) {
   if (existing) return rowOrder(existing);
   const menuRows = [];
   for (const line of b.lines) {
-    const item = await db.prepare('SELECT id,name,price,available FROM menu_items WHERE id=?').bind(line.id).first();
+    const item = await db.prepare('SELECT id,name,price,half_price AS halfPrice,available FROM menu_items WHERE id=?').bind(line.id).first();
     if (!item || !item.available) throw new Error('A selected menu item is no longer available. Refresh the menu and review the cart.');
-    if (!Number.isSafeInteger(line.price) || line.price !== item.price) throw new Error('A menu price changed. Refresh the menu and review the cart.');
-    menuRows.push({ id: item.id, name: item.name, price: item.price, qty: line.qty });
+    const portion = line.portion === 'half' ? 'half' : 'full';
+    const officialPrice = portion === 'half' ? item.halfPrice : item.price;
+    if (officialPrice === null || officialPrice === undefined) throw new Error('A half-order price is not configured for this menu item.');
+    if (!Number.isSafeInteger(line.price) || line.price !== officialPrice) throw new Error('A menu price changed. Refresh the menu and review the cart.');
+    menuRows.push({ id: item.id, name: item.name, price: officialPrice, qty: line.qty, portion: portion });
   }
   const settingsRow = await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if (!settingsRow) throw new Error('The shared menu is not initialized.');
