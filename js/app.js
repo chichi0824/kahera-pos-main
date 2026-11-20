@@ -102,6 +102,7 @@
   }
   function orderedCategories(){return S.categories.slice().sort(function(x,y){return categoryRank(x)-categoryRank(y)||x.name.localeCompare(y.name);});}
   function categoryLabel(c){return String(c.name).toLowerCase()==='extras'?'Extra':c.name;}
+  function isDrinksCategory(catId){var c=S.categories.filter(function(x){return x.id===catId;})[0];return !!c&&(/^(drinks?|beverages?)$/i.test(String(c.name).trim())||/^(drinks?|beverages?)$/i.test(String(c.id).trim()));}
   function renderCats(){
     var html='<button type="button" class="chip" data-cat="all" aria-pressed="'+(S.cat==='all')+'">All</button>';
     orderedCategories().forEach(function(c){html+='<button type="button" class="chip" data-cat="'+esc(c.id)+'" aria-pressed="'+(S.cat===c.id)+'">'+esc(categoryLabel(c))+'</button>';});
@@ -109,9 +110,11 @@
   }
   function renderTile(m,bumpId){
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
-    var prices=Array.isArray(m.variants)&&m.variants.length?m.variants.map(function(v){return v.price;}):[m.price];
-    var priceLabel=m.variants&&m.variants.length?'From '+M.peso(Math.min.apply(null,prices)):M.peso(m.price);
-    return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+'" data-add="'+esc(m.id)+'"'+(m.available?'':' aria-disabled="true"')+' style="--c:'+catColor(m.cat)+'" aria-label="Add '+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(m.available?'':', sold out')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
+    var hasOptions=isDrinksCategory(m.cat)&&Array.isArray(m.variants)&&m.variants.length;
+    var prices=hasOptions?m.variants.map(function(v){return v.price;}):[m.price];
+    var priceLabel=hasOptions?'From '+M.peso(Math.min.apply(null,prices)):M.peso(m.price);
+    var disabled=!!m.soldOut;
+    return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(disabled?', sold out':'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(disabled?'<span class="sold-out-tag">Sold Out</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
   }
 
   function qtyInCart(id) {
@@ -119,7 +122,7 @@
   }
 
   function renderGrid(bumpId){
-    var q=S.q.trim().toLowerCase(),visible=S.menu.filter(function(m){return(S.cat==='all'||m.cat===S.cat)&&(!q||m.name.toLowerCase().indexOf(q)!==-1);});
+    var q=S.q.trim().toLowerCase(),visible=S.menu.filter(function(m){return m.available&&(S.cat==='all'||m.cat===S.cat)&&(!q||m.name.toLowerCase().indexOf(q)!==-1);});
     if(!visible.length){$('grid').innerHTML='<p class="empty">No menu items match “'+esc(S.q)+'”. Add one in the Menu tab.</p>';return;}
     if(S.cat!=='all'){$('grid').innerHTML=visible.map(function(m){return renderTile(m,bumpId);}).join('');return;}
     $('grid').innerHTML=orderedCategories().map(function(cat){
@@ -440,7 +443,7 @@
     $('newCat').innerHTML = catOpts(defaultCat.id);
     $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(categoryLabel(c)) + '</button>'; }).join('');
     var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
-    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Default ₱</th><th class="num">Half ₱</th><th>Price options <small>(Name | Price)</small></th><th>Available</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Default ₱</th><th class="num">Half ₱</th><th>Drink price options <small>(Name | Price)</small></th><th>Available today</th><th>Sold out</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     visibleMenu.forEach(function (m) {
       h += '<tr data-item="' + esc(m.id) + '">' +
         '<td><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"></td>' +
@@ -448,12 +451,13 @@
         '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
         '<td class="num price"><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></td>' +
         '<td class="num price"><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="Optional" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></td>' +
-        '<td><textarea rows="3" class="variant-editor" aria-label="Price options for ' + esc(m.name) + '" data-f="variants" placeholder="Bote | 20&#10;Mismo | 25">' + esc(variantsText(m.variants)) + '</textarea></td>' +
-        '<td><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span class="sr-only">Available</span></label></td>' +
+        '<td>'+(isDrinksCategory(m.cat)?'<textarea rows="3" class="variant-editor" aria-label="Drink price options for ' + esc(m.name) + '" data-f="variants" placeholder="Bote | 20&#10;Mismo | 25">' + esc(variantsText(m.variants)) + '</textarea>':'<span class="hint">Drinks only</span>')+'</td>' +
+        '<td><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label></td>' +
+        '<td><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></td>' +
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
     });
-    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="8" class="empty">No items in this category yet.</td></tr></tbody>';
+    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="9" class="empty">No items in this category yet.</td></tr></tbody>';
   }
   var menuSaveChain = Promise.resolve();
   function saveMenu() {
@@ -487,8 +491,9 @@
   // ---------- cart mutations ----------
   function addItem(id,variant){
     if(!S.shift||S.shift.status!=='open'){toast('No daily report is open. Sales are disabled.');return;}
-    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(!m.available){toast(m.name+' is marked sold out');return;}
-    if(Array.isArray(m.variants)&&m.variants.length&&!variant){showVariantPicker(m);return;}
+    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(m.soldOut){toast(m.name+' is sold out');return;}
+    var options=isDrinksCategory(m.cat)&&Array.isArray(m.variants)?m.variants:[];
+    if(options.length&&!variant){showVariantPicker(m);return;}
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
     var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.price===price;})[0];
     if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:price,fullPrice:price,halfPrice:null,portion:'full',variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
@@ -681,6 +686,8 @@
       if (f === 'name') { var n = e.target.value.trim(); if (n) m.name = n; else e.target.value = m.name; }
       if (f === 'cat') m.cat = e.target.value;
       if (f === 'available') m.available = e.target.checked;
+      if (f === 'soldOut') m.soldOut = e.target.checked;
+      if (f === 'cat' && !isDrinksCategory(m.cat)) m.variants = [];
       if (f === 'price') {
         var c = M.toCentavos(e.target.value);
         if (isNaN(c) || c <= 0) { toast('Enter a price like 65 or 65.50'); e.target.value = (m.price / 100).toFixed(2); return; }
@@ -708,13 +715,13 @@
       e.preventDefault();
       var name=byId('k-newname').value.trim(),priceRaw=byId('k-newprice').value.trim(),price=priceRaw?M.toCentavos(priceRaw):NaN;
       var halfRaw=byId('k-newhalfprice').value.trim(),photoFile=byId('k-newimage').files&&byId('k-newimage').files[0],halfPrice=halfRaw?M.toCentavos(halfRaw):null;
-      var parsedVariants=parseVariantText(byId('k-newvariants').value,[]);
-      if(!name){$('addErr').textContent='Give the item a name.';return;}if(parsedVariants.error){$('addErr').textContent=parsedVariants.error;return;}
+      var newCat=byId('k-newcat').value,hasDrinkOptions=isDrinksCategory(newCat),variantText=byId('k-newvariants').value.trim(),parsedVariants=hasDrinkOptions?parseVariantText(variantText,[]):{variants:[]};
+      if(!name){$('addErr').textContent='Give the item a name.';return;}if(!hasDrinkOptions&&variantText){$('addErr').textContent='Price options can only be added to Drinks items.';return;}if(parsedVariants.error){$('addErr').textContent=parsedVariants.error;return;}
       if((!Number.isSafeInteger(price)||price<=0)&&parsedVariants.variants.length)price=parsedVariants.variants[0].price;
       if(!Number.isSafeInteger(price)||price<=0){$('addErr').textContent='Enter a default price or add at least one price option.';return;}
       if(halfRaw&&(isNaN(halfPrice)||halfPrice<=0||halfPrice>price)){$('addErr').textContent='Half-order price must be greater than zero and no more than the default price.';return;}
       $('addErr').textContent='';var submit=$('addForm').querySelector('[type="submit"]');submit.disabled=true;
-      compressMenuImage(photoFile).then(function(image){S.menu.push({id:'u'+Date.now().toString(36),cat:byId('k-newcat').value,name:name,price:price,halfPrice:halfPrice,variants:parsedVariants.variants,image:image,available:true});return saveMenu();})
+      compressMenuImage(photoFile).then(function(image){S.menu.push({id:'u'+Date.now().toString(36),cat:newCat,name:name,price:price,halfPrice:halfPrice,variants:parsedVariants.variants,image:image,available:true,soldOut:false});return saveMenu();})
       .then(function(){renderMenuAdmin();byId('k-newname').value='';byId('k-newprice').value='';byId('k-newhalfprice').value='';byId('k-newvariants').value='';byId('k-newimage').value='';})
         .catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
@@ -797,7 +804,7 @@
     if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
     SAMPLE.settings = remote.settings;
     SAMPLE.categories = remote.categories;
-    SAMPLE.menu = remote.menu;
+    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;m.variants=isDrinksCategory(m.cat)?(m.variants||[]):[];return m;});
     startApp();
   }).catch(function (err) {
     startApp();
