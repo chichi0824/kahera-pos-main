@@ -1,9 +1,7 @@
 /**
  * Kahera POS — menu-sample.js
- * Official starter menu. Admin menu changes are committed to this file through
- * the secure Cloudflare Worker. Keep the assigned object JSON-compatible so
- * the Worker can safely read and update it without evaluating JavaScript.
- * Prices are VAT-inclusive and stored in centavos (₱65.00 = 6500).
+ * Official shared menu. Updated by the authenticated Kahera admin API.
+ * Prices are VAT-inclusive and stored in centavos.
  */
 (function (root) {
   'use strict';
@@ -32,13 +30,6 @@
     }
   ],
   "menu": [
-    {
-      "id": "m01",
-      "cat": "drinks",
-      "name": "Kapeng Barako",
-      "price": 6500,
-      "available": true
-    },
     {
       "id": "m02",
       "cat": "drinks",
