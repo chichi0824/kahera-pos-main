@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m09",
-      "cat": "meals",
-      "name": "Pancit Bihon (for 2)",
-      "price": 18000,
-      "available": false
-    },
-    {
       "id": "m10",
       "cat": "merienda",
       "name": "Turon",
