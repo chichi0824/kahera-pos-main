@@ -38,13 +38,6 @@
       "available": true
     },
     {
-      "id": "m04",
-      "cat": "drinks",
-      "name": "Calamansi Juice",
-      "price": 5500,
-      "available": true
-    },
-    {
       "id": "m05",
       "cat": "meals",
       "name": "Chicken Adobo",
