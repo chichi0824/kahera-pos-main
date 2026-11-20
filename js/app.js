@@ -416,7 +416,7 @@
     if(S.reportMode==='day')S.reportDate=dateShift(S.reportDate,delta);
     else if(S.reportMode==='week')S.reportDate=dateShift(S.reportDate,delta*7);
     else if(S.reportMode==='month'){var p=dateParts(S.reportDate),d=new Date(Date.UTC(p[0],p[1]-1+delta,1));S.reportDate=d.toISOString().slice(0,10);}
-    else if(S.reportMode==='year'){var y=dateParts(S.reportDate);S.reportDate=(y[0]+delta)+'-'+S.reportDate.slice(5);}
+    else if(S.reportMode==='year'){var y=dateParts(S.reportDate),targetYear=y[0]+delta,lastDay=new Date(Date.UTC(targetYear,y[1],0)).getUTCDate();S.reportDate=targetYear+'-'+String(y[1]).padStart(2,'0')+'-'+String(Math.min(y[2],lastDay)).padStart(2,'0');}
     else {S.reportDate=dateShift(S.reportDate,delta);}
     S.calendarMonth=dateMonth(S.reportDate);if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();
   }
@@ -687,8 +687,8 @@
     $('dlCsv').addEventListener('click',downloadCsv);
     $('reportPeriodModes').addEventListener('click',function(e){var b=e.target.closest('[data-report-mode]');if(!b)return;S.reportMode=b.getAttribute('data-report-mode');if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();});
     $('reportCalendar').addEventListener('click',function(e){var b=e.target.closest('[data-calendar-date]');if(!b)return;S.reportDate=b.getAttribute('data-calendar-date');S.reportMode='day';S.calendarMonth=dateMonth(S.reportDate);loadReportData();});
-    $('calendarPrev').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-2,1));S.calendarMonth=d.toISOString().slice(0,7);loadReportData();});
-    $('calendarNext').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1],1));S.calendarMonth=d.toISOString().slice(0,7);loadReportData();});
+    $('calendarPrev').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-2,1));S.calendarMonth=d.toISOString().slice(0,7);if(S.reportMode==='month'){var day=dateParts(S.reportDate)[2],last=new Date(Date.UTC(p[0],p[1]-1,0)).getUTCDate();S.reportDate=S.calendarMonth+'-'+String(Math.min(day,last)).padStart(2,'0');}loadReportData();});
+    $('calendarNext').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1],1));S.calendarMonth=d.toISOString().slice(0,7);if(S.reportMode==='month'){var day=dateParts(S.reportDate)[2],last=new Date(Date.UTC(p[0],p[1]+1,0)).getUTCDate();S.reportDate=S.calendarMonth+'-'+String(Math.min(day,last)).padStart(2,'0');}loadReportData();});
     $('reportPrev').addEventListener('click',function(){changeReportPeriod(-1);});
     $('reportNext').addEventListener('click',function(){changeReportPeriod(1);});
     $('reportToday').addEventListener('click',function(){S.reportDate=manilaToday();S.calendarMonth=dateMonth(S.reportDate);S.reportMode='day';loadReportData();});
