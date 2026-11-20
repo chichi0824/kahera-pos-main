@@ -493,3 +493,32 @@ dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
   min-width: 0;
   max-width: 100%;
 }
+
+/* Per-drink-variant availability and sold-out controls */
+.menu-admin table.data .variant-edit-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1fr) minmax(82px, .7fr);
+  gap: 7px 8px;
+  align-items: center;
+}
+.menu-admin table.data .variant-status {
+  grid-column: 1 / 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+  min-width: 0;
+}
+.menu-admin table.data .variant-status .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+  font-size: .76rem;
+}
+.menu-admin table.data .variant-status .check input { width: 16px; height: 16px; }
+.menu-admin table.data .variant-edit-row > button[data-variant-remove] {
+  grid-column: 2;
+  justify-self: end;
+}
+.variant-option:disabled { opacity: .48; cursor: not-allowed; text-decoration: line-through; }
