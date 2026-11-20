@@ -29,6 +29,8 @@
   function timeOf(ts) { return new Date(ts).toLocaleTimeString('en-PH', { hour: 'numeric', minute: '2-digit' }); }
   var CAT_COLORS = ['#c2410c', '#136a48', '#7c3aed', '#0369a1', '#a16207', '#be185d'];
   var METHOD_LABEL = { cash: 'Cash', ewallet: 'E-wallet', card: 'Card' };
+  // Kept only to display legacy historical orders created before this feature was removed.
+  var DISC_LABEL = { none: '', senior: 'Senior', pwd: 'PWD' };
 
   var toastTimer;
   function toast(msg) {
