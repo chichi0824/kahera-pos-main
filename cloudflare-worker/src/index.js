@@ -47,24 +47,90 @@ async function orders(db,shiftId) {
   const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
   return (r.results||[]).map(rowOrder);
 }
+function calculateTotals(lines, settings, kind, diners, holders) {
+  const vatReg = settings.vatRegistered !== false;
+  const gross = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
+  diners = Math.max(1, Math.min(99, Number.parseInt(diners, 10) || 1));
+  holders = Math.max(0, Math.min(diners, Number.parseInt(holders, 10) || 0));
+  kind = kind === 'senior' || kind === 'pwd' ? kind : 'none';
+  const result = {
+    gross, items: lines.reduce((n, line) => n + line.qty, 0), discountKind: 'none',
+    diners, idHolders: 0, share: 0, vatRemoved: 0, discount: 0,
+    vatable: 0, vat: 0, vatExemptSales: 0, total: gross, vatRegistered: vatReg
+  };
+  let regular = gross;
+  if (kind !== 'none' && holders > 0 && gross > 0) {
+    const share = Math.round(gross * holders / diners);
+    const base = vatReg ? Math.round(share / 1.12) : share;
+    const discount = Math.round(base * 0.20);
+    regular = gross - share;
+    result.discountKind = kind;
+    result.idHolders = holders;
+    result.share = share;
+    result.vatRemoved = share - base;
+    result.discount = discount;
+    result.vatExemptSales = vatReg ? base : 0;
+    result.total = regular + base - discount;
+  }
+  if (vatReg) {
+    result.vatable = Math.round(regular / 1.12);
+    result.vat = regular - result.vatable;
+  }
+  return result;
+}
 function validateOrder(b) {
-  if(!b||!text(b.id,80)||!['dine','take'].includes(b.type)||!Array.isArray(b.lines)||!b.lines.length||b.lines.length>100)throw new Error('Order details are incomplete.');
-  for(const l of b.lines)if(!l||!text(l.id,80)||!text(l.name,80)||!Number.isSafeInteger(l.price)||l.price<1||!Number.isInteger(l.qty)||l.qty<1||l.qty>99)throw new Error('An order item is invalid.');
-  if(!b.totals||!Number.isSafeInteger(b.totals.total)||b.totals.total<1||!['cash','ewallet','card'].includes(b.method)||!Number.isSafeInteger(b.tendered)||b.tendered<b.totals.total)throw new Error('Payment details are invalid.');
-  if(b.method!=='cash'&&!text(b.ref,40))throw new Error('Payment reference is required.');
+  if (!b || !text(b.id, 80) || !['dine', 'take'].includes(b.type) ||
+      !Array.isArray(b.lines) || !b.lines.length || b.lines.length > 50) throw new Error('Order details are incomplete.');
+  for (const line of b.lines) {
+    if (!line || !text(line.id, 80) || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99) throw new Error('An order item is invalid.');
+  }
+  if (!b.totals || !['none', 'senior', 'pwd'].includes(b.totals.discountKind) ||
+      !Number.isInteger(b.totals.diners) || !Number.isInteger(b.totals.idHolders)) throw new Error('Discount details are invalid.');
+  if (!['cash', 'ewallet', 'card'].includes(b.method) ||
+      !Number.isSafeInteger(b.tendered) || b.tendered < 1) throw new Error('Payment details are invalid.');
+  if (b.method !== 'cash' && !text(b.ref, 40)) throw new Error('Payment reference is required.');
 }
 async function createOrder(db,b,deviceId) {
   validateOrder(b);
-  let existing=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();if(existing)return rowOrder(existing);
-  const shift=await ensureShift(db,deviceId);
-  const n=await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
-  if(!n)throw new Error('Order counter is missing. Run the D1 migration.');
-  const ts=Date.now(),no='K-'+pad(n.value);
-  const o={id:b.id,no,ts,type:b.type,table:b.type==='dine'?String(b.table||'').slice(0,3):'',lines:b.lines,totals:b.totals,method:b.method,tendered:b.tendered,change:b.tendered-b.totals.total,ref:b.ref||'',status:'paid',shiftId:shift.id};
-  const q=[db.prepare('INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)').bind(o.id,o.no,shift.id,deviceId||'unknown',new Date(ts).toISOString(),o.type,o.table,o.method,o.ref,o.tendered,o.change,'paid',JSON.stringify(o.totals),JSON.stringify(o))];
-  o.lines.forEach(l=>q.push(db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total) VALUES(?,?,?,?,?,?)').bind(o.id,l.id||null,l.name,l.price,l.qty,l.price*l.qty)));
-  try{await db.batch(q);}catch(e){existing=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();if(existing)return rowOrder(existing);throw e;}
-  return o;
+  let existing = await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();
+  if (existing) return rowOrder(existing);
+  const menuRows = [];
+  for (const line of b.lines) {
+    const item = await db.prepare('SELECT id,name,price,available FROM menu_items WHERE id=?').bind(line.id).first();
+    if (!item || !item.available) throw new Error('A selected menu item is no longer available. Refresh the menu and review the cart.');
+    if (!Number.isSafeInteger(line.price) || line.price !== item.price) throw new Error('A menu price changed. Refresh the menu and review the cart.');
+    menuRows.push({ id: item.id, name: item.name, price: item.price, qty: line.qty });
+  }
+  const settingsRow = await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
+  if (!settingsRow) throw new Error('The shared menu is not initialized.');
+  const settings = JSON.parse(settingsRow.settings_json);
+  const totals = calculateTotals(menuRows, settings, b.totals.discountKind, b.totals.diners, b.totals.idHolders);
+  if (b.totals.total !== totals.total) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
+  if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
+  const shift = await ensureShift(db,deviceId);
+  const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
+  if (!counter) throw new Error('Order counter is missing. Run the D1 migration.');
+  const ts=Date.now(), no='K-'+pad(counter.value);
+  const order={
+    id:b.id,no,ts,type:b.type,table:b.type==='dine'?String(b.table||'').slice(0,3):'',
+    lines:menuRows,totals,method:b.method,tendered:b.tendered,change:b.tendered-totals.total,
+    ref:b.ref||'',status:'paid',shiftId:shift.id
+  };
+  const statements=[
+    db.prepare('INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(order.id,order.no,shift.id,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order))
+  ];
+  order.lines.forEach(line=>statements.push(
+    db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total) VALUES(?,?,?,?,?,?)')
+      .bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty)
+  ));
+  try { await db.batch(statements); }
+  catch(error) {
+    existing=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();
+    if(existing)return rowOrder(existing);
+    throw error;
+  }
+  return order;
 }
 export default {
  async fetch(request,env) {
