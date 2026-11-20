@@ -114,11 +114,11 @@
   }
   function renderTile(m,bumpId){
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
-    var hasOptions=isDrinksCategory(m.cat)&&Array.isArray(m.variants)&&m.variants.length;
+    var isDrink=isDrinksCategory(m.cat),hasOptions=isDrink&&Array.isArray(m.variants)&&m.variants.length;
     var availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false;}):[];
     var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
-    var disabled=!!m.soldOut||(hasOptions&&!availableVariants.length);
-    var priceLabel=hasOptions?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No sizes available'):M.peso(m.price);
+    var disabled=!!m.soldOut||(isDrink&&!availableVariants.length);
+    var priceLabel=isDrink?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No sizes available'):M.peso(m.price);
     return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(disabled?', sold out':'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(disabled?'<span class="sold-out-tag">Sold Out</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
   }
 
@@ -496,8 +496,8 @@
   function addItem(id,variant){
     if(!S.shift||S.shift.status!=='open'){toast('No daily report is open. Sales are disabled.');return;}
     var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(m.soldOut){toast(m.name+' is sold out');return;}
-    var options=isDrinksCategory(m.cat)&&Array.isArray(m.variants)?m.variants.filter(function(v){return v.available!==false;}):[];
-    if(isDrinksCategory(m.cat)&&!options.length){toast(m.name+' has no available sizes today');return;}
+    var isDrink=isDrinksCategory(m.cat),options=isDrink&&Array.isArray(m.variants)?m.variants.filter(function(v){return v.available!==false;}):[];
+    if(isDrink&&!options.length){toast(m.name+' has no available sizes today');return;}
     if(options.length&&!variant){showVariantPicker(Object.assign({},m,{variants:options}));return;}
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
     var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.price===price;})[0];
@@ -812,7 +812,7 @@
     if (!remote || !Array.isArray(remote.menu) || !Array.isArray(remote.categories) || !remote.settings) throw new Error('The shared menu response is incomplete.');
     SAMPLE.settings = remote.settings;
     SAMPLE.categories = remote.categories;
-    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;m.variants=remote.categories.some(function(c){return c.id===m.cat&&(/^(drinks?|beverages?)$/i.test(String(c.name).trim())||/^(drinks?|beverages?)$/i.test(String(c.id).trim()));})?(m.variants||[]):[];return m;});
+    SAMPLE.menu = remote.menu.map(function(m){m.soldOut=!!m.soldOut;var drink=remote.categories.some(function(c){return c.id===m.cat&&(/^(drinks?|beverages?)$/i.test(String(c.name).trim())||/^(drinks?|beverages?)$/i.test(String(c.id).trim()));});m.variants=drink?(m.variants||[]).map(function(v){v.available=v.available!==false;return v;}):[];if(drink){m.halfPrice=null;if(m.variants.length)m.price=m.variants[0].price;}return m;});
     startApp();
   }).catch(function (err) {
     startApp();
