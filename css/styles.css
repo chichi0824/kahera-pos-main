@@ -316,3 +316,22 @@ dialog.admin-dlg::backdrop { background: rgba(10, 16, 13, .58); }
 /* Editable unit price on each active order line. */
 .price-edit { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; font-size: .76rem; color: var(--muted); font-weight: 600; }
 .price-edit input { width: 6.8em; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: 500 .82rem var(--f-mono); }
+
+/* Register category sections and selectable price-option dialog. */
+.catalog > .grid { display: block; }
+.category-section { margin: 0 0 22px; }
+.category-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 0 2px 9px; margin-bottom: 10px; border-bottom: 1px solid var(--line); }
+.category-heading h3 { font-size: 1.12rem; font-weight: 800; }
+.category-heading span { color: var(--muted); font-size: .78rem; }
+.category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr)); gap: 10px; }
+.variant-editor { min-width: 150px; width: 100%; font: .78rem/1.45 var(--f-mono); padding: 7px; border: 1px solid var(--line); border-radius: 7px; background: var(--bg); color: var(--ink); }
+dialog.variant-dlg { border: 1px solid var(--line); border-radius: 16px; padding: 0; width: min(420px, calc(100vw - 28px)); background: var(--surface); color: var(--ink); box-shadow: 0 24px 80px rgba(0,0,0,.24); }
+dialog.variant-dlg::backdrop { background: rgba(10,16,13,.58); }
+.variant-card { display: grid; gap: 16px; padding: 20px; }
+.variant-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.variant-head h2 { font-size: 1.3rem; }
+.variant-options { display: grid; gap: 8px; }
+.variant-option { display: flex; justify-content: space-between; align-items: center; gap: 12px; width: 100%; padding: 13px 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface-2); color: var(--ink); text-align: left; font: inherit; }
+.variant-option:hover { border-color: var(--accent); background: var(--accent-soft); }
+.variant-option b { font-family: var(--f-mono); white-space: nowrap; }
+@media (max-width: 560px) { .category-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
