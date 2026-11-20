@@ -124,8 +124,8 @@ async function createOrder(db,b,deviceId) {
       .bind(order.id,order.no,shift.id,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order))
   ];
   order.lines.forEach(line=>statements.push(
-    db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total) VALUES(?,?,?,?,?,?)')
-      .bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty)
+    db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)')
+      .bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty,line.portion||'full')
   ));
   try { await db.batch(statements); }
   catch(error) {
