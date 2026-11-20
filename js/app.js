@@ -105,8 +105,7 @@
   }
 
   function qtyInCart(id) {
-    var l = S.cart.lines.filter(function (x) { return x.id === id; })[0];
-    return l ? l.qty : 0;
+    return S.cart.lines.filter(function (x) { return x.id === id; }).reduce(function (n, line) { return n + line.qty; }, 0);
   }
 
   function renderGrid(bumpId) {
