@@ -192,101 +192,7 @@
 
             <ul class="lines" data-k="lines" aria-live="polite"></ul>
 
-            <details class="disc" data-k="discBox">
-              <summary>
-                Senior / PWD discount
-                <span class="disc-tag" data-k="discTag" hidden></span>
-              </summary>
-              <div class="disc-body">
-                <div
-                  class="seg"
-                  role="radiogroup"
-                  aria-label="Discount type"
-                  data-k="disc"
-                >
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked="true"
-                    data-v="none"
-                  >
-                    None
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked="false"
-                    data-v="senior"
-                  >
-                    Senior
-                  </button>
-                  <button
-                    type="button"
-                    role="radio"
-                    aria-checked="false"
-                    data-v="pwd"
-                  >
-                    PWD
-                  </button>
-                </div>
-                <div class="disc-row">
-                  <label
-                    >Diners
-                    <span class="stepper"
-                      ><button
-                        type="button"
-                        data-step="diners"
-                        data-d="-1"
-                        aria-label="Fewer diners"
-                      >
-                        −</button
-                      ><input
-                        id="k-diners"
-                        inputmode="numeric"
-                        aria-label="Number of diners"
-                      /><button
-                        type="button"
-                        data-step="diners"
-                        data-d="1"
-                        aria-label="More diners"
-                      >
-                        +
-                      </button></span
-                    >
-                  </label>
-                  <label
-                    >With ID
-                    <span class="stepper"
-                      ><button
-                        type="button"
-                        data-step="ids"
-                        data-d="-1"
-                        aria-label="Fewer ID holders"
-                      >
-                        −</button
-                      ><input
-                        id="k-ids"
-                        inputmode="numeric"
-                        aria-label="Number of senior or PWD ID holders"
-                      /><button
-                        type="button"
-                        data-step="ids"
-                        data-d="1"
-                        aria-label="More ID holders"
-                      >
-                        +
-                      </button></span
-                    >
-                  </label>
-                </div>
-                <p class="hint" data-k="discHint">
-                  20% off each ID holder's equal share of the bill. VAT is
-                  removed from that share first when the store is
-                  VAT-registered.
-                </p>
-              </div>
-            </details>
-
+            
             <dl class="totals" data-k="totals"></dl>
 
             <div class="order-actions" data-k="cartActions">
@@ -497,11 +403,17 @@
                   >Category<select id="k-newcat" data-k="newCat"></select
                 ></label>
                 <label for="k-newprice"
-                  >Price (₱, VAT-inclusive)<input
+                  >Full-order price (₱)<input
                     id="k-newprice"
                     inputmode="decimal"
                     required
-                    placeholder="65.00"
+                    placeholder="150.00"
+                /></label>
+                <label for="k-newhalfprice"
+                  >Half-order price (₱, optional)<input
+                    id="k-newhalfprice"
+                    inputmode="decimal"
+                    placeholder="75.00"
                 /></label>
                 <p class="err" data-k="addErr" role="alert"></p>
                 <button class="btn primary" type="submit">Add to menu</button>
@@ -525,12 +437,11 @@
                 Kahera: a counter-ready POS for Philippine cafés and karinderyas
               </h2>
               <p class="lead">
-                Small food businesses often total orders on a calculator and
-                work out Senior and PWD discounts by hand, which is slow and
-                easy to get wrong when VAT is involved. Kahera is a free
-                point-of-sale screen that runs in any browser and does the
-                discount math correctly. Completed sales and shift reports sync
-                through the cloud; active carts remain on the cashier's device.
+                Kahera helps small food businesses record orders, manage menu
+                prices, and accept payments from a simple browser-based POS.
+                Full and half portions can be priced separately. Completed sales
+                and shift reports sync through the cloud; active carts remain
+                on the cashier's device.
               </p>
             </div>
             <div class="panel card-pad">
@@ -550,7 +461,7 @@
                   items
                 </li>
                 <li>
-                  Senior/PWD discount pro-rated per diner, with VAT exemption
+                  Full and half portions with separately configurable prices
                 </li>
                 <li>
                   Cash change with quick-bill buttons; e-wallet and card
