@@ -390,11 +390,21 @@
       ['Discounts',M.peso(s.discounts),'Senior / PWD'],
       ['VAT removed',M.peso(s.vatRemoved),'discounted sales']
     ].map(function(k){return'<div class="panel kpi"><span class="eyebrow">'+k[0]+'</span><b>'+k[1]+'</b><small>'+k[2]+'</small></div>';}).join('');
-    var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12;
-    while(hi-lo<5){if(lo>0)lo--;if(hi-lo<5&&hi<23)hi++;}
-    var max=0,h,bars='',labels='';for(h=lo;h<=hi;h++)max=Math.max(max,s.byHour[h]||0);
-    for(h=lo;h<=hi;h++){var v=s.byHour[h]||0,pct=max?Math.round(v/max*100):0,lab=(h%12||12)+(h<12?'a':'p');bars+='<div class="bar'+(v?'':' zero')+'" style="height:'+Math.max(pct,1)+'%" title="'+lab+': '+M.peso(v)+'">'+(v?'<span>'+(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100))+'</span>':'')+'</div>';labels+='<span>'+lab+'</span>';}
-    $('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
+    var bars='',labels='',chartValues=[],chartLabels=[],chartTitle='Sales by hour';
+    if(S.reportMode==='day'){
+      var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12;
+      while(hi-lo<5){if(lo>0)lo--;if(hi-lo<5&&hi<23)hi++;}
+      for(var hour=lo;hour<=hi;hour++){chartValues.push(s.byHour[hour]||0);chartLabels.push((hour%12||12)+(hour<12?'a':'p'));}
+    }else{
+      var span=Math.round((new Date(range.to+'T00:00:00Z')-new Date(range.from+'T00:00:00Z'))/86400000),monthly=span>62,trend={};
+      S.reportOrders.forEach(function(o){if(o.status==='void')return;var key=monthly?o.reportDate.slice(0,7):o.reportDate;trend[key]=(trend[key]||0)+o.totals.total;});
+      if(monthly){var startMonth=range.from.slice(0,7),endMonth=range.to.slice(0,7),cur=startMonth;while(cur<=endMonth){chartLabels.push(new Date(cur+'-01T00:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'short'}));chartValues.push(trend[cur]||0);var p=cur.split('-').map(Number),next=new Date(Date.UTC(p[0],p[1],1));cur=next.toISOString().slice(0,7);}}
+      else{var curDate=range.from;while(curDate<=range.to){chartLabels.push(String(Number(curDate.slice(8))));chartValues.push(trend[curDate]||0);curDate=dateShift(curDate,1);}}
+      chartTitle=monthly?'Sales by month':'Sales by day';
+    }
+    var max=chartValues.reduce(function(m,v){return Math.max(m,v);},0);
+    chartValues.forEach(function(v,i){var pct=max?Math.round(v/max*100):0,lab=chartLabels[i];bars+='<div class="bar'+(v?'':' zero')+'" style="height:'+Math.max(pct,1)+'%" title="'+lab+': '+M.peso(v)+'">'+(v?'<span>'+(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100))+'</span>':'')+'</div>';labels+='<span>'+lab+'</span>';});
+    $('reportChartTitle').textContent=chartTitle;$('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
     $('split').innerHTML=['cash','ewallet','card'].map(function(m){var v=s.byMethod[m]||0,pct=s.net?Math.round(v/s.net*100):0;return'<div class="split-row"><span>'+METHOD_LABEL[m]+'</span><span class="split-track"><span class="split-fill" style="width:'+pct+'%;display:block"></span></span><b>'+M.peso(v)+' · '+pct+'%</b></div>';}).join('');
     var top=s.topItems;
     $('topItems').innerHTML=top.length?'<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>'+top.map(function(i){return'<tr><td>'+esc(i.name)+'<small class="portion-breakdown">Full '+i.fullQty+' · Half '+i.halfQty+'</small></td><td class="num mono">'+i.qty+'</td><td class="num mono">'+M.peso(i.amount)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No item sales in this period.</td></tr></tbody>';
