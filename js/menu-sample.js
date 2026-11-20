@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m14",
-      "cat": "extras",
-      "name": "Extra Rice",
-      "price": 2000,
-      "available": true
-    },
-    {
       "id": "m15",
       "cat": "extras",
       "name": "Fried Egg",
