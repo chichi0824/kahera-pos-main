@@ -67,7 +67,7 @@
       line.halfPrice = line.halfPrice || null;
     });
     S.view = store.get('view', 'register');
-    S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash';
+    S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash'; S.menuAdminCat = 'all';
   }
   function saveCart() { store.set('cart', S.cart); }
   function totals() {
@@ -119,10 +119,11 @@
     }
     $('grid').innerHTML = items.map(function (m) {
       var n = qtyInCart(m.id);
-      return '<button type="button" class="tile' + (m.id === bumpId ? ' bump' : '') + '" data-add="' + esc(m.id) + '"' +
+      var photo = m.image ? '<img class="tile-photo" src="' + esc(m.image) + '" alt="" loading="lazy">' : '<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
+      return '<button type="button" class="tile' + (m.id === bumpId ? ' bump' : '') + (m.image ? ' has-photo' : '') + '" data-add="' + esc(m.id) + '"' +
         (m.available ? '' : ' aria-disabled="true"') + ' style="--c:' + catColor(m.cat) + '"' +
         ' aria-label="Add ' + esc(m.name) + ', ' + M.peso(m.price) + (n ? ', ' + n + ' in order' : '') + (m.available ? '' : ', sold out') + '">' +
-        '<span class="t-cat" aria-hidden="true"></span>' +
+        photo + '<span class="t-cat" aria-hidden="true"></span>' +
         '<span class="t-name">' + esc(m.name) + '</span>' +
         '<span class="t-price">' + M.peso(m.price) + '</span>' +
         (n ? '<span class="t-qty" aria-hidden="true">' + n + '</span>' : '') +
@@ -411,6 +412,25 @@
   }
 
   // ---------- menu admin ----------
+  function compressMenuImage(file) {
+    return new Promise(function (resolve, reject) {
+      if (!file) { resolve(''); return; }
+      if (!/^image\\//.test(file.type)) { reject(new Error('Choose an image file.')); return; }
+      if (file.size > 8 * 1024 * 1024) { reject(new Error('Choose an image smaller than 8 MB.')); return; }
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        URL.revokeObjectURL(url);
+        var scale = Math.min(1, 480 / img.width, 360 / img.height);
+        var canvas = document.createElement('canvas'); canvas.width = Math.max(1, Math.round(img.width * scale)); canvas.height = Math.max(1, Math.round(img.height * scale));
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function (blob) {
+          if (!blob || blob.size > 90000) { reject(new Error('Photo is too large after compression. Try a smaller image.')); return; }
+          var reader = new FileReader(); reader.onload = function () { resolve(String(reader.result)); }; reader.onerror = function () { reject(new Error('Could not read this photo.')); }; reader.readAsDataURL(blob);
+        }, 'image/jpeg', 0.68);
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not open this image.')); }; img.src = url;
+    });
+  }
   function renderMenuAdmin() {
     byId('k-biz').value = S.settings.bizName;
     byId('k-biznote').value = S.settings.bizNote;
@@ -418,11 +438,15 @@
     var catOpts = function (sel) {
       return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(c.name) + '</option>'; }).join('');
     };
-    $('newCat').innerHTML = catOpts(S.categories[0].id);
-    var h = '<thead><tr><th>Item</th><th class="hide-sm">Category</th><th class="num">Full ₱</th><th class="num">Half ₱</th><th>On sale</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
-    S.menu.forEach(function (m) {
+    var defaultCat = S.categories.filter(function (c) { return c.id === 'meals' || c.name.toLowerCase() === 'ulam'; })[0] || S.categories[0];
+    $('newCat').innerHTML = catOpts(defaultCat.id);
+    $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(c.name) + '</button>'; }).join('');
+    var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
+    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Full ₱</th><th class="num">Half ₱</th><th>On sale</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
+    visibleMenu.forEach(function (m) {
       h += '<tr data-item="' + esc(m.id) + '">' +
         '<td><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"></td>' +
+        '<td class="menu-photo-cell">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<input type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></td>' +
         '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
         '<td class="num price"><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></td>' +
         '<td class="num price"><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="Optional" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></td>' +
@@ -430,7 +454,7 @@
         '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
         '</tr>';
     });
-    $('menuTable').innerHTML = h + '</tbody>';
+    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="7" class="empty">No items in this category yet.</td></tr></tbody>';
   }
   var menuSaveChain = Promise.resolve();
   function saveMenu() {
@@ -600,12 +624,21 @@
       S.settings.vatRegistered = byId('k-vat').checked;
       renderBrand(); renderTotals(); saveMenu();
     });
+    $('menuAdminFilters').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-admin-cat]'); if (!b) return;
+      S.menuAdminCat = b.getAttribute('data-admin-cat'); renderMenuAdmin();
+    });
     $('menuTable').addEventListener('change', function (e) {
       var f = e.target.getAttribute('data-f');
       var tr = e.target.closest('[data-item]');
       if (!f || !tr) return;
       var m = S.menu.filter(function (x) { return x.id === tr.getAttribute('data-item'); })[0];
       if (!m) return;
+      if (f === 'image') {
+        var photoInput = e.target; photoInput.disabled = true;
+        compressMenuImage(photoInput.files && photoInput.files[0]).then(function (image) { m.image = image; return saveMenu(); }).then(function () { renderMenuAdmin(); toast('Item photo saved.'); }).catch(function (error) { toast(error.message); photoInput.disabled = false; photoInput.value = ''; });
+        return;
+      }
       if (f === 'name') { var n = e.target.value.trim(); if (n) m.name = n; else e.target.value = m.name; }
       if (f === 'cat') m.cat = e.target.value;
       if (f === 'available') m.available = e.target.checked;
@@ -635,14 +668,17 @@
       e.preventDefault();
       var name = byId('k-newname').value.trim(), price = M.toCentavos(byId('k-newprice').value);
       var halfRaw = byId('k-newhalfprice').value.trim();
+      var photoFile = byId('k-newimage').files && byId('k-newimage').files[0];
       var halfPrice = halfRaw ? M.toCentavos(halfRaw) : null;
       if (!name) { $('addErr').textContent = 'Give the item a name.'; return; }
       if (isNaN(price) || price <= 0) { $('addErr').textContent = 'Enter a full-order price in pesos, like 150 or 150.50.'; return; }
       if (halfRaw && (isNaN(halfPrice) || halfPrice <= 0 || halfPrice > price)) { $('addErr').textContent = 'Half-order price must be greater than zero and no more than the full price.'; return; }
       $('addErr').textContent = '';
-      S.menu.push({ id: 'u' + Date.now().toString(36), cat: byId('k-newcat').value, name: name, price: price, halfPrice: halfPrice, available: true });
-      saveMenu().then(function () { renderMenuAdmin(); });
-      byId('k-newname').value = ''; byId('k-newprice').value = ''; byId('k-newhalfprice').value = '';
+      var submit = $('addForm').querySelector('[type="submit"]'); submit.disabled = true;
+      compressMenuImage(photoFile).then(function (image) {
+        S.menu.push({ id: 'u' + Date.now().toString(36), cat: byId('k-newcat').value, name: name, price: price, halfPrice: halfPrice, image: image, available: true }); return saveMenu();
+      }).then(function () { renderMenuAdmin(); byId('k-newname').value = ''; byId('k-newprice').value = ''; byId('k-newhalfprice').value = ''; byId('k-newimage').value = ''; })
+        .catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
     $('adminAccess').addEventListener('click', function () {
       if (S.isAdmin) {
