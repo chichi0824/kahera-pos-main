@@ -16,9 +16,7 @@
   root.KaheraCloud={
     getDeviceId:getDeviceId,newId:uuid,
     getMenu:function(){return request("/api/menu",{method:"GET",cache:"no-store"});},
-    login:function(password){return request("/api/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){if(!b.token)throw new Error("The server did not return an administrator session.");token=b.token;return true;});},
-    logout:function(){token=null;},isAdmin:function(){return !!token;},
-    saveMenu:function(payload){if(!token)return Promise.reject(new Error("Please log in as administrator first."));return request("/api/menu",{method:"PUT",body:JSON.stringify(payload)});},
+    saveMenu:function(payload){return request("/api/menu",{method:"PUT",body:JSON.stringify(payload)});},
     getCurrentShift:function(){return request("/api/shifts/current",{method:"GET",cache:"no-store"}).then(function(b){return b.shift;});},
     getReports:function(from,to){return request("/api/reports?from="+encodeURIComponent(from)+"&to="+encodeURIComponent(to),{method:"GET",cache:"no-store"});},
     getOrders:function(shiftId){return request("/api/orders"+(shiftId?"?shiftId="+encodeURIComponent(shiftId):""),{method:"GET",cache:"no-store"}).then(function(b){return b.orders||[];});},
