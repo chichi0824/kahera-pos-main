@@ -375,7 +375,7 @@
     var daysMeta={};S.reportDays.forEach(function(d){daysMeta[d.date]=d;});
     var html='<div class="calendar-weekdays">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(function(x){return'<span>'+x+'</span>';}).join('')+'</div><div class="calendar-days">';
     for(var i=0;i<offset;i++)html+='<span class="calendar-blank"></span>';
-    for(var n=1;n<=days;n++){var date=S.calendarMonth+'-'+String(n).padStart(2,'0'),summary=salesByDate[date],meta=daysMeta[date],selected=date===S.reportDate,hasSales=!!(summary&&summary.count);html+='<button type="button" class="calendar-day'+(selected?' selected':'')+(hasSales?' has-sales':'')+(meta?' has-report':'')+'" data-calendar-date="'+date+'" aria-label="'+formatDate(date)+', '+(summary?M.peso(summary.sales)+' sales':'no sales')+'"><span>'+n+'</span>'+(hasSales?'<small>'+M.peso(summary.sales,{symbol:false})+'</small>':(meta?'<i></i>':''))+'</button>';}
+    for(var n=1;n<=days;n++){var date=S.calendarMonth+'-'+String(n).padStart(2,'0'),summary=salesByDate[date],meta=daysMeta[date],selected=date===S.reportDate,hasSales=!!(summary&&summary.count);html+='<button type="button" class="calendar-day'+(selected?' selected':'')+(hasSales?' has-sales':'')+(meta?' has-report':'')+'" data-calendar-date="'+date+'" aria-label="'+formatDate(date)+', '+(summary?M.peso(summary.sales)+' sales':'no sales')+'"><span>'+n+'</span>'+(hasSales?'<small>'+(summary.sales>=100000?(summary.sales/100000).toFixed(1)+'k':Math.round(summary.sales/100).toString())+'</small>':(meta?'<i></i>':''))+'</button>';}
     html+='</div>';$('reportCalendar').innerHTML=html;
   }
   function renderShift(){
