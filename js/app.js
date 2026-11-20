@@ -184,7 +184,7 @@
     $('totals').innerHTML = h;
     var charge = $('charge');
     charge.textContent = 'Charge ' + M.peso(t.total);
-    charge.disabled = !S.cart.lines.length;
+    charge.disabled = !S.cart.lines.length || !S.shift || S.shift.status !== 'open';
     if (S.paying) renderPay();
   }
 
@@ -229,6 +229,7 @@
 
   function completeSale() {
     var t = totals(), err = $('payErr');
+    if (!S.shift || S.shift.status !== 'open') { err.textContent = 'No daily report is open. Sales are disabled.'; return; }
     if (!S.cart.lines.length || S.savingSale) return;
     var tendered = t.total, ref = '';
     if (S.method === 'cash') {
@@ -366,18 +367,18 @@
     var top = s.topItems.slice(0, 6);
     $('topItems').innerHTML = top.length
       ? '<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>' +
-        top.map(function (i) { return '<tr><td>' + esc(i.name) + '</td><td class="num mono">' + i.qty + '</td><td class="num mono">' + M.peso(i.amount) + '</td></tr>'; }).join('') + '</tbody>'
+        top.map(function (i) { return '<tr><td>' + esc(i.name) + '<small class="portion-breakdown">Full ' + i.fullQty + ' · Half ' + i.halfQty + '</small></td><td class="num mono">' + i.qty + '</td><td class="num mono">' + M.peso(i.amount) + '</td></tr>'; }).join('') + '</tbody>'
       : '<tbody><tr><td class="empty">Sales will appear here after the first order.</td></tr></tbody>';
 
     var ns = $('newShift');
     var wrap = $('shiftActions');
     var old = wrap.querySelector('.confirm');
     if (old) old.remove();
-    ns.hidden = pendingShift;
+    ns.hidden = !S.shift || S.shift.status !== 'open' || pendingShift;
     if (pendingShift) {
       var c = document.createElement('span');
       c.className = 'confirm';
-      c.innerHTML = 'Close this shared shift? Previous orders will remain saved. <button type="button" class="btn small danger" data-shift-yes>Close shift</button><button type="button" class="btn small" data-shift-no>Cancel</button>';
+      c.innerHTML = 'Close today’s report now? Sales will stop until the next weekday report opens. <button type="button" class="btn small danger" data-shift-yes>Close report</button><button type="button" class="btn small" data-shift-no>Cancel</button>';
       wrap.appendChild(c);
     }
   }
@@ -472,6 +473,11 @@
   function renderBrand() {
     $('biz').textContent = S.settings.bizName + ' · ' + S.settings.bizNote;
     $('orderCount').textContent = S.orders.filter(function (o) { return o.status !== 'void'; }).length;
+    var notice = $('reportNotice');
+    if (notice) {
+      notice.hidden = !!(S.shift && S.shift.status === 'open');
+      if (!notice.hidden) notice.textContent = 'No daily report is open. Sales are disabled. Reports open automatically at 7:00 AM, Monday to Friday.';
+    }
   }
 
   function renderAll() {
@@ -482,6 +488,7 @@
 
   // ---------- cart mutations ----------
   function addItem(id) {
+    if (!S.shift || S.shift.status !== 'open') { toast('No daily report is open. Sales are disabled.'); return; }
     var m = S.menu.filter(function (x) { return x.id === id; })[0];
     if (!m) return;
     if (!m.available) { toast(m.name + ' is marked sold out'); return; }
@@ -613,7 +620,7 @@
       if (e.target.closest('[data-shift-no]')) { pendingShift = false; renderShift(); }
       if (e.target.closest('[data-shift-yes]')) {
         pendingShift = false;
-        cloud.closeShift(S.shift && S.shift.id).then(function () { return cloud.startShift(cloud.getDeviceId()); }).then(function (shift) { S.shift = shift; return refreshSharedData(); }).then(function () { toast('New shared shift started. Previous orders remain in history.'); }).catch(function (error) { toast('Could not start a new shift: ' + error.message); });
+        cloud.closeShift(S.shift && S.shift.id).then(function () { return refreshSharedData(); }).then(function () { toast('Daily report closed. Orders remain saved.'); }).catch(function (error) { toast('Could not close the report: ' + error.message); });
       }
     });
 
@@ -742,9 +749,9 @@
   function refreshSharedData() {
     if (refreshInFlight) return Promise.resolve();
     refreshInFlight = true;
-    return cloud.startShift(cloud.getDeviceId()).then(function (shift) {
-      S.shift = shift;
-      return Promise.all([cloud.getOrders(shift.id), cloud.getNextNo()]);
+    return cloud.getCurrentShift().then(function (shift) {
+      S.shift = shift || null;
+      return Promise.all([S.shift ? cloud.getOrders(S.shift.id) : Promise.resolve([]), cloud.getNextNo()]);
     }).then(function (results) {
       S.orders = results[0];
       S.nextNo = results[1];
