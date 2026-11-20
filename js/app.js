@@ -450,7 +450,7 @@
     updateNewVariantControl();
     $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(categoryLabel(c)) + '</button>'; }).join('');
     var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
-    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Default ₱ / Drink variants</th><th class="num">Half ₱</th><th>Available today</th><th>Sold out</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Item</th><th>Photo</th><th class="hide-sm">Category</th><th class="num">Price / Drink variants</th><th class="num">Half ₱</th><th>Available today</th><th>Sold out</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     visibleMenu.forEach(function (m) {
       h += '<tr data-item="' + esc(m.id) + '">' +
         '<td><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"></td>' +
