@@ -232,13 +232,15 @@ tr.is-void td.num { text-decoration: line-through; }
 .menu-admin { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 14px; align-items: start; }
 .menu-admin td input, .menu-admin td select { padding: 6px 8px; }
 .menu-admin td.price input { width: 7em; text-align: right; font-family: var(--f-mono); }
-.menu-admin table { width: 100%; table-layout: fixed; }
-.menu-admin th, .menu-admin td { padding: 8px 7px; vertical-align: middle; }
-.menu-admin th:first-child { width: 32%; }
-.menu-admin th:nth-child(2) { width: 13%; }
-.menu-admin th:nth-child(3) { width: 25%; }
-.menu-admin th:nth-child(4) { width: 22%; }
-.menu-admin th:last-child { width: 8%; }
+.menu-admin table.data { width: 100%; min-width: 650px; table-layout: auto; border-collapse: separate; border-spacing: 0; }
+.menu-admin table.data th, .menu-admin table.data td { padding: 9px 8px; vertical-align: middle; border-bottom: 0; box-shadow: inset 0 -1px 0 var(--line); }
+.menu-admin table.data thead th { box-shadow: inset 0 -1px 0 var(--line); white-space: nowrap; }
+.menu-admin table.data tbody tr:last-child td { box-shadow: none; }
+.menu-admin table.data th:first-child { min-width: 210px; }
+.menu-admin table.data th:nth-child(2) { min-width: 105px; }
+.menu-admin table.data th:nth-child(3) { min-width: 165px; }
+.menu-admin table.data th:nth-child(4) { min-width: 145px; }
+.menu-admin table.data th:last-child { width: 42px; min-width: 42px; }
 .menu-item-editor { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .menu-item-editor .menu-thumb { flex: 0 0 48px; width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
 .menu-item-fields { display: grid; gap: 5px; min-width: 0; flex: 1; }
@@ -251,6 +253,9 @@ tr.is-void td.num { text-decoration: line-through; }
 .menu-status-cell .check { display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; font-size: .78rem; }
 .menu-status-cell .check input { width: 16px; height: 16px; }
 .menu-admin .drink-variants-cell { min-width: 0; }
+.menu-admin .table-wrap { width: 100%; min-width: 0; overflow-x: auto; }
+.menu-admin table.data td { background-clip: padding-box; }
+.menu-admin table.data tbody tr:hover td { background-color: var(--surface-2); }
 .form-grid { display: grid; gap: 10px; }
 .form-grid > label, .check { display: grid; gap: 4px; }
 .check { grid-template-columns: auto 1fr; align-items: center; gap: 8px; color: var(--ink); font-weight: 400; }
