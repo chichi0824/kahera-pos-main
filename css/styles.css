@@ -232,15 +232,20 @@ tr.is-void td.num { text-decoration: line-through; }
 .menu-admin { display: grid; grid-template-columns: minmax(0, 1fr) minmax(260px, 340px); gap: 14px; align-items: start; }
 .menu-admin td input, .menu-admin td select { padding: 6px 8px; }
 .menu-admin td.price input { width: 7em; text-align: right; font-family: var(--f-mono); }
-.menu-admin table.data { width: 100%; min-width: 650px; table-layout: auto; border-collapse: separate; border-spacing: 0; }
-.menu-admin table.data th, .menu-admin table.data td { padding: 9px 8px; vertical-align: middle; border-bottom: 0; box-shadow: inset 0 -1px 0 var(--line); }
-.menu-admin table.data thead th { box-shadow: inset 0 -1px 0 var(--line); white-space: nowrap; }
-.menu-admin table.data tbody tr:last-child td { box-shadow: none; }
-.menu-admin table.data th:first-child { min-width: 210px; }
-.menu-admin table.data th:nth-child(2) { min-width: 105px; }
-.menu-admin table.data th:nth-child(3) { min-width: 165px; }
-.menu-admin table.data th:nth-child(4) { min-width: 145px; }
-.menu-admin table.data th:last-child { width: 42px; min-width: 42px; }
+.menu-admin table.data { width: 100%; min-width: 700px; table-layout: fixed; border-collapse: collapse; }
+.menu-admin table.data col.menu-col-item { width: 32%; }
+.menu-admin table.data col.menu-col-category { width: 14%; }
+.menu-admin table.data col.menu-col-pricing { width: 25%; }
+.menu-admin table.data col.menu-col-status { width: 23%; }
+.menu-admin table.data col.menu-col-delete { width: 6%; }
+.menu-admin table.data th, .menu-admin table.data td { box-sizing: border-box; padding: 9px 8px; vertical-align: middle; border-bottom: 1px solid var(--line); text-align: left; }
+.menu-admin table.data thead th { white-space: nowrap; }
+.menu-admin table.data th:last-child, .menu-admin table.data td:last-child { text-align: right; }
+.menu-admin table.data td { overflow-wrap: anywhere; }
+.menu-admin table.data .menu-item-editor, .menu-admin table.data .menu-status-cell { min-width: 0; }
+@media (max-width: 560px) {
+  .menu-admin table.data col.menu-col-category { display: none; }
+}
 .menu-item-editor { display: flex; align-items: center; gap: 9px; min-width: 0; }
 .menu-item-editor .menu-thumb { flex: 0 0 48px; width: 48px; height: 48px; object-fit: cover; border-radius: 8px; }
 .menu-item-fields { display: grid; gap: 5px; min-width: 0; flex: 1; }
