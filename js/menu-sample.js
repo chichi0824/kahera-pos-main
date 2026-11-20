@@ -31,13 +31,6 @@
   ],
   "menu": [
     {
-      "id": "m11",
-      "cat": "merienda",
-      "name": "Puto Maya & Sikwate",
-      "price": 6000,
-      "available": true
-    },
-    {
       "id": "m13",
       "cat": "merienda",
       "name": "Banana Cue",
