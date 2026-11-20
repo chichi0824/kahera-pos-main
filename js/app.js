@@ -148,7 +148,7 @@
             '<option value="half"' + (l.portion === 'half' ? ' selected' : '') + '>Half</option></select></label>'
           : '<span class="portion-label">Full</span>';
         return '<li class="line">' +
-          '<span class="l-name">' + esc(l.name) + portionControl + '<span class="l-each">' + M.peso(l.price) + ' each</span></span>' +
+          '<span class="l-name">' + esc(l.name) + portionControl + '<label class="price-edit">Price <input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-price="' + i + '" aria-label="Unit price for ' + esc(l.name) + '" value="' + (l.price / 100).toFixed(2) + '"></label></span>' +
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
@@ -492,7 +492,7 @@
     var m = S.menu.filter(function (x) { return x.id === id; })[0];
     if (!m) return;
     if (!m.available) { toast(m.name + ' is marked sold out'); return; }
-    var l = S.cart.lines.filter(function (x) { return x.id === id && x.portion === 'full'; })[0];
+    var l = S.cart.lines.filter(function (x) { return x.id === id && x.portion === 'full' && x.price === m.price; })[0];
     if (l) l.qty = Math.min(99, l.qty + 1);
     else S.cart.lines.push({ id: m.id, name: m.name, price: m.price, fullPrice: m.price, halfPrice: m.halfPrice || null, portion: 'full', qty: 1 });
     saveCart(); renderCart(); renderGrid(id);
@@ -557,6 +557,20 @@
       if (b) stepLine(+b.getAttribute('data-line'), +b.getAttribute('data-d'));
     });
     $('lines').addEventListener('change', function (e) {
+      var priceInput = e.target.closest('[data-line-price]');
+      if (priceInput) {
+        var priceLine = S.cart.lines[+priceInput.getAttribute('data-line-price')];
+        var adjusted = M.toCentavos(priceInput.value);
+        if (!priceLine) return;
+        if (isNaN(adjusted) || adjusted < 1 || adjusted > 100000000) {
+          toast('Enter a valid price greater than ₱0.');
+          renderCart();
+          return;
+        }
+        priceLine.price = adjusted;
+        saveCart(); renderCart(); renderGrid();
+        return;
+      }
       var sel = e.target.closest('[data-portion]');
       if (!sel) return;
       var line = S.cart.lines[+sel.getAttribute('data-portion')];
