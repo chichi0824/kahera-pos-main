@@ -312,3 +312,7 @@ dialog.admin-dlg::backdrop { background: rgba(10, 16, 13, .58); }
 .menu-thumb.placeholder { display: grid; place-items: center; font-size: 1.3rem; }
 .menu-photo-cell input[type="file"] { max-width: 145px; font-size: .72rem; }
 @media (max-width: 560px) { .tile-photo { height: 76px; } .menu-photo-cell input[type="file"] { max-width: 112px; } }
+
+/* Editable unit price on each active order line. */
+.price-edit { display: inline-flex; align-items: center; gap: 6px; margin-top: 5px; font-size: .76rem; color: var(--muted); font-weight: 600; }
+.price-edit input { width: 6.8em; padding: 4px 6px; border: 1px solid var(--line); border-radius: 7px; background: var(--surface); color: var(--ink); font: 500 .82rem var(--f-mono); }
