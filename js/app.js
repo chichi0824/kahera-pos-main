@@ -115,9 +115,10 @@
   function renderTile(m,bumpId){
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
     var hasOptions=isDrinksCategory(m.cat)&&Array.isArray(m.variants)&&m.variants.length;
-    var prices=hasOptions?m.variants.map(function(v){return v.price;}):[m.price];
-    var priceLabel=hasOptions?'From '+M.peso(Math.min.apply(null,prices)):M.peso(m.price);
-    var disabled=!!m.soldOut;
+    var availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false;}):[];
+    var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
+    var disabled=!!m.soldOut||(hasOptions&&!availableVariants.length);
+    var priceLabel=hasOptions?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No sizes available'):M.peso(m.price);
     return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(disabled?', sold out':'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(disabled?'<span class="sold-out-tag">Sold Out</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
   }
 
@@ -677,7 +678,7 @@
       var b = e.target.closest('[data-admin-cat]'); if (!b) return;
       S.menuAdminCat = b.getAttribute('data-admin-cat'); renderMenuAdmin();
     });
-    $('menuTable').addEventListener('click',function(e){var add=e.target.closest('[data-variant-add]'),remove=e.target.closest('[data-variant-remove]'),tr=e.target.closest('[data-item]');if(!tr)return;var m=S.menu.filter(function(x){return x.id===tr.getAttribute('data-item');})[0];if(!m)return;if(add){var list=tr.querySelector('.variant-editor-list');if(list.querySelectorAll('[data-variant-row]').length>=20){toast('Maximum 20 variants per drink.');return;}list.insertAdjacentHTML('beforeend',renderVariantRow({id:'v'+Date.now().toString(36),name:'',price:0,available:true}));return;}if(remove){var row=remove.closest('[data-variant-row]');row.remove();var result=readVariantEditor(tr.querySelector('.drink-variants-cell'));if(!result.incomplete&&!result.error){m.variants=result.variants;m.price=m.variants.length?m.variants[0].price:100;m.halfPrice=null;saveMenu();}}});
+    $('menuTable').addEventListener('click',function(e){var add=e.target.closest('[data-variant-add]'),remove=e.target.closest('[data-variant-remove]'),tr=e.target.closest('[data-item]');if(!tr)return;var m=S.menu.filter(function(x){return x.id===tr.getAttribute('data-item');})[0];if(!m)return;if(add){var list=tr.querySelector('.variant-editor-list');if(list.querySelectorAll('[data-variant-row]').length>=20){toast('Maximum 20 variants per drink.');return;}list.insertAdjacentHTML('beforeend',renderVariantRow({id:'v'+Date.now().toString(36),name:'',price:0,available:true}));return;}if(remove){if(tr.querySelectorAll('[data-variant-row]').length<=1){toast('A drink needs at least one variant.');return;}var row=remove.closest('[data-variant-row]');row.remove();var result=readVariantEditor(tr.querySelector('.drink-variants-cell'));if(!result.incomplete&&!result.error){m.variants=result.variants;m.price=m.variants.length?m.variants[0].price:100;m.halfPrice=null;saveMenu();}}});
     $('menuTable').addEventListener('change', function (e) {
       var variantField=e.target.getAttribute('data-vf'),variantRow=e.target.closest('[data-variant-row]');
       if(variantField&&variantRow){var variantResult=readVariantEditor(e.target.closest('.drink-variants-cell'));if(variantResult.error){toast(variantResult.error);return;}if(variantResult.incomplete)return;var targetTr=e.target.closest('[data-item]'),targetItem=S.menu.filter(function(x){return x.id===targetTr.getAttribute('data-item');})[0];targetItem.variants=variantResult.variants;targetItem.price=variantResult.variants.length?variantResult.variants[0].price:100;targetItem.halfPrice=null;saveMenu().then(renderMenuAdmin);return;}
