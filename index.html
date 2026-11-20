@@ -166,8 +166,8 @@
     <!-- MENU -->
     <section id="view-menu" class="view" role="tabpanel" aria-labelledby="tab-menu" hidden>
       <div class="view-head">
-        <div><p class="eyebrow">Central menu · GitHub</p><h2>Menu &amp; settings</h2></div>
-        <p class="hint">Changes are committed to the official menu file. Cashier devices receive them after refreshing.</p>
+        <div><p class="eyebrow">Central menu · Cloud database</p><h2>Menu &amp; settings</h2></div>
+        <p class="hint">Changes are saved to the shared database. Cashier devices receive updates automatically.</p>
       </div>
       <div class="menu-admin" style="margin-top:12px">
         <div class="panel table-wrap">
@@ -224,7 +224,7 @@
           <ul>
             <li>Plain HTML, CSS and JavaScript. No framework, no build step</li>
             <li><code>money.js</code>: pure functions in integer centavos, unit-tested in Node</li>
-            <li>GitHub-backed shared menu via Cloudflare Worker; sales and cart data remain device-local</li>
+            <li>Cloudflare Worker + D1 shared menu, orders and shifts; active carts remain device-local</li>
             <li>Service worker + web manifest for offline use and "Add to Home Screen"</li>
           </ul>
         </div>
