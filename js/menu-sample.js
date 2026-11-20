@@ -38,13 +38,6 @@
       "available": true
     },
     {
-      "id": "m05",
-      "cat": "meals",
-      "name": "Chicken Adobo",
-      "price": 13500,
-      "available": true
-    },
-    {
       "id": "m06",
       "cat": "meals",
       "name": "Pork Sinigang",
