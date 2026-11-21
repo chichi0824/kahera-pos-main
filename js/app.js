@@ -288,8 +288,7 @@
 
   function showSlip(o) {
     var t = o.totals, h = '';
-    h += '<h3>' + esc(S.settings.bizName) + '</h3>';
-    h += '<p class="center">' + esc(S.settings.bizNote) + '</p>';
+    h += '<div class="slip-brand"><img class="slip-logo" src="./icons/kahera-icon.png" alt="Kahera icon"><div><h3>' + esc(S.settings.bizName) + '</h3><p class="center slip-location">' + esc(S.settings.bizNote) + '</p></div></div>';
     h += '<p class="stamp">Order slip · not an official receipt</p>';
     h += '<div class="row"><span>' + esc(o.no) + '</span><span>' + new Date(o.ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</span></div>';
     h += '<div class="row"><span>' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · Table ' + esc(o.table) : '') : 'Take-out') + '</span><span>' + METHOD_LABEL[o.method] + '</span></div><hr>';
