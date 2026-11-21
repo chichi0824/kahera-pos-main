@@ -22,6 +22,7 @@
     getOrders:function(shiftId){return request("/api/orders"+(shiftId?"?shiftId="+encodeURIComponent(shiftId):""),{method:"GET",cache:"no-store"}).then(function(b){return b.orders||[];});},
     getNextNo:function(){return request("/api/orders/next-number",{method:"GET",cache:"no-store"}).then(function(b){return b.no;});},
     createOrder:function(order){var payload=Object.assign({},order,{id:order.id||uuid(),deviceId:order.deviceId||getDeviceId()});return request("/api/orders",{method:"POST",body:JSON.stringify(payload)}).then(function(b){return b.order;});},
+    getPaymentProof:function(orderId){return request("/api/orders/"+encodeURIComponent(orderId)+"/payment-proof",{method:"GET",cache:"no-store"}).then(function(b){return b.dataUrl;});},
     voidOrder:function(orderId){return request("/api/orders/"+encodeURIComponent(orderId)+"/void",{method:"POST",body:"{}"}).then(function(b){return b.order;});}
   };
 })(typeof window!=="undefined"?window:this);
