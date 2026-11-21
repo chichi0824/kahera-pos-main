@@ -204,7 +204,7 @@
     $('totals').innerHTML = h;
     var charge = $('charge');
     charge.textContent = 'Charge ' + M.peso(t.total);
-    charge.disabled = !S.cart.lines.length || !S.shift || S.shift.status !== 'open';
+    charge.disabled = !S.cart.lines.length;
     if (S.paying) renderPay();
   }
 
