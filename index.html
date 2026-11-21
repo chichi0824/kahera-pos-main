@@ -252,15 +252,12 @@ DB
                 </p>
               </div>
               <div data-k="refBox" class="form-grid" hidden>
-                <label for="k-ref"
-                  >Reference no. (from the customer's confirmation)</label
-                >
-                <input
-                  id="k-ref"
-                  autocomplete="off"
-                  maxlength="40"
-                  placeholder="e.g. 4012 883 1290"
-                />
+                <label for="k-ref">Reference no. (optional when e-wallet photo is attached)</label>
+                <input id="k-ref" autocomplete="off" maxlength="40" placeholder="Enter reference number (optional for e-wallet)" />
+                <label for="k-payment-proof">Payment confirmation photo (e-wallet)</label>
+                <input id="k-payment-proof" type="file" accept="image/*" capture="environment" />
+                <p class="hint">Use the camera to photograph the successful payment screen, or choose a photo from your gallery. Verify the payment was received before completing the sale.</p>
+                <div class="payment-proof-preview" data-k="paymentProofPreview" hidden><img data-k="paymentProofImage" alt="Payment proof preview" /><button type="button" class="btn small ghost" data-k="removePaymentProof">Remove photo</button></div>
               </div>
               <p class="err" data-k="payErr" role="alert"></p>
               <div class="order-actions">
@@ -687,6 +684,7 @@ SQL</code></pre>
         </div>
       </dialog>
 
+      <dialog class="proof-dlg" data-k="proofDlg" aria-label="Payment proof"><div class="panel card-pad"><div class="report-calendar-head"><h3 data-k="proofTitle">Payment proof</h3><button type="button" class="btn ghost" data-k="proofClose">Close</button></div><img data-k="proofFullImage" alt="Customer payment confirmation" /></div></dialog>
       <div class="toast" role="status" aria-live="polite" data-k="toast"></div>
     </div>
     <!--APP-END-->
