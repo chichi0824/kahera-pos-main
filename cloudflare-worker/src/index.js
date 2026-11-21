@@ -58,7 +58,7 @@ async function currentShift(db) {
 }
 async function ensureDailyReport(db,deviceId,now=new Date()) {
   const local=manilaParts(now);
-  if(!isWeekday(local.date))return currentShift(db);
+  // A report is created every calendar day; it must never gate Register access.
   let active=await currentShift(db);
   if(active && active.report_date===local.date)return active;
   if(active && (!active.report_date || active.report_date<local.date)) {
@@ -85,7 +85,7 @@ async function runDailySchedule(db,now=new Date()) {
     await db.prepare("UPDATE shifts SET status='closed',ended_at=?,close_reason='automatic_midnight' WHERE id=? AND status='open'")
       .bind(now.toISOString(),active.id).run();
   }
-  if(isWeekday(local.date)) {
+  {
     const alreadyCreated=await db.prepare("SELECT id FROM shifts WHERE report_date=? LIMIT 1").bind(local.date).first();
     if(!alreadyCreated && !(await currentShift(db))) {
       try {
@@ -181,8 +181,9 @@ async function createOrder(db,b,deviceId) {
   const totals = calculateTotals(menuRows, settings, b.totals.discountKind, b.totals.diners, b.totals.idHolders);
   if (b.totals.total !== totals.total || b.totals.discountKind !== totals.discountKind) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
   if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
-  const shift = await currentShift(db);
-  if(!shift || shift.status!=='open') throw new Error('No daily report is open. Sales are disabled until the next report opens.');
+  // Ensure today's report exists, but keep order entry available every day and at every hour.
+  const shift = await ensureDailyReport(db,deviceId,new Date());
+  if(!shift || shift.status!=='open') throw new Error('Could not prepare today’s report. Please retry the order.');
   const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
   if (!counter) throw new Error('Order counter is missing. Run the D1 migration.');
   const ts=Date.now(), no='K-'+pad(counter.value);
