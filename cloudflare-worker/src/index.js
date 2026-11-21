@@ -106,8 +106,12 @@ async function runDailySchedule(db,now=new Date()) {
 }
 function rowOrder(r){const o=JSON.parse(r.payload_json);o.status=r.status;if(r.voided_at)o.voidedAt=Date.parse(r.voided_at);return o;}
 async function orders(db,shiftId) {
-  if(!shiftId){const s=await currentShift(db);if(!s)return [];shiftId=s.id;}
-  const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
+  if(shiftId){
+    const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
+    return (r.results||[]).map(rowOrder);
+  }
+  const today=manilaParts().date;
+  const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE COALESCE(date(created_at,'+8 hours'), '')=? ORDER BY created_at,order_no").bind(today).all();
   return (r.results||[]).map(rowOrder);
 }
 async function reportData(db,from,to) {
@@ -188,20 +192,20 @@ async function createOrder(db,b,deviceId) {
   const totals = calculateTotals(menuRows, settings, b.totals.discountKind, b.totals.diners, b.totals.idHolders);
   if (b.totals.total !== totals.total || b.totals.discountKind !== totals.discountKind) throw new Error('The order total does not match the official menu and discount calculation. Review the cart.');
   if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
-  // Ensure today's report exists, but keep order entry available every day and at every hour.
-  const shift = await ensureDailyReport(db,deviceId,new Date());
-  if(!shift) throw new Error('Could not create today’s report record. Please retry the order.');
+  // Reports are optional bookkeeping. A sale must be saved even when no report is open
+  // or daily report creation/rollover has failed.
+  const shift = await currentShift(db);
   const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
   if (!counter) throw new Error('Order counter is missing. Run the D1 migration.');
   const ts=Date.now(), no='K-'+pad(counter.value);
   const order={
     id:b.id,no,ts,type:b.type,table:b.type==='dine'?String(b.table||'').slice(0,3):'',
     lines:menuRows,totals,method:b.method,tendered:b.tendered,change:b.tendered-totals.total,
-    ref:b.ref||'',status:'paid',shiftId:shift.id
+    ref:b.ref||'',status:'paid',shiftId:shift ? shift.id : null
   };
   const statements=[
     db.prepare('INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(order.id,order.no,shift.id,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order))
+      .bind(order.id,order.no,order.shiftId,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order))
   ];
   order.lines.forEach(line=>statements.push(
     db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)')
@@ -223,7 +227,8 @@ export default {
   const h=cors(origin),u=new URL(request.url),db=env.kahera_db;
   try {
    if(!db)return json({error:'Cloudflare D1 binding kahera_db is missing.'},500,h);
-   await runDailySchedule(db,new Date());
+   // Report rollover is best-effort and must never block menu, register, or sales APIs.
+   try { await runDailySchedule(db,new Date()); } catch (scheduleError) { /* sales remain available */ }
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
    if(u.pathname==='/api/menu'&&request.method==='PUT'){await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
