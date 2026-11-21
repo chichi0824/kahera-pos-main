@@ -67,7 +67,14 @@ async function ensureDailyReport(db,deviceId,now=new Date()) {
     active=null;
   }
   const alreadyCreated=await db.prepare("SELECT id,status FROM shifts WHERE report_date=? LIMIT 1").bind(local.date).first();
-  if(alreadyCreated)return currentShift(db);
+  if(alreadyCreated){
+    // A daily report record must never prevent a sale. Reopen today's report
+    // if an earlier/legacy deployment left it closed.
+    if(alreadyCreated.status!=='open'){
+      await db.prepare("UPDATE shifts SET status='open',ended_at=NULL,close_reason=NULL WHERE id=?").bind(alreadyCreated.id).run();
+    }
+    return currentShift(db);
+  }
   try {
     await db.prepare("INSERT INTO shifts(id,device_id,started_at,status,report_date) VALUES(?,?,?,'open',?)")
       .bind(uuid(),deviceId||'scheduled-opening',now.toISOString(),local.date).run();
@@ -183,7 +190,7 @@ async function createOrder(db,b,deviceId) {
   if (b.method !== 'cash' && b.tendered !== totals.total) throw new Error('For non-cash payments, the amount must match the order total.');
   // Ensure today's report exists, but keep order entry available every day and at every hour.
   const shift = await ensureDailyReport(db,deviceId,new Date());
-  if(!shift || shift.status!=='open') throw new Error('Could not prepare today’s report. Please retry the order.');
+  if(!shift) throw new Error('Could not create today’s report record. Please retry the order.');
   const counter = await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
   if (!counter) throw new Error('Order counter is missing. Run the D1 migration.');
   const ts=Date.now(), no='K-'+pad(counter.value);
