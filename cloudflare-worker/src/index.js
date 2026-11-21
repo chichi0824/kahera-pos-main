@@ -58,7 +58,7 @@ async function currentShift(db) {
 }
 async function ensureDailyReport(db,deviceId,now=new Date()) {
   const local=manilaParts(now);
-  if(!isWeekday(local.date)||local.hour<7)return currentShift(db);
+  if(!isWeekday(local.date))return currentShift(db);
   let active=await currentShift(db);
   if(active && active.report_date===local.date)return active;
   if(active && (!active.report_date || active.report_date<local.date)) {
@@ -85,7 +85,7 @@ async function runDailySchedule(db,now=new Date()) {
     await db.prepare("UPDATE shifts SET status='closed',ended_at=?,close_reason='automatic_midnight' WHERE id=? AND status='open'")
       .bind(now.toISOString(),active.id).run();
   }
-  if(isWeekday(local.date) && local.hour>=7) {
+  if(isWeekday(local.date)) {
     const alreadyCreated=await db.prepare("SELECT id FROM shifts WHERE report_date=? LIMIT 1").bind(local.date).first();
     if(!alreadyCreated && !(await currentShift(db))) {
       try {
