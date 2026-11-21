@@ -217,6 +217,20 @@
   }
 
   // ---------- payment ----------
+  var paymentProofData = '';
+  function compressPaymentImage(file) {
+    return new Promise(function(resolve,reject){
+      if(!file || !/^image\//.test(file.type)){reject(new Error('Choose an image file.'));return;}
+      var reader=new FileReader();reader.onerror=function(){reject(new Error('Could not read the selected photo.'));};
+      reader.onload=function(){var img=new Image();img.onerror=function(){reject(new Error('Could not open the selected photo.'));};img.onload=function(){
+        var scale=Math.min(1,1280/Math.max(img.width,img.height)),canvas=document.createElement('canvas');
+        canvas.width=Math.max(1,Math.round(img.width*scale));canvas.height=Math.max(1,Math.round(img.height*scale));canvas.getContext('2d').drawImage(img,0,0,canvas.width,canvas.height);
+        var quality=.76,result=canvas.toDataURL('image/jpeg',quality);while(result.length>650000&&quality>.42){quality-=.08;result=canvas.toDataURL('image/jpeg',quality);}
+        if(result.length>650000){reject(new Error('Photo is too large. Please take a smaller photo.'));return;}resolve(result);
+      };img.src=reader.result;};reader.readAsDataURL(file);
+    });
+  }
+  function setPaymentProof(dataUrl){paymentProofData=dataUrl||'';$('paymentProofPreview').hidden=!paymentProofData;$('paymentProofImage').src=paymentProofData;if(!paymentProofData)byId('k-payment-proof').value='';}
   function openPay(open) {
     S.paying = open;
     $('pay').hidden = !open;
@@ -224,6 +238,7 @@
     if (open) {
       byId('k-tendered').value = '';
       byId('k-ref').value = '';
+      setPaymentProof('');
       $('payErr').textContent = '';
       renderPay();
       setTimeout(function () { (S.method === 'cash' ? byId('k-tendered') : byId('k-ref')).focus(); }, 30);
@@ -257,11 +272,11 @@
       if (tendered < t.total) { err.textContent = 'Cash received is ' + M.peso(t.total - tendered) + ' short of the total.'; byId('k-tendered').focus(); return; }
     } else {
       ref = byId('k-ref').value.trim();
-      if (ref.length < 4) { err.textContent = 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
+      if (S.method === 'ewallet' ? (ref.length < 4 && !paymentProofData) : ref.length < 4) { err.textContent = S.method === 'ewallet' ? 'Enter a reference number or attach a payment confirmation photo.' : 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
     }
     var orderSnapshot = {
       type: S.cart.type, table: S.cart.type === 'dine' ? S.cart.table : '',
-      lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered, ref: ref
+      lines: clone(S.cart.lines), totals: t, method: S.method, tendered: tendered, ref: ref, paymentProof: paymentProofData
     };
     var fingerprint = JSON.stringify(orderSnapshot);
     if (!S.pendingOrder || S.pendingOrder.fingerprint !== fingerprint) {
@@ -407,7 +422,7 @@
     var top=s.topItems;
     $('topItems').innerHTML=top.length?'<thead><tr><th>Item</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead><tbody>'+top.map(function(i){return'<tr><td>'+esc(i.name)+'<small class="portion-breakdown">Full '+i.fullQty+' · Half '+i.halfQty+'</small></td><td class="num mono">'+i.qty+'</td><td class="num mono">'+M.peso(i.amount)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No item sales in this period.</td></tr></tbody>';
     var orders=S.reportOrders.slice().sort(function(x,y){return y.ts-x.ts;});
-    $('reportOrdersTable').innerHTML=orders.length?'<thead><tr><th>Order</th><th>Date / Time</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>'+orders.map(function(o){return'<tr class="'+(o.status==='void'?'is-void':'')+'"><td class="mono">'+esc(o.no)+'</td><td>'+new Date(o.ts).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</td><td>'+METHOD_LABEL[o.method]+'</td><td>'+(o.status==='void'?'Voided':'Paid')+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No transactions found for this period.</td></tr></tbody>';
+    $('reportOrdersTable').innerHTML=orders.length?'<thead><tr><th>Order</th><th>Date / Time</th><th>Payment</th><th>Status</th><th class="num">Total</th></tr></thead><tbody>'+orders.map(function(o){return'<tr class="'+(o.status==='void'?'is-void':'')+'"><td class="mono">'+esc(o.no)+'</td><td>'+new Date(o.ts).toLocaleString('en-PH',{timeZone:'Asia/Manila',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})+'</td><td>'+METHOD_LABEL[o.method]+(o.hasPaymentProof?' <button type="button" class="btn small" data-proof="'+esc(o.id)+'">View proof</button>':'')+'</td><td>'+(o.status==='void'?'Voided':'Paid')+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td></tr>';}).join('')+'</tbody>':'<tbody><tr><td class="empty">No transactions found for this period.</td></tr></tbody>';
     $('reportTransactionCount').textContent=orders.length+' transaction'+(orders.length===1?'':'s');
   }
   function changeReportPeriod(delta){
@@ -705,6 +720,10 @@
     byId('k-tendered').addEventListener('keydown', function (e) { if (e.key === 'Enter') completeSale(); });
     byId('k-ref').addEventListener('keydown', function (e) { if (e.key === 'Enter') completeSale(); });
     $('complete').addEventListener('click', completeSale);
+    byId('k-payment-proof').addEventListener('change',function(e){var file=e.target.files&&e.target.files[0];if(!file)return;$('payErr').textContent='Preparing payment photo…';compressPaymentImage(file).then(function(data){setPaymentProof(data);$('payErr').textContent='Photo attached. Verify payment was received before completing the sale.';}).catch(function(error){setPaymentProof('');$('payErr').textContent=error.message;});});
+    $('removePaymentProof').addEventListener('click',function(){setPaymentProof('');$('payErr').textContent='Payment photo removed.';});
+    $('reportOrdersTable').addEventListener('click',function(e){var b=e.target.closest('[data-proof]');if(!b)return;b.disabled=true;cloud.getPaymentProof(b.getAttribute('data-proof')).then(function(dataUrl){$('proofFullImage').src=dataUrl;$('proofTitle').textContent='Payment proof';$('proofDlg').showModal();}).catch(function(error){toast('Could not load payment proof: '+error.message);}).finally(function(){b.disabled=false;});});
+    $('proofClose').addEventListener('click',function(){$('proofDlg').close();$('proofFullImage').src='';});
 
     $('slipClose').addEventListener('click', function () {
       var dlg = $('slipDlg');
