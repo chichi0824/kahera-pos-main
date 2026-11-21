@@ -420,12 +420,64 @@
     else {S.reportDate=dateShift(S.reportDate,delta);}
     S.calendarMonth=dateMonth(S.reportDate);if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();
   }
-  function copyReportCsv(){copyText(M.toCSV(S.reportOrders),'Report CSV copied. Paste it into a spreadsheet.');}
-  function downloadCsv(){
-    var csv=M.toCSV(S.reportOrders),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),a=document.createElement('a'),range=reportRange();
-    a.href=URL.createObjectURL(blob);a.download='victorias-report-'+range.from+'-to-'+range.to+'.csv';document.body.appendChild(a);a.click();a.remove();
-    setTimeout(function(){URL.revokeObjectURL(a.href);},1000);toast('Report CSV saved.');
+  var csvExportDialog=null,csvExportAction='download';
+  function csvExportBounds(mode,from,to){
+    var today=manilaToday(),range;
+    if(mode==='current')range=reportRange();
+    else if(mode==='day')range={from:S.reportDate,to:S.reportDate};
+    else if(mode==='week'){var weekday=new Date(S.reportDate+'T00:00:00Z').getUTCDay(),monday=weekday===0?-6:1-weekday;var start=dateShift(S.reportDate,monday);range={from:start,to:dateShift(start,6)};}
+    else if(mode==='month')range=monthBounds(S.reportDate.slice(0,7));
+    else if(mode==='year'){var y=S.reportDate.slice(0,4);range={from:y+'-01-01',to:y+'-12-31'};}
+    else if(mode==='custom')range={from:from,to:to};
+    else range={from:'2000-01-01',to:today};
+    return range;
   }
+  function openCsvExport(action){
+    csvExportAction=action;
+    if(!csvExportDialog){
+      csvExportDialog=document.createElement('dialog');csvExportDialog.className='csv-export-dlg';
+      csvExportDialog.innerHTML='<form method="dialog" class="csv-export-card"><div class="csv-export-head"><div><p class="eyebrow">Daily reports</p><h2>Export transactions</h2></div><button type="button" class="btn ghost" data-csv-close aria-label="Close">✕</button></div><label for="csvExportPeriod">What would you like to export?<select id="csvExportPeriod"><option value="day">This day</option><option value="week">This week</option><option value="month">This month</option><option value="year">This year</option><option value="custom">Custom date range</option><option value="all">All records</option></select></label><div class="csv-export-custom" hidden><label for="csvExportFrom">From<input type="date" id="csvExportFrom"></label><label for="csvExportTo">To<input type="date" id="csvExportTo"></label></div><p class="hint" data-csv-range></p><p class="err" data-csv-error role="alert"></p><div class="csv-export-actions"><button type="button" class="btn ghost" data-csv-close>Cancel</button><button type="button" class="btn primary" data-csv-confirm>Continue</button></div></form>';
+      root.appendChild(csvExportDialog);
+      csvExportDialog.querySelectorAll('[data-csv-close]').forEach(function(b){b.addEventListener('click',function(){csvExportDialog.close();});});
+      csvExportDialog.querySelector('#csvExportPeriod').addEventListener('change',updateCsvExportRange);
+      csvExportDialog.querySelector('#csvExportFrom').addEventListener('change',updateCsvExportRange);
+      csvExportDialog.querySelector('#csvExportTo').addEventListener('change',updateCsvExportRange);
+      csvExportDialog.querySelector('[data-csv-confirm]').addEventListener('click',runCsvExport);
+      csvExportDialog.addEventListener('click',function(e){if(e.target===csvExportDialog)csvExportDialog.close();});
+    }
+    var period=csvExportDialog.querySelector('#csvExportPeriod');
+    period.value=S.reportMode==='custom'?'custom':S.reportMode;
+    csvExportDialog.querySelector('#csvExportFrom').value=S.customFrom||S.reportDate;
+    csvExportDialog.querySelector('#csvExportTo').value=S.customTo||S.reportDate;
+    csvExportDialog.querySelector('[data-csv-error]').textContent='';
+    updateCsvExportRange();
+    if(csvExportDialog.showModal)csvExportDialog.showModal();else csvExportDialog.setAttribute('open','');
+  }
+  function updateCsvExportRange(){
+    if(!csvExportDialog)return;
+    var mode=csvExportDialog.querySelector('#csvExportPeriod').value,custom=csvExportDialog.querySelector('.csv-export-custom');
+    custom.hidden=mode!=='custom';
+    var range=csvExportBounds(mode,csvExportDialog.querySelector('#csvExportFrom').value,csvExportDialog.querySelector('#csvExportTo').value);
+    var label=csvExportDialog.querySelector('[data-csv-range]');
+    if(mode==='custom'&&(!range.from||!range.to)){label.textContent='Choose both dates to continue.';return;}
+    if(mode==='custom'&&range.from>range.to){label.textContent='The start date must be before the end date.';return;}
+    label.textContent='Date range: '+formatDate(range.from)+' – '+formatDate(range.to)+(mode==='all'?' · all available transaction history':'');
+  }
+  function runCsvExport(){
+    var mode=csvExportDialog.querySelector('#csvExportPeriod').value,from=csvExportDialog.querySelector('#csvExportFrom').value,to=csvExportDialog.querySelector('#csvExportTo').value;
+    var range=csvExportBounds(mode,from,to),error=csvExportDialog.querySelector('[data-csv-error]');
+    if(!range.from||!range.to||range.from>range.to){error.textContent='Choose a valid start and end date.';return;}
+    if(range.to>manilaToday()){error.textContent='The end date cannot be in the future.';return;}
+    var button=csvExportDialog.querySelector('[data-csv-confirm]');button.disabled=true;button.textContent='Preparing…';error.textContent='';
+    cloud.getReports(range.from,range.to).then(function(data){
+      var csv=M.toCSV(data.orders||[]);
+      if(csvExportAction==='copy'){copyText(csv,'Report CSV copied. Paste it into a spreadsheet.');}
+      else{var blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='victorias-report-'+range.from+'-to-'+range.to+'.csv';document.body.appendChild(link);link.click();link.remove();setTimeout(function(){URL.revokeObjectURL(link.href);},1000);toast('Report CSV saved.');}
+      csvExportDialog.close();
+    }).catch(function(err){error.textContent='Could not prepare CSV: '+err.message;}).finally(function(){button.disabled=false;button.textContent='Continue';});
+  }
+  function copyReportCsv(){openCsvExport('copy');}
+  function downloadCsv(){openCsvExport('download');}
 
   function copyText(text, okMsg) {
     var done = function () { toast(okMsg); };
