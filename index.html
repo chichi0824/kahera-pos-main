@@ -23,6 +23,12 @@
       href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap"
     />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
     <!--APP-START-->
@@ -128,7 +134,12 @@
           aria-labelledby="tab-register"
         >
           <div class="catalog">
-            <p class="report-notice" data-k="reportNotice" role="status" hidden></p>
+            <p
+              class="report-notice"
+              data-k="reportNotice"
+              role="status"
+              hidden
+            ></p>
             <div class="catalog-tools">
               <label class="search" for="k-search"
                 ><span class="sr-only">Search the menu</span>
@@ -189,7 +200,6 @@
 
             <ul class="lines" data-k="lines" aria-live="polite"></ul>
 
-            
             <dl class="totals" data-k="totals"></dl>
 
             <div class="order-actions" data-k="cartActions">
@@ -297,80 +307,193 @@
         </section>
 
         <!-- DAILY REPORTS -->
-        <section id="view-shift" class="view" role="tabpanel" aria-labelledby="tab-shift" hidden>
+        <section
+          id="view-shift"
+          class="view"
+          role="tabpanel"
+          aria-labelledby="tab-shift"
+          hidden
+        >
           <div class="view-head">
             <div>
               <p class="eyebrow">Sales analytics · Historical reports</p>
               <h2>Daily Reports</h2>
             </div>
             <div class="actions-row">
-              <button type="button" class="btn small" data-k="copyCsv">Copy CSV</button>
-              <button type="button" class="btn small" data-k="dlCsv">Download CSV</button>
+              <button type="button" class="btn small" data-k="copyCsv">
+                Copy CSV
+              </button>
+              <button type="button" class="btn small" data-k="dlCsv">
+                Download CSV
+              </button>
             </div>
           </div>
 
-          <div class="report-period-toolbar panel" style="margin-top:12px">
-            <div class="report-periods" data-k="reportPeriodModes" role="group" aria-label="Reporting period">
-              <button type="button" class="chip" data-report-mode="day" aria-pressed="true">Day</button>
-              <button type="button" class="chip" data-report-mode="week" aria-pressed="false">Week</button>
-              <button type="button" class="chip" data-report-mode="month" aria-pressed="false">Month</button>
-              <button type="button" class="chip" data-report-mode="year" aria-pressed="false">Year</button>
-              <button type="button" class="chip" data-report-mode="custom" aria-pressed="false">Custom</button>
+          <div class="report-period-toolbar panel" style="margin-top: 12px">
+            <div
+              class="report-periods"
+              data-k="reportPeriodModes"
+              role="group"
+              aria-label="Reporting period"
+            >
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="day"
+                aria-pressed="true"
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="week"
+                aria-pressed="false"
+              >
+                Week
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="month"
+                aria-pressed="false"
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="year"
+                aria-pressed="false"
+              >
+                Year
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="custom"
+                aria-pressed="false"
+              >
+                Custom
+              </button>
             </div>
             <div class="report-period-nav">
-              <button type="button" class="btn small ghost" data-k="reportPrev" aria-label="Previous reporting period">‹</button>
+              <button
+                type="button"
+                class="btn small ghost"
+                data-k="reportPrev"
+                aria-label="Previous reporting period"
+              >
+                ‹
+              </button>
               <strong data-k="reportRangeLabel">Today</strong>
-              <button type="button" class="btn small ghost" data-k="reportNext" aria-label="Next reporting period">›</button>
-              <button type="button" class="btn small" data-k="reportToday">Today</button>
+              <button
+                type="button"
+                class="btn small ghost"
+                data-k="reportNext"
+                aria-label="Next reporting period"
+              >
+                ›
+              </button>
+              <button type="button" class="btn small" data-k="reportToday">
+                Today
+              </button>
             </div>
           </div>
 
-          <div class="report-layout" style="margin-top:14px">
+          <div class="report-layout" style="margin-top: 14px">
             <section class="panel card-pad report-calendar-panel">
               <div class="report-calendar-head">
                 <h3 data-k="reportCalendarTitle">Calendar</h3>
                 <div class="actions-row">
-                  <button type="button" class="btn small ghost" data-k="calendarPrev" aria-label="Previous month">‹</button>
-                  <button type="button" class="btn small ghost" data-k="calendarNext" aria-label="Next month">›</button>
+                  <button
+                    type="button"
+                    class="btn small ghost"
+                    data-k="calendarPrev"
+                    aria-label="Previous month"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    class="btn small ghost"
+                    data-k="calendarNext"
+                    aria-label="Next month"
+                  >
+                    ›
+                  </button>
                 </div>
               </div>
               <div data-k="reportCalendar" class="report-calendar"></div>
-              <div class="calendar-legend"><span><i></i> Sales recorded</span><span>Choose a date to view its report</span></div>
+              <div class="calendar-legend">
+                <span><i></i> Sales recorded</span
+                ><span>Choose a date to view its report</span>
+              </div>
               <div data-k="customRange" class="custom-report-range" hidden>
-                <label for="reportFrom">From<input type="date" id="reportFrom"></label>
-                <label for="reportTo">To<input type="date" id="reportTo"></label>
-                <button type="button" class="btn primary" data-k="applyCustomRange">Apply date range</button>
+                <label for="reportFrom"
+                  >From<input type="date" id="reportFrom"
+                /></label>
+                <label for="reportTo"
+                  >To<input type="date" id="reportTo"
+                /></label>
+                <button
+                  type="button"
+                  class="btn primary"
+                  data-k="applyCustomRange"
+                >
+                  Apply date range
+                </button>
               </div>
             </section>
             <section class="report-summary">
               <div class="report-summary-head">
-                <div><p class="eyebrow">Selected reporting period</p><h3>Performance summary</h3></div>
-                <p class="hint" data-k="reportLoading" hidden>Loading report…</p>
+                <div>
+                  <p class="eyebrow">Selected reporting period</p>
+                  <h3>Performance summary</h3>
+                </div>
+                <p class="hint" data-k="reportLoading" hidden>
+                  Loading report…
+                </p>
               </div>
               <div class="kpis report-kpis" data-k="reportKpis"></div>
             </section>
           </div>
 
-          <div class="shift-grid" style="margin-top:14px">
+          <div class="shift-grid" style="margin-top: 14px">
             <div class="panel card-pad">
               <h3 data-k="reportChartTitle">Sales by hour</h3>
-              <div class="bars" data-k="bars" role="img" aria-label="Net sales by hour"></div>
-              <div class="bar-labels" data-k="barLabels" aria-hidden="true"></div>
-              <h3 style="margin-top:6px">Payment mix</h3>
+              <div
+                class="bars"
+                data-k="bars"
+                role="img"
+                aria-label="Net sales by hour"
+              ></div>
+              <div
+                class="bar-labels"
+                data-k="barLabels"
+                aria-hidden="true"
+              ></div>
+              <h3 style="margin-top: 6px">Payment mix</h3>
               <div class="split" data-k="split"></div>
             </div>
             <div class="panel card-pad">
               <h3>Best-selling items</h3>
-              <div class="table-wrap"><table class="data" data-k="topItems"></table></div>
+              <div class="table-wrap">
+                <table class="data" data-k="topItems"></table>
+              </div>
             </div>
           </div>
 
-          <section class="panel card-pad" style="margin-top:14px">
+          <section class="panel card-pad" style="margin-top: 14px">
             <div class="report-calendar-head">
               <h3>Transactions</h3>
-              <span class="hint" data-k="reportTransactionCount">0 transactions</span>
+              <span class="hint" data-k="reportTransactionCount"
+                >0 transactions</span
+              >
             </div>
-            <div class="table-wrap"><table class="data" data-k="reportOrdersTable"></table></div>
+            <div class="table-wrap">
+              <table class="data" data-k="reportOrdersTable"></table>
+            </div>
           </section>
         </section>
 
@@ -394,8 +517,15 @@
           </div>
           <div class="menu-admin" style="margin-top: 12px">
             <div class="panel menu-list-panel">
-              <div class="menu-admin-filters" data-k="menuAdminFilters" role="group" aria-label="Filter menu by category"></div>
-              <div class="table-wrap"><table class="data" data-k="menuTable"></table></div>
+              <div
+                class="menu-admin-filters"
+                data-k="menuAdminFilters"
+                role="group"
+                aria-label="Filter menu by category"
+              ></div>
+              <div class="table-wrap">
+                <table class="data" data-k="menuTable"></table>
+              </div>
             </div>
             <div class="form-grid">
               <form class="panel card-pad" data-k="settingsForm">
@@ -440,12 +570,24 @@
                 /></label>
                 <div id="k-newvariants" class="drink-variant-manager" hidden>
                   <strong>Drink variants</strong>
-                  <p class="hint">Add each size separately, set its price, and choose whether it is available today.</p>
+                  <p class="hint">
+                    Add each size separately, set its price, and choose whether
+                    it is available today.
+                  </p>
                   <div class="variant-editor-list"></div>
-                  <button type="button" class="btn small" data-variant-add>Add variant</button>
+                  <button type="button" class="btn small" data-variant-add>
+                    Add variant
+                  </button>
                 </div>
-                <label for="k-newimage">Item photo (optional)<input id="k-newimage" type="file" accept="image/*" /></label>
-                <p class="hint">Photos are resized and compressed before saving.</p>
+                <label for="k-newimage"
+                  >Item photo (optional)<input
+                    id="k-newimage"
+                    type="file"
+                    accept="image/*"
+                /></label>
+                <p class="hint">
+                  Photos are resized and compressed before saving.
+                </p>
                 <p class="err" data-k="addErr" role="alert"></p>
                 <button class="btn primary" type="submit">Add to menu</button>
               </form>
@@ -471,8 +613,8 @@
                 Kahera helps small food businesses record orders, manage menu
                 prices, and accept payments from a simple browser-based POS.
                 Full and half portions can be priced separately. Completed sales
-                and shift reports sync through the cloud; active carts remain
-                on the cashier's device.
+                and shift reports sync through the cloud; active carts remain on
+                the cashier's device.
               </p>
             </div>
             <div class="panel card-pad">
