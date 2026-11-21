@@ -249,7 +249,6 @@
 
   function completeSale() {
     var t = totals(), err = $('payErr');
-    if (!S.shift || S.shift.status !== 'open') { err.textContent = 'No daily report is open. Sales are disabled.'; return; }
     if (!S.cart.lines.length || S.savingSale) return;
     var tendered = t.total, ref = '';
     if (S.method === 'cash') {
@@ -559,8 +558,7 @@
     $('orderCount').textContent = S.orders.filter(function (o) { return o.status !== 'void'; }).length;
     var notice = $('reportNotice');
     if (notice) {
-      notice.hidden = !!(S.shift && S.shift.status === 'open');
-      if (!notice.hidden) notice.textContent = 'The register opens automatically when today’s business report starts at 7:00 AM, Monday to Friday.';
+      notice.hidden = true;
     }
   }
 
@@ -572,7 +570,6 @@
 
   // ---------- cart mutations ----------
   function addItem(id,variant){
-    if(!S.shift||S.shift.status!=='open'){toast('No daily report is open. Sales are disabled.');return;}
     var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(!isDrinksCategory(m.cat)&&m.soldOut){toast(m.name+' is sold out');return;}
     var isDrink=isDrinksCategory(m.cat),options=isDrink&&Array.isArray(m.variants)?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     if(isDrink&&!options.length){toast(m.name+' has no available sizes today');return;}
