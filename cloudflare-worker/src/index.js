@@ -117,8 +117,8 @@ async function orders(db,shiftId) {
 async function reportData(db,from,to) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)throw new Error('Choose a valid reporting date range.');
   const days=await db.prepare("SELECT s.id,s.report_date AS date,s.started_at AS startedAt,s.ended_at AS endedAt,s.status,s.close_reason AS closeReason,COUNT(o.id) AS orderCount FROM shifts s LEFT JOIN orders o ON o.shift_id=s.id WHERE s.report_date BETWEEN ? AND ? GROUP BY s.id ORDER BY s.report_date").bind(from,to).all();
-  const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,COALESCE(s.report_date,date(o.created_at,'+8 hours')) AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
-  return {days:days.results||[],orders:(rows.results||[]).map(r=>({...rowOrder(r),reportDate:r.reportDate||''}))};
+  const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,o.payment_proof,COALESCE(s.report_date,date(o.created_at,'+8 hours')) AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
+  return {days:days.results||[],orders:(rows.results||[]).map(r=>({...rowOrder(r),reportDate:r.reportDate||'',hasPaymentProof:!!r.payment_proof}))};
 }
 function calculateTotals(lines, settings, kind, diners, holders) {
   const vatReg = settings.vatRegistered !== false;
@@ -161,7 +161,8 @@ function validateOrder(b) {
       !Number.isInteger(b.totals.diners) || b.totals.diners < 1 || b.totals.diners > 99 || !Number.isInteger(b.totals.idHolders) || b.totals.idHolders < 0 || b.totals.idHolders > b.totals.diners) throw new Error('Discount details are invalid.');
   if (!['cash', 'ewallet', 'card'].includes(b.method) ||
       !Number.isSafeInteger(b.tendered) || b.tendered < 1) throw new Error('Payment details are invalid.');
-  if (b.method !== 'cash' && !text(b.ref, 40)) throw new Error('Payment reference is required.');
+  if (b.method !== 'cash' && !(b.method === 'ewallet' && typeof b.paymentProof==='string' && /^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(b.paymentProof) && b.paymentProof.length<=650000) && !text(b.ref, 40)) throw new Error('Payment reference is required, or attach an e-wallet payment proof photo.');
+  if (b.paymentProof && (b.method!=='ewallet' || typeof b.paymentProof!=='string' || !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(b.paymentProof) || b.paymentProof.length>650000)) throw new Error('E-wallet payment proof photo is invalid or too large.');
 }
 async function createOrder(db,b,deviceId) {
   validateOrder(b);
@@ -201,11 +202,11 @@ async function createOrder(db,b,deviceId) {
   const order={
     id:b.id,no,ts,type:b.type,table:b.type==='dine'?String(b.table||'').slice(0,3):'',
     lines:menuRows,totals,method:b.method,tendered:b.tendered,change:b.tendered-totals.total,
-    ref:b.ref||'',status:'paid',shiftId:shift ? shift.id : null
+    ref:b.ref||'',status:'paid',shiftId:shift ? shift.id : null,hasPaymentProof:!!b.paymentProof
   };
   const statements=[
-    db.prepare('INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-      .bind(order.id,order.no,order.shiftId,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order))
+    db.prepare('INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json,payment_proof) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+      .bind(order.id,order.no,order.shiftId,deviceId||'unknown',new Date(ts).toISOString(),order.type,order.table,order.method,order.ref,order.tendered,order.change,'paid',JSON.stringify(order.totals),JSON.stringify(order),b.paymentProof||null)
   ];
   order.lines.forEach(line=>statements.push(
     db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)')
@@ -236,6 +237,8 @@ export default {
    if(u.pathname==='/api/orders/next-number'&&request.method==='GET'){const c=await db.prepare('SELECT value FROM order_counters WHERE id=1').first();return json({no:'K-'+pad((c?c.value:0)+1)},200,h);}
    if(u.pathname==='/api/orders'&&request.method==='GET')return json({orders:await orders(db,u.searchParams.get('shiftId')||'')},200,h);
    if(u.pathname==='/api/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOrder(db,b,b.deviceId||'unknown')},201,h);}
+   const proof=u.pathname.match(/^\/api\/orders\/([^/]+)\/payment-proof$/);
+   if(proof&&request.method==='GET'){const row=await db.prepare('SELECT payment_proof FROM orders WHERE id=?').bind(decodeURIComponent(proof[1])).first();if(!row)return json({error:'Order not found.'},404,h);if(!row.payment_proof)return json({error:'No payment proof is attached to this order.'},404,h);return json({dataUrl:row.payment_proof},200,h);}
    const v=u.pathname.match(/^\/api\/orders\/([^/]+)\/void$/);
    if(v&&request.method==='POST'){const oid=decodeURIComponent(v[1]);const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(oid).first();if(!r)return json({error:'Order not found.'},404,h);if(r.status==='void')return json({order:rowOrder(r)},200,h);const o=rowOrder(r);o.status='void';o.voidedAt=Date.now();await db.prepare("UPDATE orders SET status='void',voided_at=?,payload_json=? WHERE id=?").bind(new Date(o.voidedAt).toISOString(),JSON.stringify(o),oid).run();return json({order:o},200,h);}
    return json({error:'Not found.'},404,h);
