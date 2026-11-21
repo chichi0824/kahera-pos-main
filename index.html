@@ -81,15 +81,15 @@
           >
             Menu
           </button>
-          <!-- <button
+          <button
             role="tab"
-            id="tab-about"
-            aria-controls="view-about"
+            id="tab-data-guide"
+            aria-controls="view-data-guide"
             aria-selected="false"
-            data-view="about"
+            data-view="data-guide"
           >
-            About
-          </button> -->
+            Database Guide
+          </button>
         </nav>
         <div class="top-tools">
           <span class="clock" data-k="clock">--:--</span>
@@ -584,126 +584,88 @@
           </div>
         </section>
 
-        <!-- ABOUT -->
+        <!-- DATABASE GUIDE -->
         <section
-          id="view-about"
+          id="view-data-guide"
           class="view"
           role="tabpanel"
-          aria-labelledby="tab-about"
+          aria-labelledby="tab-data-guide"
           hidden
         >
           <div class="about">
             <div class="wide panel card-pad">
-              <p class="eyebrow">About this project · v1.0.0 · MIT</p>
-              <h2>
-                Kahera: a counter-ready POS for Philippine cafés and karinderyas
-              </h2>
+              <p class="eyebrow">DATABASE GUIDE · OWNER / ADMIN REFERENCE</p>
+              <h2>Manage test sales and order records</h2>
               <p class="lead">
-                Kahera helps small food businesses record orders, manage menu
-                prices, and accept payments from a simple browser-based POS.
-                Full and half portions can be priced separately. Completed sales
-                and shift reports sync through the cloud; active carts remain on
-                the cashier's device.
-              </p>
-            </div>
-            <div class="panel card-pad">
-              <h3>Who it is for</h3>
-              <ul>
-                <li>Cafés, karinderyas, milk-tea stalls and canteens</li>
-                <li>School and cooperative canteens, LGU food courts</li>
-                <li>Pop-up stalls at bazaars and fiestas with one tablet</li>
-                <li>Developers who want a clean vanilla-JS POS to extend</li>
-              </ul>
-            </div>
-            <div class="panel card-pad">
-              <h3>Features</h3>
-              <ul>
-                <li>
-                  Tap-to-add menu tiles with search, categories and sold-out
-                  items
-                </li>
-                <li>
-                  Full and half portions with separately configurable prices
-                </li>
-                <li>
-                  Cash change with quick-bill buttons; e-wallet and card
-                  reference numbers
-                </li>
-                <li>
-                  Order slip, void with confirmation, shift report and CSV
-                  export
-                </li>
-                <li>
-                  Administrator-only shared menu editor, light and dark themes,
-                  offline access to the app shell
-                </li>
-              </ul>
-            </div>
-            <div class="panel card-pad">
-              <h3>Tech stack</h3>
-              <ul>
-                <li>
-                  Plain HTML, CSS and JavaScript. No framework, no build step
-                </li>
-                <li>
-                  <code>money.js</code>: pure functions in integer centavos,
-                  unit-tested in Node
-                </li>
-                <li>
-                  Cloudflare Worker + D1 shared menu, orders and shifts; active
-                  carts remain device-local
-                </li>
-                <li>
-                  Service worker + web manifest for offline use and "Add to Home
-                  Screen"
-                </li>
-              </ul>
-            </div>
-            <div class="panel card-pad">
-              <h3>Install and deploy</h3>
-              <pre>
-git clone https://github.com/EfraimRay/kahera-pos.git
-cd kahera-pos
-npm test          # runs the money tests
-npx serve .       # or open index.html</pre
-              >
-              <p>
-                Host the frontend on GitHub Pages and deploy the companion
-                Cloudflare Worker for secure shared-menu updates.
-              </p>
-            </div>
-            <div class="panel card-pad">
-              <h3>Client pitch</h3>
-              <p>
-                Offer it as a set-up service: load the client's menu and prices,
-                install it on their tablet as an app, and train the staff in 30
-                minutes. Add paid extras such as cloud sync across branches,
-                inventory, or a kitchen display, or bundle it with a website.
-              </p>
-            </div>
-            <div class="panel card-pad">
-              <h3>Source code</h3>
-              <p>
-                <a
-                  href="https://github.com/EfraimRay/kahera-pos"
-                  target="_blank"
-                  rel="noopener"
-                  >github.com/EfraimRay/kahera-pos</a
-                >
-                · Built by
-                <a
-                  href="https://www.efraimray.com/"
-                  target="_blank"
-                  rel="noopener"
-                  >Efraim Ray</a
-                >, Valencia City, Bukidnon.
+                Use these commands in your Mac Terminal to inspect the shared
+                Cloudflare D1 database, remove one specific test order, or reset
+                all test sales and daily reports. These actions affect the live
+                shared POS database.
               </p>
               <p class="hint">
-                The café, menu and orders are sample data. Order slips are not
-                official receipts; a business issuing receipts needs a
-                BIR-registered system. Confirm discount rules for your business
-                type with your accountant.
+                Important: deletion is permanent. Export or back up any records
+                you may need before running a delete command. Never use the full
+                reset after real business transactions have started.
               </p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>1. Open the Worker folder</h3>
+              <p>Run this first whenever you open a new Terminal window:</p>
+              <pre><code>cd ~/kahera-pos-main/cloudflare-worker</code></pre>
+              <p>Confirm the configured database in <code>wrangler.toml</code> is <code>kahera-db</code>.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>2. Check how much data is currently saved</h3>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts;"</code></pre>
+              <p class="hint">The <code>--remote</code> flag targets the shared production database, not a local test database.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>3. Delete one specific order by its ID</h3>
+              <p><strong>Step A — Find the database ID using its receipt number.</strong> Replace <code>K-0016</code> with the receipt number you want to look up.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status, totals_json FROM orders WHERE order_no = 'K-0016';"</code></pre>
+              <p><strong>Step B — Copy the exact <code>id</code> returned.</strong> Preview it before deleting. Replace <code>PASTE_ORDER_ID_HERE</code> with that exact ID.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p><strong>Step C — Delete only that order and its item rows.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="DELETE FROM order_items WHERE order_id = 'PASTE_ORDER_ID_HERE'; DELETE FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p><strong>Step D — Verify.</strong> No result means the order ID is no longer present.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p class="hint">This keeps other orders and daily reports. It does not reset the order counter, so the next receipt number continues normally.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>4. Delete all test sales and daily reports</h3>
+              <p><strong>Warning:</strong> this removes every order, every order item, and every shift / daily report in the shared database. It also resets the receipt counter. Do not run this if the database contains real sales you need to keep.</p>
+              <p><strong>Step A — Create the reset script.</strong></p>
+              <pre><code>cat &gt; reset-test-data.sql &lt;&lt;'SQL'
+DELETE FROM order_items;
+DELETE FROM orders;
+DELETE FROM shifts;
+
+UPDATE order_counters
+SET value = 0
+WHERE id = 1;
+SQL</code></pre>
+              <p><strong>Step B — Run the reset script against the remote database.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --file=reset-test-data.sql</code></pre>
+              <p><strong>Step C — Confirm the tables are empty and the counter is reset.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts; SELECT value AS order_counter FROM order_counters WHERE id = 1;"</code></pre>
+              <p>Expected result: zero orders, zero order items, zero reports, and order counter value <code>0</code>.</p>
+              <p class="hint">Your menu, menu categories, item prices, store settings, and app icon are not deleted by this script.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>5. Quick reminders</h3>
+              <ul>
+                <li>Always use <code>--remote</code> when intentionally managing the shared Cloudflare D1 database.</li>
+                <li>Find and verify an order ID before deleting it. Receipt numbers such as <code>K-0016</code> are not the same as database IDs.</li>
+                <li>Delete the matching <code>order_items</code> rows before deleting the parent order.</li>
+                <li>Deleting a single order leaves the daily report and receipt counter unchanged.</li>
+                <li>The full reset deletes historical reports too and resets receipt numbering.</li>
+                <li>Sales and daily reports are shared across cashier devices, so a deletion affects every device.</li>
+              </ul>
             </div>
           </div>
         </section>
