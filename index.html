@@ -11,10 +11,11 @@
       name="description"
       content="Kahera is a shared point-of-sale screen for Philippine cafés and karinderyas with full and half portions, cash change and cloud-synced orders and daily reports."
     />
-    <meta name="theme-color" content="#136a48" />
+    <meta name="theme-color" content="#b2c48a" />
     <!--BUILD:REPO-ONLY-->
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="icon" href="icons/icon.svg" type="image/svg+xml" />
+    <link rel="icon" href="icons/kahera-icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icons/kahera-icon.png" />
     <!--/BUILD:REPO-ONLY-->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -35,19 +36,7 @@
     <div class="app" id="kahera">
       <header class="topbar">
         <div class="brand">
-          <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
-            <rect width="40" height="40" rx="11" fill="var(--accent)"></rect>
-            <path
-              d="M11 8h18v22l-3-2.2-3 2.2-3-2.2-3 2.2-3-2.2-3 2.2z"
-              fill="var(--paper)"
-            ></path>
-            <path
-              d="M14.5 14h11M14.5 18.5h7M14.5 23h11"
-              stroke="var(--accent)"
-              stroke-width="2"
-              stroke-linecap="round"
-            ></path>
-          </svg>
+          <img class="brand-mark" src="icons/kahera-icon.png" alt="Kahera" />
           <div style="min-width: 0">
             <h1 class="brand-name">Victoria's</h1>
             <p class="brand-biz" data-k="biz">
