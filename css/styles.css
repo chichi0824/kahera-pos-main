@@ -741,6 +741,11 @@ dialog.slip-dlg::backdrop {
     opacity: 0;
   }
 }
+ .payment-proof-preview { display:flex; align-items:center; gap:12px; flex-wrap:wrap; }
+.payment-proof-preview img { width:104px; height:104px; object-fit:cover; border-radius:12px; border:1px solid var(--line); }
+.proof-dlg { width:min(92vw,720px); max-width:720px; border:0; border-radius:18px; padding:12px; background:var(--paper); color:var(--paper-ink); }
+.proof-dlg::backdrop { background:rgba(24,31,20,.58); }
+.proof-dlg img { display:block; max-width:100%; max-height:75vh; object-fit:contain; margin:12px auto 0; border-radius:10px; }
 .slip-brand {
   display: flex;
   flex-direction: column;
