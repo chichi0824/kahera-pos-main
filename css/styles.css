@@ -2,25 +2,22 @@
    Layout: a cashier's counter — big tappable menu tiles on the left,
    an order "rail" on the right that reads like the slip it will print. */
 :root {
-  --bg: #eef2ee;
-  --surface: #ffffff;
-  --surface-2: #e3e9e4;
-  --ink: #15201b;
-  --muted: #56655d;
-  --line: #cfd8d1;
-  --accent: #136a48; /* banana-leaf green */
-  --accent-soft: #d8ebe1;
+  --bg: #fcfbf4;
+  --surface: #fffef9;
+  --surface-2: #eef0e3;
+  --ink: #38271f;
+  --muted: #74685b;
+  --line: #dedccf;
+  --accent: #617b43;
+  --accent-soft: #e3eacb;
   --accent-ink: #ffffff;
-  --gold: #9a5b00; /* "needs a look" (sold out, short cash) */
-  --gold-soft: #f6e7cc;
-  --danger: #b42318;
-  --danger-soft: #f8dcd8;
-  --paper: #fffdf7;
-  --paper-ink: #24221d;
-  --shadow: 0 1px 2px rgba(21, 32, 27, 0.06), 0 8px 24px rgba(21, 32, 27, 0.06);
-  /* --f-display: "Bricolage Grotesque", "Avenir Next", "Segoe UI", system-ui, sans-serif;
-  --f-body: "Atkinson Hyperlegible", "Segoe UI", system-ui, -apple-system, sans-serif;
-  --f-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Consolas, monospace; */
+  --gold: #93601e;
+  --gold-soft: #f4e8cf;
+  --danger: #a83228;
+  --danger-soft: #f8dfd9;
+  --paper: #fcfbf4;
+  --paper-ink: #38271f;
+  --shadow: 0 1px 2px rgba(56,39,31,.06), 0 8px 24px rgba(56,39,31,.07);
   --f-display: "Inter", "Segoe UI", Arial, sans-serif;
   --f-body: "Inter", "Segoe UI", Arial, sans-serif;
   --f-mono: "Inter", "Segoe UI", Arial, sans-serif;
@@ -28,45 +25,44 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0d1411;
-    --surface: #141e19;
-    --surface-2: #1b2721;
-    --ink: #e4ece7;
-    --muted: #93a49a;
-    --line: #2a3a32;
-    --accent: #43c08a;
-    --accent-soft: #173a2b;
-    --accent-ink: #04140c;
-    --gold: #f0a83c;
-    --gold-soft: #3a2b12;
-    --danger: #f2826f;
-    --danger-soft: #3d1b17;
-    --paper: #f6f2e6;
-    --paper-ink: #24221d;
-    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+    --bg: #201b17;
+    --surface: #2b241e;
+    --surface-2: #382f26;
+    --ink: #f8f3e8;
+    --muted: #c3b6a3;
+    --line: #514437;
+    --accent: #b2c48a;
+    --accent-soft: #3c482e;
+    --accent-ink: #211d17;
+    --gold: #e6b96c;
+    --gold-soft: #49371e;
+    --danger: #f08b7c;
+    --danger-soft: #4a2823;
+    --paper: #fcfbf4;
+    --paper-ink: #38271f;
+    --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0d1411;
-  --surface: #141e19;
-  --surface-2: #1b2721;
-  --ink: #e4ece7;
-  --muted: #93a49a;
-  --line: #2a3a32;
-  --accent: #43c08a;
-  --accent-soft: #173a2b;
-  --accent-ink: #04140c;
-  --gold: #f0a83c;
-  --gold-soft: #3a2b12;
-  --danger: #f2826f;
-  --danger-soft: #3d1b17;
-  --paper: #f6f2e6;
-  --paper-ink: #24221d;
-  --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.25);
+  --bg: #201b17;
+  --surface: #2b241e;
+  --surface-2: #382f26;
+  --ink: #f8f3e8;
+  --muted: #c3b6a3;
+  --line: #514437;
+  --accent: #b2c48a;
+  --accent-soft: #3c482e;
+  --accent-ink: #211d17;
+  --gold: #e6b96c;
+  --gold-soft: #49371e;
+  --danger: #f08b7c;
+  --danger-soft: #4a2823;
+  --paper: #fcfbf4;
+  --paper-ink: #38271f;
+  --shadow: 0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.25);
   color-scheme: dark;
 }
-
 *,
 *::before,
 *::after {
@@ -2027,3 +2023,9 @@ dialog.csv-export-dlg::backdrop{background:rgba(10,16,13,.58)}
 .csv-export-actions{justify-content:flex-end}
 .csv-export-card .hint{margin:0;color:var(--muted)}
 .csv-export-card .err{min-height:1.2em;margin:0;color:var(--danger);font-size:.86rem}
+
+/* Kahera icon + warm sage palette: maintain strong contrast on interactive controls. */
+.brand-mark{width:48px;height:48px;object-fit:cover;border-radius:12px;flex:none}
+.btn.primary,.report-periods .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.btn.primary:hover{filter:brightness(.94)}
+button:disabled{cursor:not-allowed}
