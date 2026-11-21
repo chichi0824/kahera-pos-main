@@ -250,6 +250,7 @@
     $('method').querySelectorAll('[data-v]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-v') === S.method)); });
     $('cashBox').hidden = S.method !== 'cash';
     $('refBox').hidden = S.method === 'cash';
+    if (S.method !== 'ewallet' && paymentProofData) setPaymentProof('');
     $('quick').innerHTML = M.quickCash(t.total).map(function (v, i) {
       return '<button type="button" data-cash="' + v + '">' + (i === 0 ? 'Exact ' : '') + M.peso(v) + '</button>';
     }).join('');
