@@ -842,7 +842,7 @@
     refreshInFlight = true;
     return cloud.getCurrentShift().then(function (shift) {
       S.shift = shift || null;
-      return Promise.all([S.shift ? cloud.getOrders(S.shift.id) : Promise.resolve([]), cloud.getNextNo()]);
+      return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
       S.orders = results[0];
       S.nextNo = results[1];
