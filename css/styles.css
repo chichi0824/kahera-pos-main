@@ -2014,3 +2014,16 @@ dialog.variant-dlg::backdrop {
   align-self: center;
   justify-self: end;
 }
+
+/* CSV export period picker */
+dialog.csv-export-dlg{border:1px solid var(--line);border-radius:16px;padding:0;width:min(440px,calc(100vw - 28px));background:var(--surface);color:var(--ink);box-shadow:0 24px 80px rgba(0,0,0,.24)}
+dialog.csv-export-dlg::backdrop{background:rgba(10,16,13,.58)}
+.csv-export-card{display:grid;gap:14px;padding:20px}
+.csv-export-head,.csv-export-actions{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.csv-export-head h2{font-size:1.25rem}
+.csv-export-card>label,.csv-export-custom label{display:grid;gap:6px;font-weight:700}
+.csv-export-card select,.csv-export-custom input{width:100%;min-width:0}
+.csv-export-custom{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.csv-export-actions{justify-content:flex-end}
+.csv-export-card .hint{margin:0;color:var(--muted)}
+.csv-export-card .err{min-height:1.2em;margin:0;color:var(--danger);font-size:.86rem}
