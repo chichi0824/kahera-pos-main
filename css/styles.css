@@ -1021,20 +1021,46 @@ tr.is-void td.num {
   table-layout: fixed;
   border-collapse: collapse;
 }
-.menu-admin table.data col.menu-col-item {
-  width: 32%;
+.menu-admin table.data col.menu-col-item { width: 30%; }
+.menu-admin table.data col.menu-col-category { width: 14%; }
+.menu-admin table.data col.menu-col-pricing { width: 27%; }
+.menu-admin table.data col.menu-col-status { width: 23%; }
+.menu-admin table.data col.menu-col-delete { width: 6%; }
+.menu-admin table.data { table-layout: fixed; }
+.menu-admin table.data th, .menu-admin table.data td { box-sizing: border-box; }
+.menu-category-row th {
+  padding: 12px 10px !important;
+  background: var(--surface-2);
+  color: var(--ink) !important;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  letter-spacing: .02em !important;
+  text-transform: none !important;
+  font: 800 .92rem var(--f-display) !important;
 }
-.menu-admin table.data col.menu-col-category {
-  width: 14%;
+.menu-category-row th small {
+  float: right;
+  color: var(--muted);
+  font: 500 .75rem var(--f-mono);
 }
-.menu-admin table.data col.menu-col-pricing {
-  width: 25%;
+.menu-admin table.data .drink-variants-cell { padding: 10px 8px; }
+.menu-admin .drink-variants-cell .variant-editor-list { width: 100%; }
+.menu-admin .drink-variants-cell .variant-edit-row {
+  display: grid;
+  grid-template-columns: minmax(90px, 1.1fr) minmax(76px, .7fr) minmax(150px, 1.5fr) 34px;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
 }
-.menu-admin table.data col.menu-col-status {
-  width: 23%;
-}
-.menu-admin table.data col.menu-col-delete {
-  width: 6%;
+.menu-admin .drink-variants-cell .variant-edit-row > input { width: 100%; min-width: 0; box-sizing: border-box; }
+.menu-admin .drink-variants-cell .variant-status { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; }
+.menu-admin .drink-variants-cell .variant-status .check { white-space: nowrap; }
+.menu-admin .drink-variants-cell [data-variant-add] { margin-top: 8px; }
+@media (max-width: 760px) {
+  .menu-admin .drink-variants-cell .variant-edit-row {
+    grid-template-columns: minmax(0, 1fr) minmax(76px, .7fr) 34px;
+  }
+  .menu-admin .drink-variants-cell .variant-status { grid-column: 1 / -1; }
 }
 .menu-admin table.data th,
 .menu-admin table.data td {
