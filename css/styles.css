@@ -2299,3 +2299,27 @@ select option {
     grid-row: 1;
   }
 }
+
+
+/* Database Guide intro: let the explanatory copy use the available panel width
+   instead of inheriting the generic 65-character paragraph measure. */
+.db-guide-intro > p {
+  max-width: none;
+  width: 100%;
+}
+.db-guide-intro > .lead {
+  max-width: none;
+  line-height: 1.5;
+}
+.db-guide-intro .db-guide-credit {
+  justify-self: end;
+  margin: 2px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: .78rem;
+  letter-spacing: .02em;
+}
+.db-guide-intro .db-guide-credit strong {
+  color: var(--ink);
+}
