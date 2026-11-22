@@ -86,7 +86,7 @@
   }
   function saveCart() { store.set('cart', S.cart); }
   function totals() {
-    return M.computeTotals(S.cart.lines, { vatRegistered: S.settings.vatRegistered });
+    return M.computeTotals(S.cart.lines, { vatRegistered: false });
   }
   function nextNo() { return S.nextNo || 'K-0001'; }
 
@@ -189,15 +189,7 @@
     h += row('Subtotal · ' + t.items + (t.items === 1 ? ' item' : ' items'), M.peso(t.gross, { symbol: false }));
     if (t.discountKind !== 'none') {
       h += row(DISC_LABEL[t.discountKind] + ' share (' + t.idHolders + ' of ' + t.diners + ')', M.peso(t.share, { symbol: false }), 'small');
-      if (t.vatRemoved) h += row('Less 12% VAT (exempt)', M.peso(-t.vatRemoved, { symbol: false }), 'less');
       h += row('Less 20% ' + DISC_LABEL[t.discountKind] + ' discount', M.peso(-t.discount, { symbol: false }), 'less');
-    }
-    if (t.vatRegistered) {
-      h += row('VATable sales', M.peso(t.vatable, { symbol: false }), 'small');
-      h += row('VAT 12%', M.peso(t.vat, { symbol: false }), 'small');
-      if (t.vatExemptSales) h += row('VAT-exempt sales', M.peso(t.vatExemptSales, { symbol: false }), 'small');
-    } else {
-      h += row('Non-VAT seller', '—', 'small');
     }
     h += row('Total due', M.peso(t.total), 'due');
     $('totals').innerHTML = h;
@@ -312,7 +304,6 @@
     });
     h += '<hr><div class="row"><span>Subtotal</span><span>' + M.peso(t.gross, { symbol: false }) + '</span></div>';
     if (t.discountKind !== 'none') {
-      if (t.vatRemoved) h += '<div class="row"><span>Less VAT (' + DISC_LABEL[t.discountKind] + ')</span><span>' + M.peso(-t.vatRemoved, { symbol: false }) + '</span></div>';
       h += '<div class="row"><span>Less 20% ' + DISC_LABEL[t.discountKind] + '</span><span>' + M.peso(-t.discount, { symbol: false }) + '</span></div>';
     }
     h += '<div class="row big"><span>TOTAL</span><span>' + M.peso(t.total) + '</span></div>';
@@ -533,7 +524,6 @@
   function renderMenuAdmin() {
     byId('k-biz').value = S.settings.bizName;
     byId('k-biznote').value = S.settings.bizNote;
-    byId('k-vat').checked = !!S.settings.vatRegistered;
     var catOpts = function (sel) {
       return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(categoryLabel(c)) + '</option>'; }).join('');
     };
@@ -795,7 +785,6 @@
     $('settingsForm').addEventListener('change', function () {
       S.settings.bizName = byId('k-biz').value.trim() || 'My Store';
       S.settings.bizNote = byId('k-biznote').value.trim();
-      S.settings.vatRegistered = byId('k-vat').checked;
       renderBrand(); renderTotals(); saveMenu();
     });
     $('newCat').addEventListener('change', updateNewVariantControl);
