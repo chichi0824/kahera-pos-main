@@ -2344,3 +2344,56 @@ select option {
   flex: 0 0 auto;
   margin-left: 2px;
 }
+
+
+/* Drink variants: keep name + price together in the pricing area,
+   status toggles under the Status column, and remove action at far right. */
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(150px, 1fr) 34px;
+  grid-template-rows: auto;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(76px, .7fr);
+  gap: 8px;
+  min-width: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row .variant-status {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > button[data-variant-remove] {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+}
+@media (max-width: 760px) {
+  .menu-admin table.data td.drink-variants-cell .variant-edit-row {
+    grid-template-columns: minmax(0, 1.35fr) minmax(142px, 1fr) 32px;
+    gap: 6px;
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(68px, .65fr);
+    gap: 6px;
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-edit-row .variant-status {
+    gap: 6px;
+  }
+}
