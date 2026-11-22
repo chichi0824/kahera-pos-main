@@ -2323,3 +2323,24 @@ select option {
 .db-guide-intro .db-guide-credit strong {
   color: var(--ink);
 }
+
+
+/* Keep the portion selector directly beside the item name. */
+.lines .line .l-name {
+  flex-wrap: nowrap;
+  white-space: nowrap;
+  min-width: 0;
+  overflow: hidden;
+}
+.lines .line .line-item-name {
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lines .line .portion-wrap,
+.lines .line .portion-label {
+  flex: 0 0 auto;
+  margin-left: 2px;
+}
