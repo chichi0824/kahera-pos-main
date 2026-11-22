@@ -155,8 +155,7 @@
     var c = S.cart;
     $('orderNo').textContent = nextNo();
     $('otype').querySelectorAll('[data-v]').forEach(function (b) { b.setAttribute('aria-checked', String(b.getAttribute('data-v') === c.type)); });
-    $('tableWrap').hidden = c.type !== 'dine';
-    if (document.activeElement !== byId('k-table')) byId('k-table').value = c.table;
+    c.table = '';
 
     if (!c.lines.length) {
       $('lines').innerHTML = '<li class="empty">Tap a menu item to start an order.</li>';
@@ -674,9 +673,6 @@
       var b = e.target.closest('[data-v]');
       if (!b) return;
       S.cart.type = b.getAttribute('data-v'); saveCart(); renderCart();
-    });
-    byId('k-table').addEventListener('input', function (e) {
-      S.cart.table = e.target.value.replace(/[^0-9A-Za-z]/g, '').slice(0, 3); saveCart();
     });
     $('lines').addEventListener('click', function (e) {
       var b = e.target.closest('[data-line]');
