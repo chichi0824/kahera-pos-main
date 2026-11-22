@@ -2223,3 +2223,79 @@ select option {
     align-self: center;
   }
 }
+
+
+/* Compact cart row: item + portion on left, quantity in middle, editable
+   unit price on the right. */
+.lines .line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 76px;
+  align-items: center;
+  column-gap: 12px;
+  row-gap: 6px;
+  padding: 11px 0;
+}
+.lines .line .l-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px 8px;
+  min-width: 0;
+}
+.lines .line .line-item-name {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.lines .line .portion-wrap,
+.lines .line .portion-label {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
+  margin: 0;
+}
+.lines .line .portion-select {
+  width: auto;
+  min-width: 66px;
+  min-height: 32px;
+  padding: 4px 23px 4px 8px;
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+  color-scheme: inherit;
+}
+.lines .line .line-price {
+  display: block;
+  min-width: 0;
+  margin: 0;
+}
+.lines .line .line-price input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 4px;
+  text-align: right;
+  font: 600 .9rem var(--f-mono);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 7px;
+  font-variant-numeric: tabular-nums;
+}
+.lines .line .line-price input:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+@media (max-width: 560px) {
+  .lines .line {
+    grid-template-columns: minmax(0, 1fr) auto 70px;
+    column-gap: 7px;
+  }
+  .lines .line .stepper {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .lines .line .line-price {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
