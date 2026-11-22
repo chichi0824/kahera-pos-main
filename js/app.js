@@ -699,11 +699,38 @@
       }
       var sel = e.target.closest('[data-portion]');
       if (!sel) return;
-      var line = S.cart.lines[+sel.getAttribute('data-portion')];
+      var lineIndex = +sel.getAttribute('data-portion');
+      var line = S.cart.lines[lineIndex];
       if (!line || !line.halfPrice) return;
-      line.portion = sel.value === 'half' ? 'half' : 'full';
-      line.price = line.portion === 'half' ? line.halfPrice : line.fullPrice;
-      saveCart(); renderCart();
+      var nextPortion = sel.value === 'half' ? 'half' : 'full';
+      if (nextPortion === line.portion) return;
+      var nextPrice = nextPortion === 'half' ? line.halfPrice : line.fullPrice;
+      if (line.qty > 1) {
+        // Change exactly one serving; keep the remaining quantity unchanged.
+        line.qty -= 1;
+        var matchingLine = S.cart.lines.filter(function (candidate, index) {
+          return index !== lineIndex &&
+            candidate.id === line.id &&
+            (candidate.variantId || 'default') === (line.variantId || 'default') &&
+            candidate.portion === nextPortion &&
+            candidate.price === nextPrice;
+        })[0];
+        if (matchingLine && matchingLine.qty < 99) {
+          matchingLine.qty += 1;
+        } else {
+          var splitLine = Object.assign({}, line, {
+            qty: 1,
+            portion: nextPortion,
+            price: nextPrice
+          });
+          S.cart.lines.splice(lineIndex + 1, 0, splitLine);
+        }
+        toast('One serving changed to ' + (nextPortion === 'half' ? 'Half' : 'Full') + '.');
+      } else {
+        line.portion = nextPortion;
+        line.price = nextPrice;
+      }
+      saveCart(); renderCart(); renderGrid();
     });
 
     $('clear').addEventListener('click', function () {
