@@ -166,13 +166,13 @@
 
   /** Orders → CSV text (amounts in pesos with 2 decimals). */
   function toCSV(orders) {
-    var head = ['order_no', 'date_time', 'type', 'table', 'items', 'gross', 'discount_type', 'discount', 'vat_removed', 'total', 'method', 'reference', 'status'];
+    var head = ['order_no', 'date_time', 'type', 'table', 'items', 'gross', 'discount_type', 'discount', 'total', 'method', 'reference', 'status'];
     var rows = (orders || []).map(function (o) {
       var p = function (c) { return (c / 100).toFixed(2); };
       return [
         o.no, new Date(o.ts).toISOString(), o.type, o.table || '',
         o.lines.map(function (l) { return l.qty + 'x ' + (l.portion === 'half' ? 'Half ' : '') + l.name; }).join('; '),
-        p(o.totals.gross), o.totals.discountKind, p(o.totals.discount), p(o.totals.vatRemoved),
+        p(o.totals.gross), o.totals.discountKind, p(o.totals.discount),
         p(o.totals.total), o.method, o.ref || '', o.status
       ].map(csvCell).join(',');
     });
