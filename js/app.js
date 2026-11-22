@@ -551,7 +551,7 @@
       h += '<tr class="menu-category-row"><th colspan="5"><span>' + esc(categoryLabel(cat)) + '</span><small>' + categoryItems.length + (categoryItems.length === 1 ? ' item' : ' items') + '</small></th></tr>';
       categoryItems.forEach(function (m) {
         var drink = isDrinksCategory(m.cat);
-        h += '<tr data-item="' + esc(m.id) + '">' +
+        h += '<tr class="' + (drink ? 'drink-menu-row' : '') + '" data-item="' + esc(m.id) + '">' +
           '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
           '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
           (drink ? '<td colspan="2" class="drink-variants-cell">' + renderVariantEditor(m.variants) + '</td>' :
