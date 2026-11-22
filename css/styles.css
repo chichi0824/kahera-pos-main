@@ -2397,3 +2397,28 @@ select option {
     gap: 6px;
   }
 }
+
+
+/* Match drink variant input widths to the regular Full / Half price fields:
+   name = Full width; variant price = Half width. */
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  grid-template-columns: minmax(0, 1.45fr) minmax(150px, 1fr) 34px;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 6px;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields input {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+@media (max-width: 760px) {
+  .menu-admin table.data td.drink-variants-cell .variant-edit-row {
+    grid-template-columns: minmax(0, 1.35fr) minmax(142px, 1fr) 32px;
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-fields {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 6px;
+  }
+}
