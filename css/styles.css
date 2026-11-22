@@ -2125,3 +2125,31 @@ button:disabled{cursor:not-allowed}
   grid-column: 1 / 3;
   grid-row: 2;
 }
+
+
+/* Align regular menu item controls on the same top baseline as drink rows. */
+.menu-admin table.data tbody tr:not(.menu-category-row) > td {
+  vertical-align: top;
+  padding-top: 12px;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-item-cell .menu-item-editor {
+  align-items: flex-start;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.hide-sm > select[data-f="cat"] {
+  margin-top: 0;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-pricing-cell {
+  padding-top: 9px;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-pricing-cell > label {
+  vertical-align: top;
+  align-content: start;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-pricing-cell > label > span {
+  display: block;
+  line-height: 1.1;
+  min-height: 12px;
+}
+.menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-pricing-cell input {
+  margin-top: 2px;
+}
