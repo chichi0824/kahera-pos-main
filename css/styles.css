@@ -2085,3 +2085,43 @@ dialog.csv-export-dlg::backdrop{background:rgba(10,16,13,.58)}
 .btn.primary,.report-periods .chip[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
 .btn.primary:hover{filter:brightness(.94)}
 button:disabled{cursor:not-allowed}
+
+
+/* Drink menu rows: align the item controls with the first variant.
+   Keep each remove button on the same line as its variant price. */
+.menu-admin table.data tbody tr.drink-menu-row > td {
+  vertical-align: top;
+}
+.menu-admin table.data tbody tr.drink-menu-row > td.menu-item-cell,
+.menu-admin table.data tbody tr.drink-menu-row > td.hide-sm {
+  padding-top: 12px;
+}
+.menu-admin table.data tbody tr.drink-menu-row > td.drink-variants-cell {
+  padding-top: 12px;
+  vertical-align: top;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(72px, 0.7fr) 34px;
+  grid-template-rows: auto auto;
+  gap: 6px 8px;
+  align-items: center;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > input[data-vf="name"] {
+  grid-column: 1;
+  grid-row: 1;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > input[data-vf="price"] {
+  grid-column: 2;
+  grid-row: 1;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > button[data-variant-remove] {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row .variant-status {
+  grid-column: 1 / 3;
+  grid-row: 2;
+}
