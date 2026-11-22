@@ -2153,3 +2153,73 @@ button:disabled{cursor:not-allowed}
 .menu-admin table.data tbody tr:not(.menu-category-row) > td.menu-pricing-cell input {
   margin-top: 2px;
 }
+
+
+/* Cart readability: give item names, portion controls and price fields
+   clear breathing room without changing the cart's overall structure. */
+.lines .line {
+  column-gap: 14px;
+  row-gap: 8px;
+  padding: 12px 0;
+}
+.lines .line .l-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  column-gap: 10px;
+  row-gap: 7px;
+  min-width: 0;
+}
+.lines .line .portion-wrap,
+.lines .line .portion-label {
+  display: inline-flex;
+  align-items: center;
+  margin: 0;
+  flex: 0 0 auto;
+}
+.lines .line .portion-select {
+  width: auto;
+  min-width: 68px;
+  min-height: 32px;
+  padding: 5px 26px 5px 9px;
+  background-color: var(--surface-2);
+  color: var(--ink);
+  border-color: var(--line);
+  color-scheme: inherit;
+}
+.lines .line .price-edit {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 2px;
+}
+.lines .line .price-edit input {
+  width: 84px;
+}
+select,
+select:focus,
+select option {
+  color: var(--ink);
+}
+select {
+  color-scheme: inherit;
+}
+select option {
+  background-color: var(--surface);
+  color: var(--ink);
+}
+@media (max-width: 560px) {
+  .lines .line {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 8px 10px;
+  }
+  .lines .line .l-name {
+    grid-column: 1 / -1;
+  }
+  .lines .line .stepper { grid-column: 1; }
+  .lines .line .l-amt {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: center;
+  }
+}
