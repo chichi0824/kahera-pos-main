@@ -18,3 +18,15 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
 @media(max-width:1000px){.layout{grid-template-columns:minmax(0,1fr) 340px;gap:14px}.menu-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}}
 @media(max-width:760px){.order-header{min-height:62px;padding:9px 16px}main{padding:0 16px 44px}.hero{padding:32px 0 24px}.layout{grid-template-columns:1fr}.order-panel{position:static;order:2}.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.menu-card img,.menu-card-placeholder{height:86px}}
 @media(max-width:420px){.section-head{align-items:flex-start;flex-direction:column}.section-head input{width:100%}.hero h1{font-size:2.35rem}.menu-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.menu-card img,.menu-card-placeholder{height:70px}.menu-card-content{padding:9px}.menu-card h3{font-size:.86rem}.price-actions button{min-width:0;font-size:.7rem;padding:7px 5px}.order-panel{padding:13px}}
+
+
+/* Category sections mirror the POS Register tab. */
+.brand-mark{display:block;width:48px;height:48px;object-fit:cover;border-radius:12px;flex:none}
+#menu-grid>.category-section{grid-column:1/-1;margin:0 0 22px;min-width:0}
+#menu-grid>.category-section .category-heading{display:flex;align-items:baseline;justify-content:space-between;gap:12px;padding:0 2px 9px;margin-bottom:10px;border-bottom:1px solid var(--line)}
+#menu-grid>.category-section .category-heading h3{margin:0;font-size:1.12rem;font-weight:800;letter-spacing:-.02em}
+#menu-grid>.category-section .category-heading span{color:var(--muted);font-size:.78rem}
+#menu-grid>.category-section .category-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px}
+@media(max-width:1000px){#menu-grid>.category-section .category-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}}
+@media(max-width:760px){#menu-grid>.category-section .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){#menu-grid>.category-section .category-grid{gap:8px}}

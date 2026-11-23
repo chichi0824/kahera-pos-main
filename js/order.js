@@ -11,8 +11,20 @@
   var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   var total=function(){return cart.reduce(function(sum,line){return sum+line.price*line.qty;},0);};
   var count=function(){return cart.reduce(function(sum,line){return sum+line.qty;},0);};
+  function categoryRank(category){
+    var name=String(category.name||'').trim().toLowerCase();
+    if(name==='ulam'||name==='meals')return 0;
+    if(name==='merienda')return 1;
+    if(name==='extra'||name==='extras')return 2;
+    if(name==='drink'||name==='drinks'||name==='beverage'||name==='beverages')return 3;
+    return 4;
+  }
+  function orderedCategories(){
+    return categories.slice().sort(function(a,b){return categoryRank(a)-categoryRank(b)||String(a.name||'').localeCompare(String(b.name||''));});
+  }
+  function categoryLabel(category){return /^extras$/i.test(String(category.name||''))?'Extra':category.name;}
   function renderCategories(){
-    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(categories).map(function(c){return '<button type="button" class="'+(activeCategory===c.id?'active':'')+'" data-category="'+esc(c.id)+'">'+esc(c.name)+'</button>';}).join('');
+    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="'+(activeCategory===c.id?'active':'')+'" data-category="'+esc(c.id)+'">'+esc(categoryLabel(c))+'</button>';}).join('');
   }
   function itemButtons(item){
     if(item.variants&&item.variants.length){
@@ -23,14 +35,24 @@
     else out+='<button type="button" data-add="'+esc(item.id)+'" data-portion="full" '+(item.soldOut?'disabled':'')+'>Add · '+money(item.price)+'</button>';
     return out;
   }
+  function renderMenuCard(item){
+    var photo=item.image?'<img src="'+esc(item.image)+'" alt="'+esc(item.name)+'" loading="lazy">':'<div class="menu-card-placeholder"></div>';
+    var unavailable=item.available===false||item.soldOut===true;
+    return '<article class="menu-card">'+photo+'<div class="menu-card-content"><div><h3>'+esc(item.name)+'</h3><p>'+(unavailable?'Currently unavailable':item.variants&&item.variants.length?'Choose a price option':item.halfPrice?'Full or half portion':'Freshly prepared')+'</p></div><div class="price-actions">'+(unavailable?'<p>Sold out today</p>':itemButtons(item))+'</div></div></article>';
+  }
   function renderMenu(){
     var q=$('menu-search').value.trim().toLowerCase();
     var visible=menu.filter(function(m){return (activeCategory==='all'||m.cat===activeCategory)&&(!q||m.name.toLowerCase().includes(q));});
-    $('menu-grid').innerHTML=visible.length?visible.map(function(item){
-      var photo=item.image?'<img src="'+esc(item.image)+'" alt="'+esc(item.name)+'" loading="lazy">':'<div class="menu-card-placeholder"></div>';
-      var unavailable=item.available===false||item.soldOut===true;
-      return '<article class="menu-card">'+photo+'<div class="menu-card-content"><div><h3>'+esc(item.name)+'</h3><p>'+(unavailable?'Currently unavailable':item.variants&&item.variants.length?'Choose a price option':item.halfPrice?'Full or half portion':'Freshly prepared')+'</p></div><div class="price-actions">'+(unavailable?'<p>Sold out today</p>':itemButtons(item))+'</div></div></article>';
-    }).join(''):'<p class="empty">No menu items found.</p>';
+    if(!visible.length){$('menu-grid').innerHTML='<p class="empty">No menu items found.</p>';return;}
+    if(activeCategory!=='all'){
+      $('menu-grid').innerHTML=visible.map(renderMenuCard).join('');
+      return;
+    }
+    $('menu-grid').innerHTML=orderedCategories().map(function(category){
+      var items=visible.filter(function(item){return item.cat===category.id;});
+      if(!items.length)return '';
+      return '<section class="category-section"><header class="category-heading"><h3>'+esc(categoryLabel(category))+'</h3><span>'+items.length+(items.length===1?' item':' items')+'</span></header><div class="category-grid">'+items.map(renderMenuCard).join('')+'</div></section>';
+    }).join('')||'<p class="empty">No menu items found.</p>';
   }
   function addItem(itemId,variantId,portion){
     var item=menu.find(function(m){return m.id===itemId;});if(!item)return;
