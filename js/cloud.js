@@ -12,8 +12,15 @@
   function setToken(value){token=value||null;try{if(token)root.sessionStorage.setItem(TOKEN_KEY,token);else root.sessionStorage.removeItem(TOKEN_KEY);}catch(_){}}
   token=readToken()||null;
   function request(path,options) {
-    options=options||{};options.headers=options.headers||{};options.headers["Content-Type"]="application/json";
-    if(token)options.headers.Authorization="Bearer "+token;
+    options=options||{};
+    var headers=new Headers(options.headers||{});
+    headers.set("Content-Type","application/json");
+    // Read the current tab's session token for every request. This avoids
+    // relying on a potentially stale in-memory copy after login/session changes.
+    token=readToken()||token||null;
+    if(token)headers.set("Authorization","Bearer "+token);
+    else headers.delete("Authorization");
+    options.headers=headers;
     return fetch(API_URL.replace(/\/$/,"")+path,options).then(function(r){return r.json().catch(function(){return {};}).then(function(b){if(!r.ok)throw new Error(b.error||"Request failed ("+r.status+").");return b;});});
   }
   root.KaheraCloud={
