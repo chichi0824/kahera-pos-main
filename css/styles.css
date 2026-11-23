@@ -1453,7 +1453,7 @@ dialog.admin-dlg::backdrop {
 .tile-photo {
   display: block;
   width: 100%;
-  height: 92px;
+  height: 58px;
   object-fit: cover;
   border-radius: 9px;
   margin-bottom: 8px;
@@ -1490,7 +1490,7 @@ dialog.admin-dlg::backdrop {
 }
 @media (max-width: 560px) {
   .tile-photo {
-    height: 76px;
+    height: 48px;
   }
   .menu-photo-cell input[type="file"] {
     max-width: 112px;
