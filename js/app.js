@@ -859,13 +859,17 @@
         return;
       }
       if (remove) {
+        var variantRow = remove.closest('[data-variant-row]');
+        var variantName = variantRow.querySelector('[data-vf="name"]').value.trim() || 'this option';
+        if (!window.confirm('Remove "' + variantName + '" from ' + item.name + '? This change will be saved to the shared menu.')) return;
         if (tr.querySelectorAll('[data-variant-row]').length <= 1) { toast('Keep at least one option, or turn off price options.'); return; }
-        remove.closest('[data-variant-row]').remove();
+        variantRow.remove();
         var remaining = readVariantEditor(tr.querySelector('[data-variant-container]'));
         if (!remaining.incomplete && !remaining.error) { item.variants = remaining.variants; item.price = remaining.variants[0].price; item.halfPrice = null; saveMenu().then(renderMenuAdmin).catch(function () {}); }
         return;
       }
       if (del) {
+        if (!window.confirm('Delete "' + item.name + '" from the menu? This cannot be undone from this screen.')) return;
         S.menu = S.menu.filter(function (x) { return x.id !== itemId; });
         saveMenu().then(function () { renderMenuAdmin(); toast('Removed ' + item.name); }).catch(function () {});
       }
@@ -920,7 +924,12 @@
       if (add) {
         if (list.querySelectorAll('[data-variant-row]').length >= 20) { toast('Maximum 20 price options per item.'); return; }
         list.insertAdjacentHTML('beforeend', renderVariantRow({ id: 'v' + Date.now().toString(36), name: '', price: 0, available: true, soldOut: false }));
-      } else remove.closest('[data-variant-row]').remove();
+      } else {
+        var newVariantRow = remove.closest('[data-variant-row]');
+        var newVariantName = newVariantRow.querySelector('[data-vf="name"]').value.trim() || 'this option';
+        if (!window.confirm('Remove "' + newVariantName + '" from the new item?')) return;
+        newVariantRow.remove();
+      }
     });
     $('addForm').addEventListener('submit', function (e) {
       e.preventDefault();
