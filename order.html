@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Order Online · Victoria's</title>
+  <meta name="description" content="Order your favorites from Victoria's for pickup or delivery.">
+  <meta name="theme-color" content="#b2c48a">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/order.css">
+</head>
+<body>
+  <header class="order-header">
+    <a class="brand" href="order.html"><span class="brand-mark">V</span><span><strong data-store-name>Victoria's</strong><small data-store-note>Freshly prepared favorites</small></span></a>
+    <a class="header-cart" href="#your-order">Your order <span data-cart-count>0</span></a>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">MADE FRESH · ORDER ONLINE</p>
+      <h1>Good food, <em>made easy.</em></h1>
+      <p>Choose your favorites, then pick them up or have them delivered.</p>
+    </section>
+    <div class="layout">
+      <section class="menu-area">
+        <div class="section-head"><div><p class="eyebrow">THE MENU</p><h2>What are you craving?</h2></div><input id="menu-search" type="search" placeholder="Search menu" aria-label="Search menu"></div>
+        <nav id="category-list" class="category-list" aria-label="Menu categories"></nav>
+        <div id="menu-grid" class="menu-grid"><p class="loading">Loading today's menu…</p></div>
+      </section>
+      <aside id="your-order" class="order-panel">
+        <div class="panel-heading"><div><p class="eyebrow">YOUR SELECTION</p><h2>Your order</h2></div><span class="cart-count" data-cart-count>0</span></div>
+        <div id="cart-lines" class="cart-lines"><p class="empty">Your order is empty. Add something delicious.</p></div>
+        <div class="total-row"><span>Total</span><strong id="cart-total">₱0.00</strong></div>
+        <form id="customer-form">
+          <h3>Where should we send it?</h3>
+          <label>Full name<input id="customer-name" name="customerName" maxlength="80" autocomplete="name" required placeholder="Your name"></label>
+          <label>Contact number<input id="customer-phone" name="customerPhone" type="tel" maxlength="30" autocomplete="tel" required placeholder="09XX XXX XXXX"></label>
+          <fieldset>
+            <legend>Order type</legend>
+            <label class="choice"><input type="radio" name="fulfillment" value="pickup" checked><span><strong>Pickup</strong><small>Pay cash when you collect your order</small></span></label>
+            <label class="choice"><input type="radio" name="fulfillment" value="delivery"><span><strong>Delivery</strong><small>Pay cash when your order arrives</small></span></label>
+          </fieldset>
+          <div id="delivery-fields" hidden>
+            <label>Delivery address<textarea id="delivery-address" maxlength="240" rows="3" placeholder="House number, street, barangay, city and landmark"></textarea></label>
+            <label class="check"><input id="contact-to-confirm" type="checkbox"><span>Please contact me to confirm or get my delivery address.</span></label>
+          </div>
+          <div class="payment-note"><strong>Cash only</strong><span>No online payment is collected on this page. Your order will be confirmed by the store and marked paid after cash is received.</span></div>
+          <p id="form-error" class="form-error" role="alert"></p>
+          <button id="place-order" class="submit-order" type="submit" disabled>Place order · ₱0.00</button>
+          <p class="fine-print">By placing an order, you agree that the store may contact you about pickup or delivery details.</p>
+        </form>
+      </aside>
+    </div>
+    <section id="order-success" class="success-panel" hidden aria-live="polite">
+      <div class="success-icon">✓</div><p class="eyebrow">ORDER RECEIVED</p><h2>Thank you for your order!</h2>
+      <p>Your order number is <strong id="success-number"></strong>.</p>
+      <p id="success-detail"></p><p class="success-unpaid">Payment status: <strong>Unpaid</strong> · Cash on pickup/delivery</p>
+      <button id="order-again" class="submit-order" type="button">Place another order</button>
+    </section>
+  </main>
+  <footer>Victoria's · Thank you for supporting our kitchen.</footer>
+  <script src="js/cloud.js"></script>
+  <script src="js/order.js"></script>
+</body>
+</html>
