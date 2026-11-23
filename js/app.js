@@ -81,12 +81,46 @@
       line.fullPrice = line.fullPrice || (line.portion === 'full' ? line.price : line.price * 2);
       line.halfPrice = line.halfPrice || null;
     });
+    syncCartPrices();
     S.view = store.get('view', 'register');
     S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash'; S.menuAdminCat = 'all';
   }
   function saveCart() { store.set('cart', S.cart); }
+  function syncCartPrices() {
+    var changed = false;
+    S.cart.lines.forEach(function (line) {
+      var item = S.menu.filter(function (m) { return m.id === line.id; })[0];
+      if (!item) return;
+      var variants = Array.isArray(item.variants) ? item.variants : [];
+      if (variants.length) {
+        var selected = variants.filter(function (v) { return v.id === line.variantId; })[0];
+        if (!selected) return;
+        if (line.price !== selected.price || line.fullPrice !== selected.price ||
+            line.variantName !== selected.name || line.halfPrice !== null) changed = true;
+        line.price = selected.price;
+        line.fullPrice = selected.price;
+        line.halfPrice = null;
+        line.portion = 'full';
+        line.variantName = selected.name;
+        line.optionPrice = selected.price;
+      } else {
+        var officialPrice = line.portion === 'half' && item.halfPrice ? item.halfPrice : item.price;
+        if (line.portion === 'half' && !item.halfPrice) line.portion = 'full';
+        if (line.price !== officialPrice || line.fullPrice !== item.price ||
+            line.halfPrice !== (item.halfPrice || null) || line.name !== item.name) changed = true;
+        line.price = officialPrice;
+        line.fullPrice = item.price;
+        line.halfPrice = item.halfPrice || null;
+        line.name = item.name;
+        line.variantId = null;
+        line.variantName = '';
+        line.optionPrice = null;
+      }
+    });
+    if (changed) saveCart();
+  }
   function totals() {
-    return M.computeTotals(S.cart.lines, { vatRegistered: false });
+    return M.computeTotals(S.cart.lines, { vatRegistered: S.settings.vatRegistered !== false });
   }
   function nextNo() { return S.nextNo || 'K-0001'; }
 
@@ -171,7 +205,7 @@
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
-          '<label class="line-price"><span class="sr-only">Unit price</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-price="' + i + '" aria-label="Unit price for ' + esc(l.name) + '" value="' + (l.price / 100).toFixed(2) + '"></label>' +
+          '<span class="line-price" aria-label="Unit price">' + M.peso(l.price) + '</span>' +
           '</li>';
       }).join('');
     }
@@ -669,20 +703,6 @@
       if (b) stepLine(+b.getAttribute('data-line'), +b.getAttribute('data-d'));
     });
     $('lines').addEventListener('change', function (e) {
-      var priceInput = e.target.closest('[data-line-price]');
-      if (priceInput) {
-        var priceLine = S.cart.lines[+priceInput.getAttribute('data-line-price')];
-        var adjusted = M.toCentavos(priceInput.value);
-        if (!priceLine) return;
-        if (isNaN(adjusted) || adjusted < 1 || adjusted > 100000000) {
-          toast('Enter a valid price greater than ₱0.');
-          renderCart();
-          return;
-        }
-        priceLine.price = adjusted;
-        saveCart(); renderCart(); renderGrid();
-        return;
-      }
       var sel = e.target.closest('[data-portion]');
       if (!sel) return;
       var lineIndex = +sel.getAttribute('data-portion');
