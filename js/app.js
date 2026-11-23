@@ -1027,9 +1027,9 @@
   cloud.checkSession().then(function(authenticated){
     if(!authenticated){showOwnerLogin();return;}
     cloud.getMenu().then(function(remote){
-      var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;startApp();
+      var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;root.hidden=false;startApp();
     }).catch(function(err){
-      sharedMenuReady=false;startApp();toast('Shared menu unavailable: '+err.message+'. Menu editing is paused to protect saved items.');
+      sharedMenuReady=false;root.hidden=false;startApp();toast('Shared menu unavailable: '+err.message+'. Menu editing is paused to protect saved items.');
     });
   }).catch(showOwnerLogin);
 })();
