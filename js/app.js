@@ -986,10 +986,13 @@
     setView(S.view);
     tick(); setInterval(tick, 30000);
     refreshSharedData().catch(function (error) { toast('Cloud sync unavailable: ' + error.message); });
-    setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
   }
 
   var refreshInFlight = false;
+  var refreshInterval = null;
+  var loginFormBound = false;
   function refreshSharedData() {
     if (refreshInFlight) return Promise.resolve();
     refreshInFlight = true;
@@ -1009,7 +1012,9 @@
     }).catch(function (error) {
       if (/Owner login required/i.test(error && error.message || '')) {
         cloud.logout();
-        window.location.reload();
+        if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
+        showOwnerLogin();
+        return;
       }
       throw error;
     }).finally(function () { refreshInFlight = false; });
@@ -1018,6 +1023,8 @@
   function showOwnerLogin(){
     var panel=document.getElementById('owner-login'),form=document.getElementById('owner-login-form'),error=document.getElementById('owner-login-error');
     root.hidden=true;panel.hidden=false;
+    if (loginFormBound) return;
+    loginFormBound = true;
     form.addEventListener('submit',function(event){
       event.preventDefault();
       var button=form.querySelector('button[type="submit"]'),password=document.getElementById('owner-password').value;
@@ -1035,6 +1042,11 @@
     cloud.getMenu().then(function(remote){
       var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;root.hidden=false;startApp();
     }).catch(function(err){
+      if (/Owner login required/i.test(err && err.message || '')) {
+        cloud.logout();
+        showOwnerLogin();
+        return;
+      }
       sharedMenuReady=false;root.hidden=false;startApp();toast('Shared menu unavailable: '+err.message+'. Menu editing is paused to protect saved items.');
     });
   }).catch(showOwnerLogin);
