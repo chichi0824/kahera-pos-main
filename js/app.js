@@ -1006,6 +1006,12 @@
       if (S.view === 'orders') renderOrders();
       if (S.view === 'shift' && reportRange().to >= manilaToday() && Date.now()-lastReportRefresh>30000) loadReportData();
       renderCart();
+    }).catch(function (error) {
+      if (/Owner login required/i.test(error && error.message || '')) {
+        cloud.logout();
+        window.location.reload();
+      }
+      throw error;
     }).finally(function () { refreshInFlight = false; });
   }
 
