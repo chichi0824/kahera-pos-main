@@ -105,7 +105,13 @@ async function runDailySchedule(db,now=new Date()) {
   }
 }
 function rowOrder(r){const o=JSON.parse(r.payload_json);o.status=r.status;if(r.voided_at)o.voidedAt=Date.parse(r.voided_at);return o;}
+export function validateOnlineOrder(b) {
+  const address=details.address,contactRequested=details.contactRequested;
+  return {address,contactRequested};
+}
 async function createOnlineOrder(db,b) {
+  const details=validateOnlineOrder(b);
+
   if(!b||!text(b.id,80)||!/^[a-zA-Z0-9-]{8,80}$/.test(b.id)||!text(b.customerName,80)||!text(b.customerPhone,30)||!['pickup','delivery'].includes(b.fulfillmentType)||!Array.isArray(b.lines)||!b.lines.length||b.lines.length>50)throw new Error('Please complete your name, contact number, order type, and items.');
   const address=text(b.deliveryAddress,240)?b.deliveryAddress.trim():'';
   const contactRequested=b.deliveryContactRequested===true;
