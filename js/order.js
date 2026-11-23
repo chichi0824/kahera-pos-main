@@ -11,7 +11,7 @@
   }
   function itemButtons(item){
     if(item.variants&&item.variants.length){
-      return item.variants.map(function(v){var off=v.available===false||v.soldOut===true;return '<button type="button" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'" '+(off?'disabled':'')+'>'+esc(v.name)+' · '+money(v.price)+'</button>';}).join('');
+      return item.variants.map(function(v){var off=!item.available||item.soldOut||v.available===false||v.soldOut===true;return '<button type="button" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'" '+(off?'disabled':'')+'>'+esc(v.name)+' · '+money(v.price)+'</button>';}).join('');
     }
     var out='';
     if(item.halfPrice){out+='<button type="button" data-add="'+esc(item.id)+'" data-portion="full" '+(item.soldOut?'disabled':'')+'>Full · '+money(item.price)+'</button><button type="button" data-add="'+esc(item.id)+'" data-portion="half" '+(item.soldOut?'disabled':'')+'>Half · '+money(item.halfPrice)+'</button>';}
@@ -76,7 +76,7 @@
   });
   $('order-again').addEventListener('click',function(){cart=[];requestId=null;$('customer-form').reset();setFulfillment();renderCart();$('order-success').hidden=true;document.querySelector('.layout').hidden=false;document.querySelector('.hero').hidden=false;window.scrollTo({top:0,behavior:'smooth'});});
   cloud.getMenu().then(function(data){
-    categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available||m.variants&&m.variants.some(function(v){return v.available!==false&&!v.soldOut;});});
+    categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
     $('store-name').textContent=data.settings&&data.settings.bizName||"Victoria's";
     $('store-note').textContent=data.settings&&data.settings.bizNote||'Freshly prepared favorites';
     document.title='Order Online · '+$('store-name').textContent;
