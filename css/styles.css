@@ -2267,10 +2267,23 @@ select option {
   display: block;
   min-width: 0;
   margin: 0;
+}
+.lines .line .line-price input {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  padding: 5px 4px;
   text-align: right;
-  color: var(--ink);
   font: 600 .9rem var(--f-mono);
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid transparent;
+  border-radius: 7px;
   font-variant-numeric: tabular-nums;
+}
+.lines .line .line-price input:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
 }
 @media (max-width: 560px) {
   .lines .line {
