@@ -177,15 +177,33 @@ async function createOrder(db,b,deviceId) {
     const variants = JSON.parse(item.variantsJson || '[]');
     let officialPrice = portion === 'half' ? item.halfPrice : item.price;
     let variantName = '';
-    if (line.variantId) {
+    if (variants.length) {
+      if (!line.variantId) throw new Error('Choose a valid drink size. Refresh the menu and review the cart.');
       const selected = variants.find(v => v.id === line.variantId);
-      if (!selected || selected.available===false || line.optionPrice !== selected.price) throw new Error('A selected drink size is no longer available or its price changed. Refresh the menu and review the cart.');
+      if (!selected || selected.available === false || selected.soldOut === true) {
+        throw new Error('A selected drink size is no longer available. Refresh the menu and review the cart.');
+      }
       officialPrice = selected.price;
       variantName = selected.name;
+    } else if (line.variantId) {
+      throw new Error('A selected menu option is invalid. Refresh the menu and review the cart.');
     }
-    if (officialPrice === null || officialPrice === undefined) throw new Error('A half-order price is not configured for this menu item.');
-    if (!Number.isSafeInteger(line.price) || line.price < 1 || line.price > 100000000) throw new Error('An adjusted item price is invalid.');
-    menuRows.push({ id:item.id, name:item.name, price:line.price, qty:line.qty, portion:portion, variantId:line.variantId||null, variantName:variantName || line.variantName || '' });
+    if (!Number.isSafeInteger(officialPrice) || officialPrice < 1 || officialPrice > 100000000) {
+      throw new Error(portion === 'half'
+        ? 'A half-order price is not configured for this menu item.'
+        : 'The selected menu item has an invalid price. Contact the store.');
+    }
+    // The browser may submit a displayed price, but it is never authoritative.
+    // All calculations and saved order records use the price read from D1 above.
+    menuRows.push({
+      id: item.id,
+      name: item.name,
+      price: officialPrice,
+      qty: line.qty,
+      portion,
+      variantId: line.variantId || null,
+      variantName
+    });
   }
   const settingsRow = await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if (!settingsRow) throw new Error('The shared menu is not initialized.');
