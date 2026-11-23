@@ -162,7 +162,7 @@ async function markOnlineOrderPaid(db,id){
 
 async function orders(db,shiftId) {
   if(shiftId){
-    const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no').bind(shiftId).all();
+    const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no").bind(shiftId).all();
     return (r.results||[]).map(rowOrder);
   }
   const today=manilaParts().date;
