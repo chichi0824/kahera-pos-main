@@ -17,6 +17,9 @@
     return fetch(API_URL.replace(/\/$/,"")+path,options).then(function(r){return r.json().catch(function(){return {};}).then(function(b){if(!r.ok)throw new Error(b.error||"Request failed ("+r.status+").");return b;});});
   }
   root.KaheraCloud={
+    login:function(password){return request("/api/auth/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){setToken(b.token);return true;});},
+    checkSession:function(){return request("/api/auth/session",{method:"GET",cache:"no-store"}).then(function(){return true;}).catch(function(){setToken(null);return false;});},
+    logout:function(){setToken(null);},
     getDeviceId:getDeviceId,newId:uuid,
     getMenu:function(){return request("/api/menu",{method:"GET",cache:"no-store"});},
     saveMenu:function(payload){return request("/api/menu",{method:"PUT",body:JSON.stringify(payload)});},
