@@ -162,11 +162,11 @@ async function markOnlineOrderPaid(db,id){
 
 async function orders(db,shiftId) {
   if(shiftId){
-    const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
+    const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no').bind(shiftId).all();
     return (r.results||[]).map(rowOrder);
   }
   const today=manilaParts().date;
-  const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE COALESCE(date(created_at,'+8 hours'), '')=? ORDER BY created_at,order_no").bind(today).all();
+  const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE COALESCE(date(created_at,'+8 hours'), '')=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no").bind(today).all();
   return (r.results||[]).map(rowOrder);
 }
 async function reportData(db,from,to) {
@@ -315,7 +315,6 @@ export default {
    if(u.pathname==='/api/auth/session'&&request.method==='GET'){
      return isAdmin(bearer(request),env.SESSION_SECRET)?json({authenticated:true},200,h):json({authenticated:false},401,h);
    }
-   if(u.pathname==='/api/public/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOnlineOrder(db,b)},201,h);}
    // Public menu reads are needed by the future customer ordering page.
    // All operational and administrative API routes require the owner session.
    if(!((u.pathname==='/api/menu'&&request.method==='GET')||(u.pathname==='/api/public/orders'&&request.method==='POST'))&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
@@ -323,6 +322,7 @@ export default {
    }
    // Report rollover is best-effort and must never block menu, register, or sales APIs.
    try { await runDailySchedule(db,new Date()); } catch (scheduleError) { /* sales remain available */ }
+   if(u.pathname==='/api/public/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOnlineOrder(db,b)},201,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
    if(u.pathname==='/api/menu'&&request.method==='PUT'){await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
