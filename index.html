@@ -32,8 +32,21 @@
     />
   </head>
   <body>
+    <!-- Owner-only POS login. Public ordering will use a separate page. -->
+    <section id="owner-login" class="owner-login" hidden aria-labelledby="owner-login-title">
+      <form id="owner-login-form" class="owner-login-card">
+        <img src="icons/kahera-icon.png" alt="" width="52" height="52" />
+        <p class="eyebrow">KAHERA · OWNER ACCESS</p>
+        <h1 id="owner-login-title">Welcome back</h1>
+        <p class="owner-login-copy">Sign in to access the point-of-sale system.</p>
+        <label for="owner-password">Owner password</label>
+        <input id="owner-password" type="password" autocomplete="current-password" required maxlength="200" />
+        <p id="owner-login-error" class="err" role="alert" aria-live="polite"></p>
+        <button class="btn primary" type="submit">Sign in</button>
+      </form>
+    </section>
     <!--APP-START-->
-    <div class="app" id="kahera">
+    <div class="app" id="kahera" hidden>
       <header class="topbar">
         <div class="brand">
           <img class="brand-mark" src="icons/kahera-icon.png" alt="Kahera" />
@@ -93,6 +106,7 @@ DB
         </nav>
         <div class="top-tools">
           <span class="clock" data-k="clock">--:--</span>
+          <button type="button" class="btn small ghost" data-k="logout">Log out</button>
           <button
             type="button"
             class="icon-btn"
