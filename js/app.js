@@ -166,7 +166,7 @@
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
     var hasOptions=hasPriceOptions(m),availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
-    var disabled=!!m.soldOut||(hasOptions&&!availableVariants.length);
+    var disabled=(!hasOptions&&!!m.soldOut)||(hasOptions&&!availableVariants.length);
     var priceLabel=hasOptions?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No options available'):M.peso(m.price);
     var hasListedSoldOut=hasOptions&&m.variants.some(function(v){return v.available!==false&&v.soldOut;});var statusLabel=m.soldOut?'Sold Out':(hasOptions&&!availableVariants.length?(hasListedSoldOut?'All options sold out':'No options'):'');
     return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(statusLabel?', '+statusLabel.toLowerCase():'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
@@ -177,7 +177,7 @@
   }
 
   function renderGrid(bumpId){
-    var q=S.q.trim().toLowerCase(),visible=S.menu.filter(function(m){return m.available&&(S.cat==='all'||m.cat===S.cat)&&(!q||m.name.toLowerCase().indexOf(q)!==-1);});
+    var q=S.q.trim().toLowerCase(),visible=S.menu.filter(function(m){return (hasPriceOptions(m)||m.available)&&(S.cat==='all'||m.cat===S.cat)&&(!q||m.name.toLowerCase().indexOf(q)!==-1);});
     if(!visible.length){$('grid').innerHTML='<p class="empty">No menu items match “'+esc(S.q)+'”. Add one in the Menu tab.</p>';return;}
     if(S.cat!=='all'){$('grid').innerHTML=visible.map(function(m){return renderTile(m,bumpId);}).join('');return;}
     $('grid').innerHTML=orderedCategories().map(function(cat){
@@ -576,7 +576,7 @@
         h += '<tr class="' + (usesOptions ? 'drink-menu-row' : '') + '" data-item="' + esc(m.id) + '">' +
           '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
           '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
-          (usesOptions ? '<td colspan="2" class="drink-variants-cell" data-variant-container>' + (drink ? '<strong>Drink sizes</strong>' : '<div class="menu-option-controls"><label class="check"><input type="checkbox" data-f="useVariants" checked><span>Use price options</span></label><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Item available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div>') + renderVariantEditor(m.variants) + '</td>' :
+          (usesOptions ? '<td colspan="2" class="drink-variants-cell" data-variant-container>' + (drink ? '<strong>Drink sizes</strong>' : '<label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants" checked><span>Use price options</span></label>') + renderVariantEditor(m.variants) + '</td>' :
             '<td class="menu-pricing-cell"><label><span>Full ₱</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half ₱</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="—" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label><label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants"><span>Use price options</span></label></td><td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>') +
           '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
           '</tr>';
@@ -627,7 +627,7 @@
 
   // ---------- cart mutations ----------
   function addItem(id,variant){
-    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(m.soldOut){toast(m.name+' is sold out');return;}
+    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(!hasPriceOptions(m)&&m.soldOut){toast(m.name+' is sold out');return;}
     var hasOptions=hasPriceOptions(m),options=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     if(hasOptions&&!options.length){toast(m.name+' has no available options today');return;}
     if(hasOptions&&!variant){showVariantPicker(Object.assign({},m,{variants:options}));return;}
