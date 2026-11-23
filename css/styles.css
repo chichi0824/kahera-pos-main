@@ -2422,3 +2422,8 @@ select option {
     gap: 6px;
   }
 }
+
+/* Optional price-option controls for any menu item */
+.menu-pricing-cell .menu-options-toggle { display: flex; flex: 0 0 100%; align-items: center; gap: 6px; min-width: 0; color: var(--muted); }
+.menu-pricing-cell .menu-options-toggle input, .new-options-toggle input { width: 16px !important; height: 16px; flex: 0 0 auto; }
+.new-options-toggle { display: flex; align-items: center; gap: 8px; }

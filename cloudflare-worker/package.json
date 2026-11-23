@@ -1,6 +1,7 @@
 {
   "name": "kahera-menu-worker",
   "private": true,
-  "scripts": { "dev": "wrangler dev", "deploy": "wrangler deploy" },
+  "type": "module",
+  "scripts": { "dev": "wrangler dev", "deploy": "wrangler deploy", "test": "node --test tests/menu.test.mjs" },
   "devDependencies": { "wrangler": "^4.0.0" }
 }
