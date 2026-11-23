@@ -95,9 +95,9 @@
       if (variants.length) {
         var selected = variants.filter(function (v) { return v.id === line.variantId; })[0];
         if (!selected) return;
-        if (line.price !== selected.price || line.fullPrice !== selected.price ||
+        if ((!line.priceOverridden && line.price !== selected.price) || line.fullPrice !== selected.price ||
             line.variantName !== selected.name || line.halfPrice !== null) changed = true;
-        line.price = selected.price;
+        if (!line.priceOverridden) line.price = selected.price;
         line.fullPrice = selected.price;
         line.halfPrice = null;
         line.portion = 'full';
@@ -106,9 +106,9 @@
       } else {
         var officialPrice = line.portion === 'half' && item.halfPrice ? item.halfPrice : item.price;
         if (line.portion === 'half' && !item.halfPrice) line.portion = 'full';
-        if (line.price !== officialPrice || line.fullPrice !== item.price ||
+        if ((!line.priceOverridden && line.price !== officialPrice) || line.fullPrice !== item.price ||
             line.halfPrice !== (item.halfPrice || null) || line.name !== item.name) changed = true;
-        line.price = officialPrice;
+        if (!line.priceOverridden) line.price = officialPrice;
         line.fullPrice = item.price;
         line.halfPrice = item.halfPrice || null;
         line.name = item.name;
@@ -205,7 +205,7 @@
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
-          '<span class="line-price" aria-label="Unit price">' + M.peso(l.price) + '</span>' +
+          '<label class="line-price"><span class="sr-only">Unit price</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-price="' + i + '" aria-label="Unit price for ' + esc(l.name) + '" value="' + (l.price / 100).toFixed(2) + '"></label>' +
           '</li>';
       }).join('');
     }
@@ -703,6 +703,21 @@
       if (b) stepLine(+b.getAttribute('data-line'), +b.getAttribute('data-d'));
     });
     $('lines').addEventListener('change', function (e) {
+      var priceInput = e.target.closest('[data-line-price]');
+      if (priceInput) {
+        var priceLine = S.cart.lines[+priceInput.getAttribute('data-line-price')];
+        var adjusted = M.toCentavos(priceInput.value);
+        if (!priceLine) return;
+        if (isNaN(adjusted) || adjusted < 1 || adjusted > 100000000) {
+          toast('Enter a valid price greater than ₱0.');
+          renderCart();
+          return;
+        }
+        priceLine.price = adjusted;
+        priceLine.priceOverridden = true;
+        saveCart(); renderCart(); renderGrid();
+        return;
+      }
       var sel = e.target.closest('[data-portion]');
       if (!sel) return;
       var lineIndex = +sel.getAttribute('data-portion');
@@ -727,7 +742,8 @@
           var splitLine = Object.assign({}, line, {
             qty: 1,
             portion: nextPortion,
-            price: nextPrice
+            price: nextPrice,
+            priceOverridden: false
           });
           S.cart.lines.splice(lineIndex + 1, 0, splitLine);
         }
@@ -735,6 +751,7 @@
       } else {
         line.portion = nextPortion;
         line.price = nextPrice;
+        line.priceOverridden = false;
       }
       saveCart(); renderCart(); renderGrid();
     });

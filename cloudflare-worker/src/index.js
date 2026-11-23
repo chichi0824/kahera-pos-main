@@ -193,12 +193,17 @@ async function createOrder(db,b,deviceId) {
         ? 'A half-order price is not configured for this menu item.'
         : 'The selected menu item has an invalid price. Contact the store.');
     }
-    // The browser may submit a displayed price, but it is never authoritative.
-    // All calculations and saved order records use the price read from D1 above.
+    // An intentional POS line-price edit applies to this sale only.
+    // It never changes the shared menu price in D1.
+    const salePrice = line.priceOverridden === true ? line.price : officialPrice;
+    if (!Number.isSafeInteger(salePrice) || salePrice < 1 || salePrice > 100000000) {
+      throw new Error('Enter a valid item price greater than zero.');
+    }
     menuRows.push({
       id: item.id,
       name: item.name,
-      price: officialPrice,
+      price: salePrice,
+      priceOverridden: line.priceOverridden === true,
       qty: line.qty,
       portion,
       variantId: line.variantId || null,
