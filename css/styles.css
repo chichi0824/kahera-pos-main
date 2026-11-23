@@ -2462,3 +2462,47 @@ select option {
 }
 .owner-login-card .err { min-height: 1.2em; color: var(--danger); }
 .owner-login-card button { min-height: 46px; }
+
+
+/* ---------- Incoming online orders ---------- */
+.online-orders { display: grid; gap: 12px; margin-top: 14px; }
+.online-orders-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.online-orders-head h3 { font-size: 1.15rem; }
+.online-order-card {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--gold);
+  border-left: 4px solid var(--gold);
+  border-radius: 12px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.online-order-top, .online-order-customer, .online-order-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.online-order-top > div { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.online-order-total { font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.online-order-customer { justify-content: flex-start; }
+.online-order-customer a { color: var(--accent); font-weight: 700; text-decoration: none; }
+.online-order-address { color: var(--muted); font-size: .9rem; }
+.online-order-lines { display: grid; gap: 6px; list-style: none; margin: 0; padding: 10px 0; border-block: 1px solid var(--line); }
+.online-order-lines li { display: flex; justify-content: space-between; gap: 12px; font-size: .9rem; }
+.online-order-actions { justify-content: space-between; }
+.online-orders-empty { display: flex; flex-direction: column; gap: 3px; padding: 16px; border: 1px dashed var(--line); border-radius: 12px; color: var(--muted); }
+.online-orders-empty strong { color: var(--ink); }
+.order-source { display: block; color: var(--muted); font-size: .75rem; }
+.pill.unpaid { background: var(--gold-soft); color: var(--gold); }
+.pill.online { background: var(--accent-soft); color: var(--accent); }
+.pill.paid { background: var(--accent-soft); color: var(--accent); }
+tr.is-unpaid { background: var(--gold-soft); }
+@media (max-width: 620px) {
+  .online-order-card { padding: 12px; }
+  .online-orders-head { align-items: flex-start; flex-direction: column; }
+  .online-order-actions { align-items: stretch; flex-direction: column; }
+  .online-order-actions .btn { width: 100%; }
+}

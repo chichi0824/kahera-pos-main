@@ -360,32 +360,29 @@
   var pendingVoid = null;
   function renderOrders() {
     var list = S.orders.slice().reverse();
-    var paid = list.filter(function (o) { return o.status !== 'void'; }).length;
-    $('ordersNote').textContent = list.length ? paid + ' paid · ' + (list.length - paid) + ' voided' + (list.some(function (o) { return o.sample; }) ? ' · includes sample orders' : '') : '';
+    var unpaid = list.filter(function(o){return o.source==='online'&&o.status==='unpaid';});
+    var voided = list.filter(function(o){return o.status==='void';}).length;
+    var paid = list.filter(function(o){return o.status==='paid';}).length;
+    $('ordersNote').textContent = list.length ? unpaid.length+' unpaid · '+paid+' paid · '+voided+' voided' : '';
+    $('onlineOrders').innerHTML = unpaid.length ? '<div class="online-orders-head"><div><p class="eyebrow">CUSTOMER ORDERS</p><h3>Incoming online orders</h3></div><span class="pill unpaid">'+unpaid.length+' awaiting payment</span></div>'+unpaid.map(function(o){
+      var fulfil=o.fulfillmentType==='delivery'?'Delivery':'Pickup';
+      var address=o.fulfillmentType==='delivery'?(o.deliveryContactRequested?'Customer asked staff to contact them to confirm the delivery address':(o.deliveryAddress||'Address not provided')):'Pickup at store';
+      return '<article class="online-order-card"><div class="online-order-top"><div><span class="mono">'+esc(o.no)+'</span><span class="pill unpaid">Unpaid</span><span class="pill online">Online · '+fulfil+'</span></div><strong class="online-order-total">'+M.peso(o.totals.total)+'</strong></div><div class="online-order-customer"><strong>'+esc(o.customerName||'Customer')+'</strong><a href="tel:'+esc(o.customerPhone||'')+'">'+esc(o.customerPhone||'No contact number')+'</a></div><p class="online-order-address">'+esc(address)+'</p><ul class="online-order-lines">'+o.lines.map(function(l){return '<li><span>'+l.qty+' × '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name))+'</span><strong>'+M.peso(l.price*l.qty)+'</strong></li>';}).join('')+'</ul><div class="online-order-actions"><span class="hint">Cash on '+(o.fulfillmentType==='delivery'?'delivery':'pickup')+'</span><button type="button" class="btn primary small" data-mark-paid="'+esc(o.id)+'">Mark as Paid</button></div></article>';
+    }).join('') : '<div class="online-orders-empty"><strong>No unpaid online orders</strong><span>New customer orders will appear here automatically.</span></div>';
     if (!list.length) {
-      $('ordersTable').innerHTML = '<tbody><tr><td class="empty">No orders yet this shift. Completed sales appear here.</td></tr></tbody>';
+      $('ordersTable').innerHTML = '<tbody><tr><td class="empty">No orders yet today.</td></tr></tbody>';
       return;
     }
-    var h = '<thead><tr><th>Order</th><th>Time</th><th class="hide-sm">Type</th><th class="hide-sm">Items</th><th class="hide-sm">Paid by</th><th class="num">Total</th><th class="num"><span class="sr-only">Actions</span></th></tr></thead><tbody>';
+    var h = '<thead><tr><th>Order</th><th>Time</th><th>Source / Customer</th><th class="hide-sm">Type</th><th class="hide-sm">Items</th><th>Status</th><th class="num">Total</th><th class="num"><span class="sr-only">Actions</span></th></tr></thead><tbody>';
     list.forEach(function (o) {
-      var isVoid = o.status === 'void';
-      h += '<tr class="' + (isVoid ? 'is-void' : '') + '">' +
-        '<td class="mono">' + esc(o.no) + (isVoid ? ' <span class="pill void">Void</span>' : '') +
-          '</td>' +
-        '<td class="mono">' + timeOf(o.ts) + '</td>' +
-        '<td class="hide-sm">' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · T' + esc(o.table) : '') : 'Take-out') + '</td>' +
-        '<td class="hide-sm">' + o.lines.map(function (l) { return l.qty + '× ' + (l.variantName ? esc(l.name) + ' · ' + esc(l.variantName) : (l.portion === 'half' ? 'Half ' : '') + esc(l.name)); }).join(', ') + '</td>' +
-        '<td class="hide-sm">' + METHOD_LABEL[o.method] + '</td>' +
-        '<td class="num mono">' + M.peso(o.totals.total) + '</td>' +
-        '<td class="num"><div class="row-actions">' +
-          '<button type="button" class="btn small" data-slip="' + esc(o.no) + '">Slip</button>' +
-          (isVoid ? '' : pendingVoid === o.no
-            ? '<span class="confirm">Void ' + esc(o.no) + '? <button type="button" class="btn small danger" data-void-yes="' + esc(o.no) + '">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>'
-            : '<button type="button" class="btn small danger" data-void="' + esc(o.no) + '">Void</button>') +
-        '</div></td></tr>';
+      var isVoid=o.status==='void',isOnline=o.source==='online';
+      var type=isOnline?(o.fulfillmentType==='delivery'?'Delivery':'Pickup'):(o.type==='dine'?'Dine-in'+(o.table?' · T'+esc(o.table):''):'Take-out');
+      var status=isVoid?'<span class="pill void">Void</span>':o.status==='unpaid'?'<span class="pill unpaid">Unpaid</span>':'<span class="pill paid">Paid</span>';
+      h+='<tr class="'+(isVoid?'is-void':o.status==='unpaid'?'is-unpaid':'')+'"><td class="mono">'+esc(o.no)+'</td><td class="mono">'+timeOf(o.ts)+'</td><td>'+(isOnline?'<strong>'+esc(o.customerName||'Customer')+'</strong><small class="order-source">Online</small>':'POS')+'</td><td class="hide-sm">'+type+'</td><td class="hide-sm">'+o.lines.map(function(l){return l.qty+'× '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name));}).join(', ')+'</td><td>'+status+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td><td class="num"><div class="row-actions">'+(isOnline&&o.status==='paid'?'<span class="hint">Cash received</span>':'')+(!isOnline?'<button type="button" class="btn small" data-slip="'+esc(o.no)+'">Slip</button>':'')+(isVoid?'':pendingVoid===o.no?'<span class="confirm">Void '+esc(o.no)+'? <button type="button" class="btn small danger" data-void-yes="'+esc(o.no)+'">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>':'<button type="button" class="btn small danger" data-void="'+esc(o.no)+'">Void</button>')+'</div></td></tr>';
     });
-    $('ordersTable').innerHTML = h + '</tbody>';
+    $('ordersTable').innerHTML=h+'</tbody>';
   }
+
   function findOrder(no) { return S.orders.filter(function (o) { return o.no === no; })[0]; }
 
   // ---------- calendar-based reporting ----------
@@ -809,6 +806,10 @@
     $('ordersTable').addEventListener('click', function (e) {
       var t = e.target.closest('button');
       if (!t) return;
+      if (t.hasAttribute('data-mark-paid')) {
+        var onlineOrder=S.orders.filter(function(o){return o.id===t.getAttribute('data-mark-paid');})[0];
+        if(onlineOrder&&!t.disabled&&window.confirm('Confirm that cash has been received for '+onlineOrder.no+'?')){t.disabled=true;t.textContent='Saving…';cloud.markOrderPaid(onlineOrder.id).then(function(updated){S.orders=S.orders.map(function(x){return x.id===updated.id?updated:x;});renderOrders();renderBrand();toast(updated.no+' marked paid');}).catch(function(error){t.disabled=false;t.textContent='Mark as Paid';toast('Could not update payment: '+error.message);});}
+      }
       if (t.hasAttribute('data-slip')) showSlip(findOrder(t.getAttribute('data-slip')));
       if (t.hasAttribute('data-void')) { pendingVoid = t.getAttribute('data-void'); renderOrders(); }
       if (t.hasAttribute('data-void-no')) { pendingVoid = null; renderOrders(); }
@@ -996,8 +997,11 @@
       S.shift = shift || null;
       return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
+      var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
+      var incoming=results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;});
       S.orders = results[0];
       S.nextNo = results[1];
+      if(incoming.length)toast(incoming.length===1?'New online order '+incoming[0].no+' received':'You have '+incoming.length+' new online orders');
       renderBrand();
       if (S.view === 'orders') renderOrders();
       if (S.view === 'shift' && reportRange().to >= manilaToday() && Date.now()-lastReportRefresh>30000) loadReportData();

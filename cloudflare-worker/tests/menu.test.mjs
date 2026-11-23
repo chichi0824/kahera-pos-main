@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { saveMenu, validateMenu } from '../src/index.js';
+import { saveMenu, validateMenu, validateOnlineOrder } from '../src/index.js';
 
 function menuPayload(item, category = { id: 'meals', name: 'Ulam' }) {
   return {
@@ -133,3 +133,58 @@ test('administrative API routes accept a valid owner session', async () => {
   assert.equal(response.status, 200);
 });
 
+
+
+test('accepts a pickup order with customer contact details', () => {
+  const result = validateOnlineOrder({
+    id: 'customer-order-123456',
+    customerName: 'Juan Dela Cruz',
+    customerPhone: '09171234567',
+    fulfillmentType: 'pickup',
+    lines: [{ id: 'ulam-1', qty: 2 }]
+  });
+  assert.deepEqual(result, { address: '', contactRequested: false });
+});
+
+test('requires a delivery address or contact request for delivery orders', () => {
+  assert.throws(() => validateOnlineOrder({
+    id: 'customer-order-123456',
+    customerName: 'Juan Dela Cruz',
+    customerPhone: '09171234567',
+    fulfillmentType: 'delivery',
+    lines: [{ id: 'ulam-1', qty: 1 }]
+  }), /Enter your delivery address or ask the store to contact you/);
+});
+
+test('allows delivery when the customer asks staff to confirm the address', () => {
+  const result = validateOnlineOrder({
+    id: 'customer-order-123456',
+    customerName: 'Juan Dela Cruz',
+    customerPhone: '09171234567',
+    fulfillmentType: 'delivery',
+    deliveryContactRequested: true,
+    lines: [{ id: 'ulam-1', qty: 1 }]
+  });
+  assert.deepEqual(result, { address: '', contactRequested: true });
+});
+
+test('rejects delivery details on a pickup order', () => {
+  assert.throws(() => validateOnlineOrder({
+    id: 'customer-order-123456',
+    customerName: 'Juan Dela Cruz',
+    customerPhone: '09171234567',
+    fulfillmentType: 'pickup',
+    deliveryAddress: '123 Main Street',
+    lines: [{ id: 'ulam-1', qty: 1 }]
+  }), /Pickup orders do not need delivery details/);
+});
+
+test('requires customer name and contact number for online orders', () => {
+  assert.throws(() => validateOnlineOrder({
+    id: 'customer-order-123456',
+    customerName: '',
+    customerPhone: '',
+    fulfillmentType: 'pickup',
+    lines: [{ id: 'ulam-1', qty: 1 }]
+  }), /Please complete your name, contact number/);
+});

@@ -105,19 +105,74 @@ async function runDailySchedule(db,now=new Date()) {
   }
 }
 function rowOrder(r){const o=JSON.parse(r.payload_json);o.status=r.status;if(r.voided_at)o.voidedAt=Date.parse(r.voided_at);return o;}
+export function validateOnlineOrder(b) {
+  if(!b||!text(b.id,80)||!/^[a-zA-Z0-9-]{8,80}$/.test(b.id)||!text(b.customerName,80)||!text(b.customerPhone,30)||!['pickup','delivery'].includes(b.fulfillmentType)||!Array.isArray(b.lines)||!b.lines.length||b.lines.length>50)throw new Error('Please complete your name, contact number, order type, and items.');
+  const address=text(b.deliveryAddress,240)?b.deliveryAddress.trim():'';
+  const contactRequested=b.deliveryContactRequested===true;
+  if(b.fulfillmentType==='delivery'&&!address&&!contactRequested)throw new Error('Enter your delivery address or ask the store to contact you to confirm it.');
+  if(b.fulfillmentType==='pickup'&&(address||contactRequested))throw new Error('Pickup orders do not need delivery details.');
+  return {address,contactRequested};
+}
+async function createOnlineOrder(db,b) {
+  const details=validateOnlineOrder(b);
+
+  const address=details.address,contactRequested=details.contactRequested;
+  const existing=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();
+  if(existing)return rowOrder(existing);
+  const lines=[];
+  for(const line of b.lines){
+    if(!line||!text(line.id,80)||!Number.isInteger(line.qty)||line.qty<1||line.qty>30||!(line.portion===undefined||['full','half'].includes(line.portion)))throw new Error('An order item is invalid.');
+    const item=await db.prepare('SELECT id,name,price,half_price AS halfPrice,available,sold_out AS soldOut,variants_json AS variantsJson FROM menu_items WHERE id=?').bind(line.id).first();
+    if(!item||!item.available||item.soldOut)throw new Error('A selected item is unavailable. Refresh the menu and review your cart.');
+    const variants=JSON.parse(item.variantsJson||'[]');
+    let price=line.portion==='half'?item.halfPrice:item.price,variantName='';
+    if(variants.length){
+      if(!text(line.variantId,80))throw new Error('Choose a valid price option.');
+      const v=variants.find(x=>x.id===line.variantId);
+      if(!v||v.available===false||v.soldOut===true)throw new Error('A selected price option is unavailable. Refresh the menu.');
+      price=v.price;variantName=v.name;
+    }else if(line.variantId)throw new Error('A selected price option is invalid.');
+    if(!Number.isSafeInteger(price)||price<1)throw new Error('The selected item price is invalid.');
+    lines.push({id:item.id,name:item.name,price,qty:line.qty,portion:variants.length?'full':(line.portion==='half'?'half':'full'),variantId:line.variantId||null,variantName,priceOverridden:false});
+  }
+  const settingsRow=await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
+  if(!settingsRow)throw new Error('The shared menu is not initialized.');
+  const totals=calculateTotals(lines,JSON.parse(settingsRow.settings_json),'none',1,0);
+  const shift=await currentShift(db);
+  const counter=await db.prepare('UPDATE order_counters SET value=value+1 WHERE id=1 RETURNING value').first();
+  if(!counter)throw new Error('Order counter is missing. Run the D1 migration.');
+  const ts=Date.now(),no='K-'+pad(counter.value);
+  const order={id:b.id,no,ts,type:'take',table:'',lines,totals,method:'cash',tendered:0,change:0,ref:'',status:'unpaid',shiftId:shift?shift.id:null,source:'online',customerName:b.customerName.trim(),customerPhone:b.customerPhone.trim(),fulfillmentType:b.fulfillmentType,deliveryAddress:address,deliveryContactRequested:contactRequested,hasPaymentProof:false};
+  const statements=[db.prepare("INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json,source,customer_name,customer_phone,fulfillment_type,delivery_address,delivery_contact_requested) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+    .bind(order.id,order.no,order.shiftId,'online',new Date(ts).toISOString(),'take','', 'cash','',0,0,'unpaid',JSON.stringify(totals),JSON.stringify(order),'online',order.customerName,order.customerPhone,order.fulfillmentType,order.deliveryAddress,contactRequested?1:0)];
+  lines.forEach(line=>statements.push(db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)').bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty,line.portion)));
+  try{await db.batch(statements);}catch(error){const duplicate=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();if(duplicate)return rowOrder(duplicate);throw error;}
+  return order;
+}
+async function markOnlineOrderPaid(db,id){
+  const row=await db.prepare('SELECT payload_json,status,source FROM orders WHERE id=?').bind(id).first();
+  if(!row)throw new Error('Order not found.');
+  if(row.source!=='online')throw new Error('Only online orders can be marked paid here.');
+  if(row.status==='paid')return rowOrder(row);
+  if(row.status!=='unpaid')throw new Error('This order cannot be marked paid.');
+  const order=JSON.parse(row.payload_json);order.status='paid';order.paidAt=Date.now();
+  await db.prepare("UPDATE orders SET status='paid',payload_json=? WHERE id=? AND status='unpaid'").bind(JSON.stringify(order),id).run();
+  return order;
+}
+
 async function orders(db,shiftId) {
   if(shiftId){
-    const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? ORDER BY created_at,order_no').bind(shiftId).all();
+    const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE shift_id=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no").bind(shiftId).all();
     return (r.results||[]).map(rowOrder);
   }
   const today=manilaParts().date;
-  const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE COALESCE(date(created_at,'+8 hours'), '')=? ORDER BY created_at,order_no").bind(today).all();
+  const r=await db.prepare("SELECT payload_json,status,voided_at FROM orders WHERE COALESCE(date(created_at,'+8 hours'), '')=? OR (source='online' AND status='unpaid') ORDER BY created_at,order_no").bind(today).all();
   return (r.results||[]).map(rowOrder);
 }
 async function reportData(db,from,to) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)throw new Error('Choose a valid reporting date range.');
-  const days=await db.prepare("SELECT s.id,s.report_date AS date,s.started_at AS startedAt,s.ended_at AS endedAt,s.status,s.close_reason AS closeReason,COUNT(o.id) AS orderCount FROM shifts s LEFT JOIN orders o ON o.shift_id=s.id WHERE s.report_date BETWEEN ? AND ? GROUP BY s.id ORDER BY s.report_date").bind(from,to).all();
-  const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,o.payment_proof,COALESCE(s.report_date,date(o.created_at,'+8 hours')) AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
+  const days=await db.prepare("SELECT s.id,s.report_date AS date,s.started_at AS startedAt,s.ended_at AS endedAt,s.status,s.close_reason AS closeReason,COUNT(CASE WHEN o.status!='unpaid' THEN o.id END) AS orderCount FROM shifts s LEFT JOIN orders o ON o.shift_id=s.id WHERE s.report_date BETWEEN ? AND ? GROUP BY s.id ORDER BY s.report_date").bind(from,to).all();
+  const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,o.payment_proof,COALESCE(s.report_date,date(o.created_at,'+8 hours')) AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE o.status!='unpaid' AND COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
   return {days:days.results||[],orders:(rows.results||[]).map(r=>({...rowOrder(r),reportDate:r.reportDate||'',hasPaymentProof:!!r.payment_proof}))};
 }
 function calculateTotals(lines, settings, kind, diners, holders) {
@@ -262,11 +317,12 @@ export default {
    }
    // Public menu reads are needed by the future customer ordering page.
    // All operational and administrative API routes require the owner session.
-   if(!(u.pathname==='/api/menu'&&request.method==='GET')&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
+   if(!((u.pathname==='/api/menu'&&request.method==='GET')||(u.pathname==='/api/public/orders'&&request.method==='POST'))&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
      return json({error:'Owner login required.'},401,h);
    }
    // Report rollover is best-effort and must never block menu, register, or sales APIs.
    try { await runDailySchedule(db,new Date()); } catch (scheduleError) { /* sales remain available */ }
+   if(u.pathname==='/api/public/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOnlineOrder(db,b)},201,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
    if(u.pathname==='/api/menu'&&request.method==='PUT'){await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
@@ -276,6 +332,8 @@ export default {
    if(u.pathname==='/api/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOrder(db,b,b.deviceId||'unknown')},201,h);}
    const proof=u.pathname.match(/^\/api\/orders\/([^/]+)\/payment-proof$/);
    if(proof&&request.method==='GET'){const row=await db.prepare('SELECT payment_proof FROM orders WHERE id=?').bind(decodeURIComponent(proof[1])).first();if(!row)return json({error:'Order not found.'},404,h);if(!row.payment_proof)return json({error:'No payment proof is attached to this order.'},404,h);return json({dataUrl:row.payment_proof},200,h);}
+   const paid=u.pathname.match(/^\/api\/orders\/([^/]+)\/mark-paid$/);
+   if(paid&&request.method==='POST'){const order=await markOnlineOrderPaid(db,decodeURIComponent(paid[1]));return json({order},200,h);}
    const v=u.pathname.match(/^\/api\/orders\/([^/]+)\/void$/);
    if(v&&request.method==='POST'){const oid=decodeURIComponent(v[1]);const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(oid).first();if(!r)return json({error:'Order not found.'},404,h);if(r.status==='void')return json({order:rowOrder(r)},200,h);const o=rowOrder(r);o.status='void';o.voidedAt=Date.now();await db.prepare("UPDATE orders SET status='void',voided_at=?,payload_json=? WHERE id=?").bind(new Date(o.voidedAt).toISOString(),JSON.stringify(o),oid).run();return json({order:o},200,h);}
    return json({error:'Not found.'},404,h);
