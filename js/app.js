@@ -43,6 +43,7 @@
 
   // ---------- state ----------
   var S = {};
+  var sharedMenuReady = false;
   function blankCart() {
     return { type: 'dine', table: '', lines: [] };
   }
@@ -591,16 +592,23 @@
   }
   var menuSaveChain = Promise.resolve();
   function saveMenu() {
+    if (!sharedMenuReady) {
+      S.settings = clone(SAMPLE.settings); S.categories = clone(SAMPLE.categories); S.menu = clone(SAMPLE.menu);
+      renderMenuAdmin(); renderGrid();
+      var unavailable = new Error('The shared menu did not load. Menu changes are paused to protect your saved items. Refresh after the connection is restored.');
+      toast(unavailable.message);
+      return Promise.reject(unavailable);
+    }
     menuSaveChain = menuSaveChain.catch(function () {}).then(function () {
       var payload = { settings: clone(S.settings), categories: clone(S.categories), menu: clone(S.menu) };
       return cloud.saveMenu(payload);
-    });
-    return menuSaveChain.then(function () {
+    }).then(function () {
       renderGrid();
       toast('Menu saved to the shared database. Cashiers will see it shortly.');
     }).catch(function (err) {
       return cloud.getMenu().then(function(remote){var restored=normalizeSharedMenu(remote);S.settings=restored.settings;S.categories=restored.categories;S.menu=restored.menu;syncCartPrices();}).catch(function(){}).then(function(){renderMenuAdmin();renderGrid();toast('Menu was not saved: '+err.message);throw err;});
     });
+    return menuSaveChain;
   }
   function renderBrand() {
     $('biz').textContent = S.settings.bizName + ' · ' + S.settings.bizNote;
@@ -989,9 +997,11 @@
     SAMPLE.settings = shared.settings;
     SAMPLE.categories = shared.categories;
     SAMPLE.menu = shared.menu;
+    sharedMenuReady = true;
     startApp();
   }).catch(function (err) {
+    sharedMenuReady = false;
     startApp();
-    toast('Using starter menu: ' + err.message);
+    toast('Shared menu unavailable: ' + err.message + '. Menu editing is paused to protect saved items.');
   });
 })();
