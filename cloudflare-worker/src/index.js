@@ -251,6 +251,20 @@ export default {
   const h=cors(origin),u=new URL(request.url),db=env.kahera_db;
   try {
    if(!db)return json({error:'Cloudflare D1 binding kahera_db is missing.'},500,h);
+   if(u.pathname==='/api/auth/login'&&request.method==='POST'){
+     if(!text(env.ADMIN_PASSWORD,200))return json({error:'Owner login is not configured. Set ADMIN_PASSWORD in Worker secrets.'},503,h);
+     const body=await request.json();
+     if(!body||!text(body.password,200)||!eq(body.password,env.ADMIN_PASSWORD))return json({error:'Incorrect password.'},401,h);
+     return json({token:await makeToken(env.SESSION_SECRET)},200,h);
+   }
+   if(u.pathname==='/api/auth/session'&&request.method==='GET'){
+     return isAdmin(bearer(request),env.SESSION_SECRET)?json({authenticated:true},200,h):json({authenticated:false},401,h);
+   }
+   // Public menu reads are needed by the future customer ordering page.
+   // All operational and administrative API routes require the owner session.
+   if(!(u.pathname==='/api/menu'&&request.method==='GET')&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
+     return json({error:'Owner login required.'},401,h);
+   }
    // Report rollover is best-effort and must never block menu, register, or sales APIs.
    try { await runDailySchedule(db,new Date()); } catch (scheduleError) { /* sales remain available */ }
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);

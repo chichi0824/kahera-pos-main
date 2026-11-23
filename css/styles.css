@@ -2427,3 +2427,38 @@ select option {
 .menu-pricing-cell .menu-options-toggle { display: flex; flex: 0 0 100%; align-items: center; gap: 6px; min-width: 0; color: var(--muted); }
 .menu-pricing-cell .menu-options-toggle input, .new-options-toggle input { width: 16px !important; height: 16px; flex: 0 0 auto; }
 .new-options-toggle { display: flex; align-items: center; gap: 8px; }
+
+
+/* ---------- Owner login ---------- */
+.owner-login {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: var(--bg);
+}
+.owner-login[hidden], .app[hidden] { display: none !important; }
+.owner-login-card {
+  width: min(100%, 420px);
+  display: grid;
+  gap: 14px;
+  padding: clamp(24px, 5vw, 40px);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+.owner-login-card > img { border-radius: 12px; }
+.owner-login-card h1 { font-size: 1.8rem; }
+.owner-login-copy { color: var(--muted); }
+.owner-login-card input {
+  width: 100%;
+  min-height: 46px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--ink);
+}
+.owner-login-card .err { min-height: 1.2em; color: var(--danger); }
+.owner-login-card button { min-height: 46px; }

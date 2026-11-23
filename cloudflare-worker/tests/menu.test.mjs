@@ -73,3 +73,63 @@ test('does not write to D1 when menu validation fails', async () => {
   await assert.rejects(() => saveMenu(db, menuPayload({ ...eggRoll, price: 1200 })), /first option as the base price/);
   assert.equal(batchCalls, 0);
 });
+
+
+import worker from '../src/index.js';
+
+function authDb() {
+  return {
+    prepare(sql) {
+      return {
+        bind() { return this; },
+        async first() { return null; },
+        async run() { return { success: true }; },
+        async all() { return { results: [] }; }
+      };
+    }
+  };
+}
+function authRequest(path, method='GET', body, token) {
+  const headers = { Origin: 'https://chichi0824.github.io' };
+  if (body !== undefined) headers['Content-Type'] = 'application/json';
+  if (token) headers.Authorization = 'Bearer ' + token;
+  return new Request('https://kahera-menu-api.example.workers.dev' + path, {
+    method, headers, body: body === undefined ? undefined : JSON.stringify(body)
+  });
+}
+const authEnv = () => ({
+  kahera_db: authDb(),
+  ADMIN_PASSWORD: 'test-owner-password',
+  SESSION_SECRET: 'test-session-secret-with-sufficient-entropy',
+  APP_ORIGINS: 'https://chichi0824.github.io'
+});
+
+test('owner login issues a session token and session endpoint accepts it', async () => {
+  const env = authEnv();
+  const login = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
+  assert.equal(login.status, 200);
+  const { token } = await login.json();
+  assert.ok(token);
+  const session = await worker.fetch(authRequest('/api/auth/session', 'GET', undefined, token), env);
+  assert.equal(session.status, 200);
+  assert.deepEqual(await session.json(), { authenticated: true });
+});
+
+test('owner login rejects an incorrect password', async () => {
+  const response = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'wrong-password' }), authEnv());
+  assert.equal(response.status, 401);
+});
+
+test('administrative API routes reject requests without an owner session', async () => {
+  const response = await worker.fetch(authRequest('/api/reports?from=2026-11-23&to=2026-11-23'), authEnv());
+  assert.equal(response.status, 401);
+});
+
+test('administrative API routes accept a valid owner session', async () => {
+  const env = authEnv();
+  const login = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
+  const { token } = await login.json();
+  const response = await worker.fetch(authRequest('/api/reports?from=2026-11-23&to=2026-11-23', 'GET', undefined, token), env);
+  assert.equal(response.status, 200);
+});
+

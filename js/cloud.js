@@ -2,18 +2,24 @@
 (function (root) {
   "use strict";
   var API_URL = "https://kahera-menu-api.kahera-menu-api.workers.dev";
-  var token = null, DEVICE_KEY = "kahera:v1:device-id";
+  var token = null, TOKEN_KEY = "kahera:v1:owner-session", DEVICE_KEY = "kahera:v1:device-id";
   function uuid() { return root.crypto && root.crypto.randomUUID ? root.crypto.randomUUID() : "k-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2); }
   function getDeviceId() {
     try { var saved=root.localStorage.getItem(DEVICE_KEY);if(saved)return saved;var created=uuid();root.localStorage.setItem(DEVICE_KEY,created);return created; }
     catch(_){return uuid();}
   }
+  function readToken(){try{return root.sessionStorage.getItem(TOKEN_KEY)||"";}catch(_){return "";}}
+  function setToken(value){token=value||null;try{if(token)root.sessionStorage.setItem(TOKEN_KEY,token);else root.sessionStorage.removeItem(TOKEN_KEY);}catch(_){}}
+  token=readToken()||null;
   function request(path,options) {
     options=options||{};options.headers=options.headers||{};options.headers["Content-Type"]="application/json";
     if(token)options.headers.Authorization="Bearer "+token;
     return fetch(API_URL.replace(/\/$/,"")+path,options).then(function(r){return r.json().catch(function(){return {};}).then(function(b){if(!r.ok)throw new Error(b.error||"Request failed ("+r.status+").");return b;});});
   }
   root.KaheraCloud={
+    login:function(password){return request("/api/auth/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){setToken(b.token);return true;});},
+    checkSession:function(){return request("/api/auth/session",{method:"GET",cache:"no-store"}).then(function(){return true;}).catch(function(){setToken(null);return false;});},
+    logout:function(){setToken(null);},
     getDeviceId:getDeviceId,newId:uuid,
     getMenu:function(){return request("/api/menu",{method:"GET",cache:"no-store"});},
     saveMenu:function(payload){return request("/api/menu",{method:"PUT",body:JSON.stringify(payload)});},
