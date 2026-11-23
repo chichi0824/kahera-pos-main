@@ -2,6 +2,11 @@
   'use strict';
   var cloud=window.KaheraCloud,menu=[],categories=[],cart=[],activeCategory='all',requestId=null;
   var $=function(id){return document.getElementById(id);};
+  var themeButton=$('theme-toggle');
+  function applyTheme(theme){document.documentElement.setAttribute('data-theme',theme);if(themeButton){themeButton.textContent=theme==='dark'?'☀':'◐';themeButton.setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode');}}
+  var savedTheme=null;try{savedTheme=localStorage.getItem('kahera:v1:theme');savedTheme=savedTheme?JSON.parse(savedTheme):null;}catch(e){}
+  applyTheme(savedTheme==='dark'||savedTheme==='light'?savedTheme:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
+  if(themeButton)themeButton.addEventListener('click',function(){var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('kahera:v1:theme',JSON.stringify(next));}catch(e){}});
   var money=function(cents){return new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format((cents||0)/100);};
   var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   var total=function(){return cart.reduce(function(sum,line){return sum+line.price*line.qty;},0);};
