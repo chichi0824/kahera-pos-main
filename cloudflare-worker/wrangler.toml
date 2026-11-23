@@ -1,0 +1,14 @@
+name = "kahera-menu-api"
+main = "src/index.js"
+compatibility_date = "2026-11-20"
+
+[vars]
+APP_ORIGINS = "https://chichi0824.github.io"
+
+[[d1_databases]]
+binding = "kahera_db"
+database_name = "kahera-db"
+database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"
+
+[triggers]
+crons = ["* * * * *"]

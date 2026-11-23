@@ -1,0 +1,701 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width,initial-scale=1,viewport-fit=cover"
+    />
+    <title>Victoria's</title>
+    <meta
+      name="description"
+      content="Kahera is a shared point-of-sale screen for Philippine cafés and karinderyas with full and half portions, cash change and cloud-synced orders and daily reports."
+    />
+    <meta name="theme-color" content="#b2c48a" />
+    <!--BUILD:REPO-ONLY-->
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="icon" href="icons/kahera-icon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="icons/kahera-icon.png" />
+    <!--/BUILD:REPO-ONLY-->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@500;700&display=swap"
+    />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!--APP-START-->
+    <div class="app" id="kahera">
+      <header class="topbar">
+        <div class="brand">
+          <img class="brand-mark" src="icons/kahera-icon.png" alt="Kahera" />
+          <div style="min-width: 0">
+            <h1 class="brand-name">Victoria's</h1>
+            <p class="brand-biz" data-k="biz">
+              Karinderya ng Sta. Cruz, Laguna
+            </p>
+          </div>
+        </div>
+        <nav class="tabs" role="tablist" aria-label="Sections" data-k="tabs">
+          <button
+            role="tab"
+            id="tab-register"
+            aria-controls="view-register"
+            aria-selected="true"
+            data-view="register"
+          >
+            Register
+          </button>
+          <button
+            role="tab"
+            id="tab-orders"
+            aria-controls="view-orders"
+            aria-selected="false"
+            data-view="orders"
+          >
+            Orders <span class="count" data-k="orderCount">0</span>
+          </button>
+          <button
+            role="tab"
+            id="tab-shift"
+            aria-controls="view-shift"
+            aria-selected="false"
+            data-view="shift"
+          >
+            Daily Reports
+          </button>
+          <button
+            role="tab"
+            id="tab-menu"
+            aria-controls="view-menu"
+            aria-selected="false"
+            data-view="menu"
+          >
+            Menu
+          </button>
+          <button
+            role="tab"
+            id="tab-data-guide"
+            aria-controls="view-data-guide"
+            aria-selected="false"
+            data-view="data-guide"
+          >
+DB
+          </button>
+        </nav>
+        <div class="top-tools">
+          <span class="clock" data-k="clock">--:--</span>
+          <button
+            type="button"
+            class="icon-btn"
+            data-k="theme"
+            aria-label="Switch light or dark theme"
+            title="Theme"
+          >
+            <svg
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              aria-hidden="true"
+            >
+              <circle cx="12" cy="12" r="8"></circle>
+              <path d="M12 4a8 8 0 0 0 0 16z" fill="currentColor"></path>
+            </svg>
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <!-- REGISTER -->
+        <section
+          id="view-register"
+          class="view view-register"
+          role="tabpanel"
+          aria-labelledby="tab-register"
+        >
+          <div class="catalog">
+            <p
+              class="report-notice"
+              data-k="reportNotice"
+              role="status"
+              hidden
+            ></p>
+            <div class="catalog-tools">
+              <label class="search" for="k-search"
+                ><span class="sr-only">Search the menu</span>
+                <input
+                  id="k-search"
+                  type="search"
+                  placeholder="Search menu   ( press / )"
+                  autocomplete="off"
+                />
+              </label>
+              <div
+                class="chips"
+                data-k="cats"
+                role="group"
+                aria-label="Menu categories"
+              ></div>
+            </div>
+            <div class="grid" data-k="grid"></div>
+          </div>
+
+          <aside class="order panel" id="k-order" aria-label="Current order">
+            <div class="order-head">
+              <h2>Order <span class="mono" data-k="orderNo">K-0001</span></h2>
+              <div class="order-meta">
+                <div
+                  class="seg"
+                  role="radiogroup"
+                  aria-label="Order type"
+                  data-k="otype"
+                >
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked="true"
+                    data-v="dine"
+                  >
+                    Dine-in
+                  </button>
+                  <button
+                    type="button"
+                    role="radio"
+                    aria-checked="false"
+                    data-v="take"
+                  >
+                    Take-out
+                  </button>
+                </div>
+
+              </div>
+            </div>
+
+            <ul class="lines" data-k="lines" aria-live="polite"></ul>
+
+            <dl class="totals" data-k="totals"></dl>
+
+            <div class="order-actions" data-k="cartActions">
+              <button type="button" class="btn ghost" data-k="clear">
+                Clear
+              </button>
+              <button type="button" class="btn primary big" data-k="charge">
+                Charge
+              </button>
+            </div>
+
+            <div class="pay" data-k="pay" hidden>
+              <h3>Payment</h3>
+              <div
+                class="seg"
+                role="radiogroup"
+                aria-label="Payment method"
+                data-k="method"
+              >
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked="true"
+                  data-v="cash"
+                >
+                  Cash
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked="false"
+                  data-v="ewallet"
+                >
+                  E-wallet
+                </button>
+                <button
+                  type="button"
+                  role="radio"
+                  aria-checked="false"
+                  data-v="card"
+                >
+                  Card
+                </button>
+              </div>
+              <div data-k="cashBox" class="form-grid">
+                <label for="k-tendered">Cash received (₱)</label>
+                <input
+                  id="k-tendered"
+                  class="tender"
+                  inputmode="decimal"
+                  autocomplete="off"
+                  placeholder="0.00"
+                />
+                <div
+                  class="quick"
+                  data-k="quick"
+                  aria-label="Quick cash amounts"
+                ></div>
+                <p class="change" data-k="change" aria-live="polite">
+                  <span>Change</span><b>₱0.00</b>
+                </p>
+              </div>
+              <div data-k="refBox" class="form-grid" hidden>
+                <label for="k-ref">Reference no. (optional when e-wallet photo is attached)</label>
+                <input id="k-ref" autocomplete="off" maxlength="40" placeholder="Enter reference number (optional for e-wallet)" />
+                <label for="k-payment-proof">Payment confirmation photo (e-wallet)</label>
+                <input id="k-payment-proof" type="file" accept="image/*" capture="environment" />
+                <p class="hint">Use the camera to photograph the successful payment screen, or choose a photo from your gallery. Verify the payment was received before completing the sale.</p>
+                <div class="payment-proof-preview" data-k="paymentProofPreview" hidden><img data-k="paymentProofImage" alt="Payment proof preview" /><button type="button" class="btn small ghost" data-k="removePaymentProof">Remove photo</button></div>
+              </div>
+              <p class="err" data-k="payErr" role="alert"></p>
+              <div class="order-actions">
+                <button type="button" class="btn ghost" data-k="back">
+                  Back
+                </button>
+                <button type="button" class="btn primary big" data-k="complete">
+                  Complete sale
+                </button>
+              </div>
+            </div>
+          </aside>
+        </section>
+
+        <!-- ORDERS -->
+        <section
+          id="view-orders"
+          class="view"
+          role="tabpanel"
+          aria-labelledby="tab-orders"
+          hidden
+        >
+          <div class="view-head">
+            <div>
+              <p class="eyebrow">Current daily report</p>
+              <h2>Orders</h2>
+            </div>
+            <p data-k="ordersNote"></p>
+          </div>
+          <div class="panel table-wrap" style="margin-top: 12px">
+            <table class="data" data-k="ordersTable"></table>
+          </div>
+        </section>
+
+        <!-- DAILY REPORTS -->
+        <section
+          id="view-shift"
+          class="view"
+          role="tabpanel"
+          aria-labelledby="tab-shift"
+          hidden
+        >
+          <div class="view-head">
+            <div>
+              <p class="eyebrow">Sales analytics · Historical reports</p>
+              <h2>Daily Reports</h2>
+            </div>
+            <div class="actions-row">
+              <button type="button" class="btn small" data-k="copyCsv">
+                Copy CSV
+              </button>
+              <button type="button" class="btn small" data-k="dlCsv">
+                Download CSV
+              </button>
+            </div>
+          </div>
+
+          <div class="report-period-toolbar panel" style="margin-top: 12px">
+            <div
+              class="report-periods"
+              data-k="reportPeriodModes"
+              role="group"
+              aria-label="Reporting period"
+            >
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="day"
+                aria-pressed="true"
+              >
+                Day
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="week"
+                aria-pressed="false"
+              >
+                Week
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="month"
+                aria-pressed="false"
+              >
+                Month
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="year"
+                aria-pressed="false"
+              >
+                Year
+              </button>
+              <button
+                type="button"
+                class="chip"
+                data-report-mode="custom"
+                aria-pressed="false"
+              >
+                Custom
+              </button>
+            </div>
+            <div class="report-period-nav">
+              <button
+                type="button"
+                class="btn small ghost"
+                data-k="reportPrev"
+                aria-label="Previous reporting period"
+              >
+                ‹
+              </button>
+              <strong data-k="reportRangeLabel">Today</strong>
+              <button
+                type="button"
+                class="btn small ghost"
+                data-k="reportNext"
+                aria-label="Next reporting period"
+              >
+                ›
+              </button>
+              <button type="button" class="btn small" data-k="reportToday">
+                Today
+              </button>
+            </div>
+          </div>
+
+          <div class="report-layout" style="margin-top: 14px">
+            <section class="panel card-pad report-calendar-panel">
+              <div class="report-calendar-head">
+                <h3 data-k="reportCalendarTitle">Calendar</h3>
+                <div class="actions-row">
+                  <button
+                    type="button"
+                    class="btn small ghost"
+                    data-k="calendarPrev"
+                    aria-label="Previous month"
+                  >
+                    ‹
+                  </button>
+                  <button
+                    type="button"
+                    class="btn small ghost"
+                    data-k="calendarNext"
+                    aria-label="Next month"
+                  >
+                    ›
+                  </button>
+                </div>
+              </div>
+              <div data-k="reportCalendar" class="report-calendar"></div>
+              <div class="calendar-legend">
+                <span><i></i> Sales recorded</span
+                ><span>Choose a date to view its report</span>
+              </div>
+              <div data-k="customRange" class="custom-report-range" hidden>
+                <label for="reportFrom"
+                  >From<input type="date" id="reportFrom"
+                /></label>
+                <label for="reportTo"
+                  >To<input type="date" id="reportTo"
+                /></label>
+                <button
+                  type="button"
+                  class="btn primary"
+                  data-k="applyCustomRange"
+                >
+                  Apply date range
+                </button>
+              </div>
+            </section>
+            <section class="report-summary">
+              <div class="report-summary-head">
+                <div>
+                  <p class="eyebrow">Selected reporting period</p>
+                  <h3>Performance summary</h3>
+                </div>
+                <p class="hint" data-k="reportLoading" hidden>
+                  Loading report…
+                </p>
+              </div>
+              <div class="kpis report-kpis" data-k="reportKpis"></div>
+            </section>
+          </div>
+
+          <div class="shift-grid" style="margin-top: 14px">
+            <div class="panel card-pad">
+              <h3 data-k="reportChartTitle">Sales by hour</h3>
+              <div
+                class="bars"
+                data-k="bars"
+                role="img"
+                aria-label="Net sales by hour"
+              ></div>
+              <div
+                class="bar-labels"
+                data-k="barLabels"
+                aria-hidden="true"
+              ></div>
+              <h3 style="margin-top: 6px">Payment mix</h3>
+              <div class="split" data-k="split"></div>
+            </div>
+            <div class="panel card-pad">
+              <h3>Best-selling items</h3>
+              <div class="table-wrap">
+                <table class="data" data-k="topItems"></table>
+              </div>
+            </div>
+          </div>
+
+          <section class="panel card-pad" style="margin-top: 14px">
+            <div class="report-calendar-head">
+              <h3>Transactions</h3>
+              <span class="hint" data-k="reportTransactionCount"
+                >0 transactions</span
+              >
+            </div>
+            <div class="table-wrap">
+              <table class="data" data-k="reportOrdersTable"></table>
+            </div>
+          </section>
+        </section>
+
+        <!-- MENU -->
+        <section
+          id="view-menu"
+          class="view"
+          role="tabpanel"
+          aria-labelledby="tab-menu"
+          hidden
+        >
+          <div class="view-head">
+            <div>
+              <p class="eyebrow">Central menu · Cloud database</p>
+              <h2>Menu &amp; settings</h2>
+            </div>
+            <p class="hint">
+              Changes are saved to the shared database. Cashier devices receive
+              updates automatically.
+            </p>
+          </div>
+          <div class="menu-admin" style="margin-top: 12px">
+            <div class="panel menu-list-panel">
+              <div
+                class="menu-admin-filters"
+                data-k="menuAdminFilters"
+                role="group"
+                aria-label="Filter menu by category"
+              ></div>
+              <div class="table-wrap">
+                <table class="data" data-k="menuTable"></table>
+              </div>
+            </div>
+            <div class="form-grid">
+              <form class="panel card-pad" data-k="settingsForm">
+                <h3>Store</h3>
+                <label for="k-biz"
+                  >Business name<input
+                    id="k-biz"
+                    maxlength="60"
+                    autocomplete="organization"
+                /></label>
+                <label for="k-biznote"
+                  >Subtitle<input id="k-biznote" maxlength="80"
+                /></label>
+
+              </form>
+              <form class="panel card-pad" data-k="addForm">
+                <h3>Add item</h3>
+                <label for="k-newname"
+                  >Name<input
+                    id="k-newname"
+                    maxlength="40"
+                    required
+                    placeholder="e.g. Ginataang Bilo-bilo"
+                /></label>
+                <label for="k-newcat"
+                  >Category<select id="k-newcat" data-k="newCat"></select
+                ></label>
+                <label for="k-newprice"
+                  >Default price (non-drinks only)<input
+                    id="k-newprice"
+                    inputmode="decimal"
+                    placeholder="150.00"
+                /></label>
+                <label for="k-newhalfprice"
+                  >Half-order price (optional)<input
+                    id="k-newhalfprice"
+                    inputmode="decimal"
+                    placeholder="75.00"
+                /></label>
+                <label class="check new-options-toggle" for="k-newusevariants">
+                  <input id="k-newusevariants" type="checkbox" />
+                  <span>Use multiple price options</span>
+                </label>
+                <div id="k-newvariants" class="drink-variant-manager" hidden>
+                  <strong>Price options</strong>
+                  <p class="hint">
+                    Add each selling option separately, set its price, and choose whether
+                    it is available today.
+                  </p>
+                  <div class="variant-editor-list"></div>
+                  <button type="button" class="btn small" data-variant-add>
+                    Add variant
+                  </button>
+                </div>
+                <label for="k-newimage"
+                  >Item photo (optional)<input
+                    id="k-newimage"
+                    type="file"
+                    accept="image/*"
+                /></label>
+                <p class="hint">
+                  Photos are resized and compressed before saving.
+                </p>
+                <p class="err" data-k="addErr" role="alert"></p>
+                <button class="btn primary" type="submit">Add to menu</button>
+              </form>
+            </div>
+          </div>
+        </section>
+
+        <!-- DATABASE GUIDE -->
+        <section
+          id="view-data-guide"
+          class="view"
+          role="tabpanel"
+          aria-labelledby="tab-data-guide"
+          hidden
+        >
+          <div class="about">
+            <div class="wide panel card-pad db-guide-intro">
+              <p class="eyebrow">DATABASE GUIDE · OWNER / ADMIN REFERENCE</p>
+              <h2>Manage test sales and order records</h2>
+              <p class="lead">
+                Use these commands in your Mac Terminal to inspect the shared
+                Cloudflare D1 database, remove one specific test order, or reset
+                all test sales and daily reports. These actions affect the live
+                shared POS database.
+              </p>
+              <p class="hint">
+                Important: deletion is permanent. Export or back up any records
+                you may need before running a delete command. Never use the full
+                reset after real business transactions have started.
+              </p>
+              <p class="db-guide-credit">Modified by <strong>Maryjoy Tan (MJ)</strong></p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>1. Open the Worker folder</h3>
+              <p>Run this first whenever you open a new Terminal window:</p>
+              <pre><code>cd ~/kahera-pos-main/cloudflare-worker</code></pre>
+              <p>Confirm the configured database in <code>wrangler.toml</code> is <code>kahera-db</code>.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>2. Check how much data is currently saved</h3>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts;"</code></pre>
+              <p class="hint">The <code>--remote</code> flag targets the shared production database, not a local test database.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>3. Delete one specific order by its ID</h3>
+              <p><strong>Step A — Find the database ID using its receipt number.</strong> Replace <code>K-0016</code> with the receipt number you want to look up.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status, totals_json FROM orders WHERE order_no = 'K-0016';"</code></pre>
+              <p><strong>Step B — Copy the exact <code>id</code> returned.</strong> Preview it before deleting. Replace <code>PASTE_ORDER_ID_HERE</code> with that exact ID.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p><strong>Step C — Delete only that order and its item rows.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="DELETE FROM order_items WHERE order_id = 'PASTE_ORDER_ID_HERE'; DELETE FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p><strong>Step D — Verify.</strong> No result means the order ID is no longer present.</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
+              <p class="hint">This keeps other orders and daily reports. It does not reset the order counter, so the next receipt number continues normally.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>4. Delete all test sales and daily reports</h3>
+              <p><strong>Warning:</strong> this removes every order, every order item, and every shift / daily report in the shared database. It also resets the receipt counter. Do not run this if the database contains real sales you need to keep.</p>
+              <p><strong>Step A — Create the reset script.</strong></p>
+              <pre><code>cat &gt; reset-test-data.sql &lt;&lt;'SQL'
+DELETE FROM order_items;
+DELETE FROM orders;
+DELETE FROM shifts;
+
+UPDATE order_counters
+SET value = 0
+WHERE id = 1;
+SQL</code></pre>
+              <p><strong>Step B — Run the reset script against the remote database.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --file=reset-test-data.sql</code></pre>
+              <p><strong>Step C — Confirm the tables are empty and the counter is reset.</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts; SELECT value AS order_counter FROM order_counters WHERE id = 1;"</code></pre>
+              <p>Expected result: zero orders, zero order items, zero reports, and order counter value <code>0</code>.</p>
+              <p class="hint">Your menu, menu categories, item prices, store settings, and app icon are not deleted by this script.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>5. Quick reminders</h3>
+              <ul>
+                <li>Always use <code>--remote</code> when intentionally managing the shared Cloudflare D1 database.</li>
+                <li>Find and verify an order ID before deleting it. Receipt numbers such as <code>K-0016</code> are not the same as database IDs.</li>
+                <li>Delete the matching <code>order_items</code> rows before deleting the parent order.</li>
+                <li>Deleting a single order leaves the daily report and receipt counter unchanged.</li>
+                <li>The full reset deletes historical reports too and resets receipt numbering.</li>
+                <li>Sales and daily reports are shared across cashier devices, so a deletion affects every device.</li>
+              </ul>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <div class="mbar" data-k="mbar" hidden>
+        <div class="m-sum">
+          <small data-k="mItems">0 items</small><b data-k="mTotal">₱0.00</b>
+        </div>
+        <a class="btn primary" href="#k-order" data-k="mGo">Review order</a>
+      </div>
+
+      <dialog class="slip-dlg" data-k="slipDlg" aria-label="Order slip">
+        <div class="slip" data-k="slip"></div>
+        <div class="dlg-actions">
+          <button type="button" class="btn primary" data-k="slipClose">
+            Done
+          </button>
+        </div>
+      </dialog>
+
+      <dialog class="proof-dlg" data-k="proofDlg" aria-label="Payment proof"><div class="panel card-pad"><div class="report-calendar-head"><h3 data-k="proofTitle">Payment proof</h3><button type="button" class="btn ghost" data-k="proofClose">Close</button></div><img data-k="proofFullImage" alt="Customer payment confirmation" /></div></dialog>
+      <div class="toast" role="status" aria-live="polite" data-k="toast"></div>
+    </div>
+    <!--APP-END-->
+    <script src="js/money.js"></script>
+    <script src="js/store.js"></script>
+    <script src="js/menu-sample.js"></script>
+    <script src="js/cloud.js"></script>
+    <script src="js/app.js"></script>
+    <!--BUILD:REPO-ONLY-->
+    <script>
+      if ("serviceWorker" in navigator && location.protocol !== "file:") {
+        navigator.serviceWorker.register("sw.js").catch(function () {
+          /* offline mode unavailable */
+        });
+      }
+    </script>
+    <!--/BUILD:REPO-ONLY-->
+  </body>
+</html>
