@@ -1,7 +1,7 @@
 /* Kahera POS — sw.js
  * Offline support: cache the app shell on install, serve cache-first,
  * refresh the cache in the background. Bump CACHE when files change. */
-const CACHE = 'kahera-v2.9.0-order-category-sections';
+const CACHE = 'kahera-v2.9.1-owner-auth-refresh';
 const SHELL = [
   './', 'index.html', 'order.html', 'css/styles.css', 'css/order.css', 'js/order.js', 'js/money.js', 'js/store.js',
   'js/menu-sample.js', 'js/cloud.js', 'js/app.js', 'manifest.webmanifest', 'icons/kahera-icon.png'
