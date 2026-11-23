@@ -958,6 +958,10 @@
       }).catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
 
+    $('logout').addEventListener('click', function () {
+      cloud.logout();
+      window.location.reload();
+    });
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
       var cur = de.getAttribute('data-theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -1001,16 +1005,27 @@
     }).finally(function () { refreshInFlight = false; });
   }
 
-  cloud.getMenu().then(function (remote) {
-    var shared = normalizeSharedMenu(remote);
-    SAMPLE.settings = shared.settings;
-    SAMPLE.categories = shared.categories;
-    SAMPLE.menu = shared.menu;
-    sharedMenuReady = true;
-    startApp();
-  }).catch(function (err) {
-    sharedMenuReady = false;
-    startApp();
-    toast('Shared menu unavailable: ' + err.message + '. Menu editing is paused to protect saved items.');
-  });
+  function showOwnerLogin(){
+    var panel=document.getElementById('owner-login'),form=document.getElementById('owner-login-form'),error=document.getElementById('owner-login-error');
+    root.hidden=true;panel.hidden=false;
+    form.addEventListener('submit',function(event){
+      event.preventDefault();
+      var button=form.querySelector('button[type="submit"]'),password=document.getElementById('owner-password').value;
+      error.textContent='';button.disabled=true;button.textContent='Signing in…';
+      cloud.login(password).then(function(){
+        return cloud.getMenu().then(function(remote){
+          var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;
+          panel.hidden=true;root.hidden=false;startApp();
+        });
+      }).catch(function(err){cloud.logout();error.textContent=err.message||'Unable to sign in.';}).finally(function(){button.disabled=false;button.textContent='Sign in';});
+    });
+  }
+  cloud.checkSession().then(function(authenticated){
+    if(!authenticated){showOwnerLogin();return;}
+    cloud.getMenu().then(function(remote){
+      var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;startApp();
+    }).catch(function(err){
+      sharedMenuReady=false;startApp();toast('Shared menu unavailable: '+err.message+'. Menu editing is paused to protect saved items.');
+    });
+  }).catch(showOwnerLogin);
 })();
