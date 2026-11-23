@@ -997,8 +997,11 @@
       S.shift = shift || null;
       return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
+      var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
+      var incoming=results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;});
       S.orders = results[0];
       S.nextNo = results[1];
+      if(incoming.length)toast(incoming.length===1?'New online order '+incoming[0].no+' received':'You have '+incoming.length+' new online orders');
       renderBrand();
       if (S.view === 'orders') renderOrders();
       if (S.view === 'shift' && reportRange().to >= manilaToday() && Date.now()-lastReportRefresh>30000) loadReportData();
