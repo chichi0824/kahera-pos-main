@@ -19,7 +19,7 @@ async function menu(db) {
   const m=await db.prepare('SELECT id,category_id AS cat,name,price,half_price AS halfPrice,image_data AS image,available,sold_out AS soldOut,variants_json AS variantsJson FROM menu_items ORDER BY sort_order,name').all();
   return {settings:JSON.parse(s.settings_json),categories:c.results||[],menu:(m.results||[]).map(x=>({...x,halfPrice:x.halfPrice===null?null:x.halfPrice,variants:JSON.parse(x.variantsJson||'[]'),image:x.image||'',available:!!x.available,soldOut:!!x.soldOut}))};
 }
-function validateMenu(b) {
+export function validateMenu(b) {
   if(!b||!b.settings||!Array.isArray(b.categories)||!Array.isArray(b.menu))throw new Error('Menu payload is incomplete.');
   if(b.menu.length>500||b.categories.length>30)throw new Error('Menu exceeds the allowed limit.');
   const cats=new Map(),items=new Set();
@@ -28,16 +28,16 @@ function validateMenu(b) {
     if(!m||!text(m.id,80)||items.has(m.id)||!text(m.name,40)||!cats.has(m.cat)||!Number.isSafeInteger(m.price)||m.price<1||m.price>100000000||!(m.halfPrice===null||m.halfPrice===undefined||(Number.isSafeInteger(m.halfPrice)&&m.halfPrice>0&&m.halfPrice<=m.price))||typeof m.available!=='boolean'||!(m.soldOut===undefined||typeof m.soldOut==='boolean')||!(m.image===undefined||m.image===null||m.image===''||(typeof m.image==='string'&&m.image.length<=120000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(m.image))))throw new Error('A menu item is invalid.');
     const variants=Array.isArray(m.variants)?m.variants:[];
     const isDrinks=/^(drinks?|beverages?)$/i.test(String(cats.get(m.cat)).trim())||/^(drinks?|beverages?)$/i.test(String(m.cat).trim());
-    if(variants.length&&!isDrinks)throw new Error('Price options can only be added to Drinks items.');
-    if(isDrinks&&(!variants.length||m.halfPrice!==null&&m.halfPrice!==undefined||m.price!==variants[0].price))throw new Error('Drinks must use individual variants only, without default or half-order prices.');
     if(variants.length>20)throw new Error('A menu item can have no more than 20 price options.');
+    if(isDrinks&&!variants.length)throw new Error('Drinks must have at least one price option.');
+    if(variants.length&&(m.halfPrice!==null&&m.halfPrice!==undefined||m.price!==variants[0].price))throw new Error('Items with price options must use the first option as the base price and cannot have a half-order price.');
     const variantIds=new Set(),variantNames=new Set();
-    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean')||!(v.soldOut===undefined||typeof v.soldOut==='boolean'))throw new Error('A menu drink variant is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
+    for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean')||!(v.soldOut===undefined||typeof v.soldOut==='boolean'))throw new Error('A menu price option is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
     items.add(m.id);
   }
   if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean')throw new Error('Store settings are invalid.');
 }
-async function saveMenu(db,b) {
+export async function saveMenu(db,b) {
   validateMenu(b);
   const q=[db.prepare('DELETE FROM menu_items'),db.prepare('DELETE FROM menu_categories'),db.prepare('INSERT OR REPLACE INTO store_settings(id,settings_json,updated_at) VALUES(1,?,CURRENT_TIMESTAMP)').bind(JSON.stringify(b.settings))];
   b.categories.forEach((c,i)=>q.push(db.prepare('INSERT INTO menu_categories(id,name,sort_order) VALUES(?,?,?)').bind(c.id,c.name.trim(),i)));

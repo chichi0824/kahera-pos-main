@@ -539,15 +539,19 @@ DB
                     placeholder="150.00"
                 /></label>
                 <label for="k-newhalfprice"
-                  >Half-order price (non-drinks only, optional)<input
+                  >Half-order price (optional)<input
                     id="k-newhalfprice"
                     inputmode="decimal"
                     placeholder="75.00"
                 /></label>
+                <label class="check new-options-toggle" for="k-newusevariants">
+                  <input id="k-newusevariants" type="checkbox" />
+                  <span>Use multiple price options</span>
+                </label>
                 <div id="k-newvariants" class="drink-variant-manager" hidden>
-                  <strong>Drink variants</strong>
+                  <strong>Price options</strong>
                   <p class="hint">
-                    Add each size separately, set its price, and choose whether
+                    Add each selling option separately, set its price, and choose whether
                     it is available today.
                   </p>
                   <div class="variant-editor-list"></div>
