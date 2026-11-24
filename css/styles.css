@@ -3110,3 +3110,18 @@ tr.is-unpaid { background: var(--gold-soft); }
     padding: 0;
   }
 }
+
+.lines .line .line-price {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.lines .line .line-price .unit-currency {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .72rem;
+}
+.lines .line .line-price input {
+  flex: 1 1 auto;
+  width: 1%;
+}
