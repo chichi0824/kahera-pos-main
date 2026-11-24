@@ -517,7 +517,7 @@
 
   function showSlip(o) {
     var t = o.totals, h = '';
-    h += '<div class="slip-brand"><img class="slip-logo" src="./icons/kahera-icon.png" alt="Kahera icon"><div><h3>' + esc(S.settings.bizName) + '</h3><p class="center slip-location">' + esc(S.settings.bizNote) + '</p></div></div>';
+    h += '<div class="slip-brand"><img class="slip-logo" src="' + esc(S.settings.brandIcon || './icons/kahera-icon.png') + '" alt="Store icon"><div><h3>' + esc(S.settings.bizName) + '</h3><p class="center slip-location">' + esc(S.settings.bizNote) + '</p></div></div>';
     h += '<p class="stamp">Order slip · not an official receipt</p>';
     h += '<div class="row"><span>' + esc(o.no) + '</span><span>' + new Date(o.ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</span></div>';
     h += '<div class="row"><span>' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · Table ' + esc(o.table) : '') : 'Take-out') + '</span><span>' + METHOD_LABEL[o.method] + '</span></div><hr>';
@@ -748,8 +748,6 @@
     });
   }
   function renderMenuAdmin() {
-    byId('k-biz').value = S.settings.bizName;
-    byId('k-biznote').value = S.settings.bizNote;
     var catOpts = function (sel) { return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(categoryLabel(c)) + '</option>'; }).join(''); };
     var defaultCat = S.categories.filter(function (c) { return c.id === 'meals' || c.name.toLowerCase() === 'ulam'; })[0] || S.categories[0];
     $('newCat').innerHTML = catOpts(defaultCat.id);
@@ -802,7 +800,14 @@
     return menuSaveChain;
   }
   function renderBrand() {
-    $('biz').textContent = S.settings.bizName + ' · ' + S.settings.bizNote;
+    var icon = S.settings.brandIcon || 'icons/kahera-icon.png';
+    var brandText = S.settings.bizName || 'My Store';
+    $('biz').textContent = brandText + (S.settings.bizNote ? ' · ' + S.settings.bizNote : '');
+    root.querySelectorAll('[data-k="brandIcon"]').forEach(function (img) { img.src = icon; });
+    var loginIcon = byId('login-brand-icon'), preview = byId('store-icon-preview'), favicon = byId('app-favicon');
+    if (loginIcon) loginIcon.src = icon;
+    if (preview) preview.src = icon;
+    if (favicon) favicon.href = icon;
     $('orderCount').textContent = S.orders.filter(function (o) { return o.status !== 'void'; }).length;
     var notice = $('reportNotice');
     if (notice) {
@@ -1123,11 +1128,55 @@
     $('reportToday').addEventListener('click',function(){S.reportDate=manilaToday();S.calendarMonth=dateMonth(S.reportDate);S.reportMode='day';loadReportData();});
     $('applyCustomRange').addEventListener('click',function(){var from=byId('reportFrom').value,to=byId('reportTo').value;if(!from||!to){toast('Choose both start and end dates.');return;}if(from>to){toast('Start date must be before end date.');return;}S.customFrom=from;S.customTo=to;S.reportDate=from;S.calendarMonth=dateMonth(from);S.reportMode='custom';loadReportData();});
 
-    $('settingsForm').addEventListener('submit', function (e) { e.preventDefault(); });
-    $('settingsForm').addEventListener('change', function () {
+    $('storeProfileForm').addEventListener('submit', function (e) {
+      e.preventDefault();
       S.settings.bizName = byId('k-biz').value.trim() || 'My Store';
       S.settings.bizNote = byId('k-biznote').value.trim();
-      renderBrand(); renderTotals(); saveMenu();
+      renderBrand(); renderTotals();
+      var submit = $('storeProfileForm').querySelector('button[type="submit"]');
+      submit.disabled = true; submit.textContent = 'Saving…';
+      saveMenu().then(function () {
+        toast('Business profile saved. Cashiers and customers will see the update shortly.');
+      }).catch(function (error) {
+        $('storeProfileError').textContent = error.message || 'Could not save the business profile.';
+      }).finally(function () { submit.disabled = false; submit.textContent = 'Save business profile'; });
+    });
+    byId('store-icon-input').addEventListener('change', function () {
+      var file = this.files && this.files[0];
+      if (!file) return;
+      if (!/^image\\/(png|jpeg|webp)$/.test(file.type)) { $('storeProfileError').textContent = 'Choose a PNG, JPG, or WebP image.'; this.value = ''; return; }
+      if (file.size > 8 * 1024 * 1024) { $('storeProfileError').textContent = 'Choose an image smaller than 8 MB.'; this.value = ''; return; }
+      $('storeProfileError').textContent = '';
+      var reader = new FileReader();
+      reader.onload = function () {
+        var image = new Image();
+        image.onload = function () {
+          var canvas = document.createElement('canvas'), size = 256, ctx;
+          canvas.width = size; canvas.height = size; ctx = canvas.getContext('2d');
+          var scale = Math.max(size / image.width, size / image.height);
+          var width = image.width * scale, height = image.height * scale;
+          ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+          ctx.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+          S.settings.brandIcon = canvas.toDataURL('image/jpeg', 0.86);
+          renderBrand();
+          byId('store-icon-preview').src = S.settings.brandIcon;
+          saveMenu().then(function () { toast('Store icon updated.'); }).catch(function (error) {
+            $('storeProfileError').textContent = error.message || 'Could not save the store icon.';
+          });
+        };
+        image.onerror = function () { $('storeProfileError').textContent = 'That image could not be opened.'; };
+        image.src = reader.result;
+      };
+      reader.onerror = function () { $('storeProfileError').textContent = 'Could not read that image.'; };
+      reader.readAsDataURL(file);
+    });
+    $('resetStoreIcon').addEventListener('click', function () {
+      S.settings.brandIcon = '';
+      byId('store-icon-input').value = '';
+      renderBrand(); byId('store-icon-preview').src = 'icons/kahera-icon.png';
+      saveMenu().then(function () { toast('Default store icon restored.'); }).catch(function (error) {
+        $('storeProfileError').textContent = error.message || 'Could not restore the default icon.';
+      });
     });
     $('newCat').addEventListener('change', updateNewVariantControl);
     byId('k-newusevariants').addEventListener('change', updateNewVariantControl);
@@ -1330,6 +1379,9 @@
     else status.textContent = 'Permission has not been requested yet.';
   }
   function renderSettings() {
+    byId('k-biz').value = S.settings.bizName || '';
+    byId('k-biznote').value = S.settings.bizNote || '';
+    byId('store-icon-preview').src = S.settings.brandIcon || 'icons/kahera-icon.png';
     $('voiceAlertsEnabled').checked = notificationSettings.voiceEnabled;
     $('browserAlertsEnabled').checked = notificationSettings.browserEnabled;
     $('floatingAlertEnabled').checked = notificationSettings.floatingEnabled;
