@@ -747,6 +747,13 @@
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('Could not open this image.')); }; img.src = url;
     });
   }
+  function findDuplicateMenuName(name, excludeId) {
+    var normalized = String(name || '').trim().toLocaleLowerCase();
+    if (!normalized) return null;
+    return S.menu.filter(function (m) {
+      return m.id !== excludeId && String(m.name || '').trim().toLocaleLowerCase() === normalized;
+    })[0] || null;
+  }
   function renderMenuAdmin() {
     var catOpts = function (sel) { return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(categoryLabel(c)) + '</option>'; }).join(''); };
     var defaultCat = S.categories.filter(function (c) { return c.id === 'meals' || c.name.toLowerCase() === 'ulam'; })[0] || S.categories[0];
@@ -763,7 +770,7 @@
       categoryItems.forEach(function (m) {
         var drink = isDrinksCategory(m.cat), usesOptions = drink || hasPriceOptions(m);
         h += '<tr class="' + (usesOptions ? 'drink-menu-row' : '') + '" data-item="' + esc(m.id) + '">' +
-          '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
+          '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><small class="menu-duplicate-note" data-name-error hidden>There is already an item with the same name.</small><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
           '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
           (usesOptions ? '<td colspan="2" class="drink-variants-cell" data-variant-container>' + (drink ? '<strong>Drink sizes</strong>' : '<label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants" checked><span>Use price options</span></label>') + renderVariantEditor(m.variants) + '</td>' :
             '<td class="menu-pricing-cell"><label><span>Full ₱</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half ₱</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="—" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label><label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants"><span>Use price options</span></label></td><td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>') +
@@ -1241,7 +1248,19 @@
         else { item.price = hasPriceOptions(item) ? item.variants[0].price : item.price; item.variants = []; }
         saveMenu().then(renderMenuAdmin).catch(function () {}); return;
       }
-      if (f === 'name') { var name = e.target.value.trim(); if (name) item.name = name; else e.target.value = item.name; }
+      if (f === 'name') {
+        var name = e.target.value.trim(), duplicate = findDuplicateMenuName(name, item.id);
+        var note = tr.querySelector('[data-name-error]');
+        if (duplicate) {
+          if (note) note.hidden = false;
+          e.target.setAttribute('aria-invalid', 'true');
+          e.target.value = item.name;
+          return;
+        }
+        if (note) note.hidden = true;
+        e.target.removeAttribute('aria-invalid');
+        if (name) item.name = name; else e.target.value = item.name;
+      }
       if (f === 'cat') { item.cat = e.target.value; if (isDrinksCategory(item.cat)) { item.halfPrice = null; if (!hasPriceOptions(item)) item.variants = [{ id: 'vregular-' + Date.now().toString(36), name: 'Regular', price: item.price, available: true, soldOut: false }]; item.price = item.variants[0].price; } }
       if (f === 'available') item.available = e.target.checked;
       if (f === 'soldOut') item.soldOut = e.target.checked;
@@ -1281,6 +1300,7 @@
       var halfRaw = byId('k-newhalfprice').value.trim(), halfPrice = halfRaw ? M.toCentavos(halfRaw) : null;
       var parsedVariants = hasOptions ? readVariantEditor(byId('k-newvariants')) : { variants: [] };
       if (!name) { $('addErr').textContent = 'Give the item a name.'; return; }
+      if (findDuplicateMenuName(name, null)) { $('addErr').textContent = 'There is already an item with the same name. Please choose a different name.'; return; }
       if (parsedVariants.error) { $('addErr').textContent = parsedVariants.error; return; }
       if (hasOptions) {
         if (parsedVariants.incomplete) { $('addErr').textContent = 'Complete or remove each price option.'; return; }
