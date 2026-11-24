@@ -599,77 +599,155 @@
           <div class="about">
             <div class="wide panel card-pad db-guide-intro">
               <p class="eyebrow">DATABASE GUIDE · OWNER / ADMIN REFERENCE</p>
-              <h2>Manage test sales and order records</h2>
+              <h2>Operating the live Kahera database</h2>
               <p class="lead">
-                Use these commands in your Mac Terminal to inspect the shared
-                Cloudflare D1 database, remove one specific test order, or reset
-                all test sales and daily reports. These actions affect the live
-                shared POS database.
+                This guide covers the shared Cloudflare D1 database used by the POS
+                and customer ordering page: how to inspect records, make a backup,
+                apply reviewed database changes, and handle common live operations.
               </p>
               <p class="hint">
-                Important: deletion is permanent. Export or back up any records
-                you may need before running a delete command. Never use the full
-                reset after real business transactions have started.
+                <strong>Live database warning:</strong> commands marked REMOTE affect
+                the shared business database used by every cashier device and the
+                customer ordering page. Do not experiment, reset data, or run
+                unfamiliar SQL against it. Export a backup first and verify the
+                target database before any change.
               </p>
               <p class="db-guide-credit">Modified by <strong>Maryjoy Tan (MJ)</strong></p>
             </div>
 
             <div class="panel card-pad">
-              <h3>1. Open the Worker folder</h3>
-              <p>Run this first whenever you open a new Terminal window:</p>
-              <pre><code>cd ~/kahera-pos-main/cloudflare-worker</code></pre>
-              <p>Confirm the configured database in <code>wrangler.toml</code> is <code>kahera-db</code>.</p>
-            </div>
-
-            <div class="panel card-pad">
-              <h3>2. Check how much data is currently saved</h3>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts;"</code></pre>
-              <p class="hint">The <code>--remote</code> flag targets the shared production database, not a local test database.</p>
-            </div>
-
-            <div class="panel card-pad">
-              <h3>3. Delete one specific order by its ID</h3>
-              <p><strong>Step A — Find the database ID using its receipt number.</strong> Replace <code>K-0016</code> with the receipt number you want to look up.</p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status, totals_json FROM orders WHERE order_no = 'K-0016';"</code></pre>
-              <p><strong>Step B — Copy the exact <code>id</code> returned.</strong> Preview it before deleting. Replace <code>PASTE_ORDER_ID_HERE</code> with that exact ID.</p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, status FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
-              <p><strong>Step C — Delete only that order and its item rows.</strong></p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="DELETE FROM order_items WHERE order_id = 'PASTE_ORDER_ID_HERE'; DELETE FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
-              <p><strong>Step D — Verify.</strong> No result means the order ID is no longer present.</p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no FROM orders WHERE id = 'PASTE_ORDER_ID_HERE';"</code></pre>
-              <p class="hint">This keeps other orders and daily reports. It does not reset the order counter, so the next receipt number continues normally.</p>
-            </div>
-
-            <div class="panel card-pad">
-              <h3>4. Delete all test sales and daily reports</h3>
-              <p><strong>Warning:</strong> this removes every order, every order item, and every shift / daily report in the shared database. It also resets the receipt counter. Do not run this if the database contains real sales you need to keep.</p>
-              <p><strong>Step A — Create the reset script.</strong></p>
-              <pre><code>cat &gt; reset-test-data.sql &lt;&lt;'SQL'
-DELETE FROM order_items;
-DELETE FROM orders;
-DELETE FROM shifts;
-
-UPDATE order_counters
-SET value = 0
-WHERE id = 1;
-SQL</code></pre>
-              <p><strong>Step B — Run the reset script against the remote database.</strong></p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --file=reset-test-data.sql</code></pre>
-              <p><strong>Step C — Confirm the tables are empty and the counter is reset.</strong></p>
-              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS total_orders FROM orders; SELECT COUNT(*) AS total_items FROM order_items; SELECT COUNT(*) AS total_reports FROM shifts; SELECT value AS order_counter FROM order_counters WHERE id = 1;"</code></pre>
-              <p>Expected result: zero orders, zero order items, zero reports, and order counter value <code>0</code>.</p>
-              <p class="hint">Your menu, menu categories, item prices, store settings, and app icon are not deleted by this script.</p>
-            </div>
-
-            <div class="panel card-pad">
-              <h3>5. Quick reminders</h3>
+              <h3>1. Understand how Kahera stores data</h3>
               <ul>
-                <li>Always use <code>--remote</code> when intentionally managing the shared Cloudflare D1 database.</li>
-                <li>Find and verify an order ID before deleting it. Receipt numbers such as <code>K-0016</code> are not the same as database IDs.</li>
-                <li>Delete the matching <code>order_items</code> rows before deleting the parent order.</li>
-                <li>Deleting a single order leaves the daily report and receipt counter unchanged.</li>
-                <li>The full reset deletes historical reports too and resets receipt numbering.</li>
-                <li>Sales and daily reports are shared across cashier devices, so a deletion affects every device.</li>
+                <li><strong>Cloudflare D1:</strong> the shared database named <code>kahera-db</code>, connected to the Worker through the <code>kahera_db</code> binding. The configured primary location is APAC.</li>
+                <li><strong>Shared across devices:</strong> menu categories, menu items, prices, availability, sold-out status, menu photos, store settings, orders, order items, payment details, and daily report / shift records.</li>
+                <li><strong>Customer orders:</strong> online orders are saved in the same <code>orders</code> and <code>order_items</code> tables. They begin as <code>unpaid</code>; the cashier marks them paid after receiving payment.</li>
+                <li><strong>Device-local data:</strong> an in-progress register cart and the browser's acknowledged-order reminder state are not shared D1 records. Do not expect another cashier device to see an unfinished cart.</li>
+                <li><strong>Daily reports:</strong> one report/shift record is maintained per Manila calendar date. The Worker has a scheduled trigger that runs every minute to maintain daily report rollover.</li>
+              </ul>
+              <p class="hint">D1 stores amounts as integer centavos. For example, ₱125.00 is stored as <code>12500</code>. Do not manually convert or edit amounts without understanding the affected fields.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>2. Open the Worker project and verify the target</h3>
+              <p>Open Terminal and move to the Worker folder:</p>
+              <pre><code>cd ~/kahera-pos-main/cloudflare-worker</code></pre>
+              <p>Check <code>wrangler.toml</code>. The database configuration should identify:</p>
+              <pre><code>name = "kahera-menu-api"
+binding = "kahera_db"
+database_name = "kahera-db"
+database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"</code></pre>
+              <p>Check the database information before proceeding:</p>
+              <pre><code>npx wrangler d1 info kahera-db</code></pre>
+              <p class="hint">Use the exact project folder and database name above. If the name or ID does not match, stop and confirm the configuration before running any remote command.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>3. Make a manual backup before changes</h3>
+              <p>Export the complete remote database (schema and data) to a timestamped SQL file:</p>
+              <pre><code>npx wrangler d1 export kahera-db --remote --output=./kahera-db-backup-before-change.sql</code></pre>
+              <p>Keep the backup in a safe location outside the public website folder and repository. Do not commit customer names, phone numbers, delivery addresses, payment references, or payment proof photos to GitHub.</p>
+              <p>For a quick count-only check, run:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT 'orders' AS table_name, COUNT(*) AS total FROM orders UNION ALL SELECT 'order_items', COUNT(*) FROM order_items UNION ALL SELECT 'shifts', COUNT(*) FROM shifts UNION ALL SELECT 'menu_items', COUNT(*) FROM menu_items UNION ALL SELECT 'menu_categories', COUNT(*) FROM menu_categories;"</code></pre>
+              <p class="hint">A successful export is a file you can retain. A row count is not a backup. Protect backup files because they contain business and customer information.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>4. Inspect live records safely (read-only)</h3>
+              <p><strong>Check recent orders:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT order_no, created_at, source, status, payment_method, tendered, change_amount FROM orders ORDER BY created_at DESC LIMIT 20;"</code></pre>
+              <p><strong>Check online orders that are still awaiting payment:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT order_no, created_at, customer_name, customer_phone, fulfillment_type, status FROM orders WHERE source = 'online' AND status = 'unpaid' ORDER BY created_at DESC;"</code></pre>
+              <p><strong>Check daily reports:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT report_date, status, started_at, ended_at, close_reason FROM shifts ORDER BY report_date DESC LIMIT 30;"</code></pre>
+              <p><strong>Check the current receipt counter:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_receipt_number FROM order_counters WHERE id = 1;"</code></pre>
+              <p><strong>Check applied migrations:</strong></p>
+              <pre><code>npx wrangler d1 migrations list kahera-db --remote</code></pre>
+              <p>These SELECT commands only read data. Avoid copying customer details into chat, screenshots, or public issue trackers.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>5. Apply a database migration</h3>
+              <p>Database structure changes must be added as a new, numbered SQL file inside <code>cloudflare-worker/migrations/</code>. Do not edit an older migration that has already been applied to the remote database.</p>
+              <ol>
+                <li>Create the migration in a development branch and review the SQL.</li>
+                <li>Test it against a local D1 database first.</li>
+                <li>Review the GitHub pull request. Confirm exactly which tables and records the migration changes.</li>
+                <li>Export a fresh remote backup and confirm the output file exists.</li>
+                <li>Check which migrations are pending on the remote database.</li>
+                <li>Only after approval, apply the pending migration(s) to remote D1.</li>
+              </ol>
+              <p><strong>List pending remote migrations:</strong></p>
+              <pre><code>npx wrangler d1 migrations list kahera-db --remote</code></pre>
+              <p><strong>Apply pending migrations (production change):</strong></p>
+              <pre><code>npx wrangler d1 migrations apply kahera-db --remote</code></pre>
+              <p><strong>Verify afterward:</strong></p>
+              <pre><code>npx wrangler d1 migrations list kahera-db --remote</code></pre>
+              <p class="hint">Do not run <code>migrations apply</code> just to check the database. It changes the remote schema when unapplied migrations exist. Review the proposed migration names and SQL before confirming.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>6. Deploying the Worker is separate from changing the database</h3>
+              <p>Deploying the Worker publishes API code. Applying D1 migrations changes database structure/data. One does not automatically replace the other.</p>
+              <p>From the Worker folder, the Worker deployment command is:</p>
+              <pre><code>npx wrangler deploy</code></pre>
+              <p>Only deploy after the code has been reviewed and the required database migrations have been applied in the correct order. Confirm the Worker name and environment before deployment.</p>
+              <p class="hint">The POS website is published separately through GitHub Pages. A website update does not, by itself, deploy the Cloudflare Worker or apply D1 migrations.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>7. If a specific test order must be removed</h3>
+              <p>Do this only when the order is confirmed to be test data and the owner has approved deletion. First look up the receipt number:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, source, status FROM orders WHERE order_no = 'K-0016';"</code></pre>
+              <p>Copy the exact database <code>id</code>, then verify that it identifies the intended test order:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no, created_at, source, status FROM orders WHERE id = 'PASTE_EXACT_ORDER_ID_HERE';"</code></pre>
+              <p>Only after confirming the record and taking a backup, delete its child item rows first and then the order:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="DELETE FROM order_items WHERE order_id = 'PASTE_EXACT_ORDER_ID_HERE'; DELETE FROM orders WHERE id = 'PASTE_EXACT_ORDER_ID_HERE';"</code></pre>
+              <p>Verify that the order no longer exists:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT id, order_no FROM orders WHERE id = 'PASTE_EXACT_ORDER_ID_HERE';"</code></pre>
+              <p class="hint">Receipt numbers (for example, <code>K-0016</code>) are not database IDs. This deletion removes the selected order from every device and affects historical reporting. Never delete a real sale to correct a mistake; use the POS's available order controls and preserve the audit trail.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>8. Restoring data or recovering from a mistake</h3>
+              <ul>
+                <li>Stop making further manual changes and record what happened, when, and which command was run.</li>
+                <li>Do not immediately import an old SQL export over the live database. A restore can overwrite newer orders and settings.</li>
+                <li>For a recent accidental change, check Cloudflare D1 Time Travel options and the recovery point before restoring. Restoration is a production operation and should be owner-approved.</li>
+                <li>If using a SQL export, restore only into a separately created/test database first and verify its contents before considering any production recovery.</li>
+                <li>After recovery, verify menu, orders, unpaid online orders, daily reports, receipt counter, and customer ordering before resuming normal use.</li>
+              </ul>
+              <p class="hint">Do not use the old “delete all test sales” reset procedure on a live business database. Once real transactions begin, historical sales and daily reports must be retained.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>9. Live-operation checklist</h3>
+              <ul>
+                <li>Confirm the production D1 database name and ID in <code>wrangler.toml</code>.</li>
+                <li>Confirm owner login works and the owner password is strong and private.</li>
+                <li>Keep <code>ADMIN_PASSWORD</code> and <code>SESSION_SECRET</code> in Cloudflare Worker secrets. Never paste them into source code, SQL, screenshots, or GitHub.</li>
+                <li>Confirm the Worker is deployed and the POS Settings health check reports Cloud API and database as connected.</li>
+                <li>Confirm the customer ordering setting is intentionally enabled or disabled before sharing the public order page.</li>
+                <li>Test a small POS cash sale, a non-cash sale if supported, and an online cash-on-delivery/pickup order flow using clearly identified test data before opening to customers.</li>
+                <li>Verify that unpaid online orders are not treated as completed/paid sales, and that the cashier marks payment only after receiving it.</li>
+                <li>Verify that menu updates appear on the other cashier device and customer ordering page.</li>
+                <li>Make and securely retain a full remote SQL export before the first live day, and repeat backups before migrations or risky maintenance.</li>
+                <li>Keep a simple record of each production migration, Worker deployment, backup filename, date, and person who approved it.</li>
+              </ul>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>10. Quick reference</h3>
+              <ul>
+                <li><strong>Database:</strong> <code>kahera-db</code></li>
+                <li><strong>Worker:</strong> <code>kahera-menu-api</code></li>
+                <li><strong>D1 binding:</strong> <code>kahera_db</code></li>
+                <li><strong>Configured database ID:</strong> <code>96b04312-003f-49e9-a5e4-1646babb4a53</code></li>
+                <li><strong>Database region hint:</strong> APAC</li>
+                <li><strong>Worker folder:</strong> <code>cloudflare-worker</code></li>
+                <li><strong>Migration folder:</strong> <code>cloudflare-worker/migrations/</code></li>
+                <li><strong>POS website:</strong> <code>https://chichi0824.github.io/kahera-pos-main/</code></li>
+                <li><strong>Customer order page:</strong> <code>https://chichi0824.github.io/kahera-pos-main/order.html</code></li>
               </ul>
             </div>
           </div>
