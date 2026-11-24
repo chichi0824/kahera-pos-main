@@ -908,7 +908,17 @@ tr.is-void td.num {
   display: grid;
   grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
   gap: 14px;
-  align-items: start;
+  align-items: stretch;
+}
+/* Keep the Best-selling panel aligned with Sales by Hour and scroll only its list. */
+.shift-grid > .panel:last-child {
+  min-height: 430px;
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.shift-grid > .panel:last-child .table-wrap {
+  min-height: 0;
+  max-height: 360px;
+  overflow: auto;
 }
 .card-pad {
   padding: 16px;
@@ -3580,11 +3590,9 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 @media(max-width:560px){.report-chart-head{align-items:flex-start;flex-direction:column}.report-chart-toggle{align-self:flex-start}.report-interactive-bars{gap:4px}.report-interactive-bars .bar span{font-size:.58rem}.chart-detail{gap:8px;padding:10px}}
 
 
-/* Let the best-selling panel stretch to the full height of the sales-by-hour panel. */
-@media (min-width: 761px) {
-  .shift-grid > .panel:last-child {
-    height: auto;
-    min-height: 430px;
-    align-self: stretch;
+/* On narrow screens, let the report panels stack naturally. */
+@media (max-width: 760px) {
+  .shift-grid > .panel:last-child .table-wrap {
+    max-height: 360px;
   }
 }
