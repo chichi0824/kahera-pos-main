@@ -35,10 +35,15 @@
     else out+='<button type="button" data-add="'+esc(item.id)+'" data-portion="full" '+(item.soldOut?'disabled':'')+'>Add · '+money(item.price)+'</button>';
     return out;
   }
+  function qtyInCart(itemId){
+    return cart.filter(function(line){return line.id===itemId;}).reduce(function(sum,line){return sum+(Number(line.qty)||0);},0);
+  }
   function renderMenuCard(item){
     var photo=item.image?'<img src="'+esc(item.image)+'" alt="'+esc(item.name)+'" loading="lazy">':'<div class="menu-card-placeholder"></div>';
     var unavailable=item.available===false||item.soldOut===true;
-    return '<article class="menu-card">'+photo+'<div class="menu-card-content"><div><h3>'+esc(item.name)+'</h3><p>'+(unavailable?'Currently unavailable':item.variants&&item.variants.length?'Choose a price option':item.halfPrice?'Full or half portion':'Freshly prepared')+'</p></div><div class="price-actions">'+(unavailable?'<p>Sold out today</p>':itemButtons(item))+'</div></div></article>';
+    var qty=qtyInCart(item.id);
+    var quantityBadge=qty>0?'<span class="menu-card-qty" aria-label="'+qty+' '+(qty===1?'item':'items')+' selected">'+qty+'</span>':'';
+    return '<article class="menu-card">'+photo+quantityBadge+'<div class="menu-card-content"><div><h3>'+esc(item.name)+'</h3><p>'+(unavailable?'Currently unavailable':item.variants&&item.variants.length?'Choose a price option':item.halfPrice?'Full or half portion':'Freshly prepared')+'</p></div><div class="price-actions">'+(unavailable?'<p>Sold out today</p>':itemButtons(item))+'</div></div></article>';
   }
   function renderMenu(){
     var q=$('menu-search').value.trim().toLowerCase();
@@ -71,6 +76,7 @@
     document.querySelectorAll('[data-cart-count]').forEach(function(el){el.textContent=count();});
     $('place-order').textContent='Place order · '+money(total());
     $('place-order').disabled=!cart.length;
+    renderMenu();
   }
   function setFulfillment(){
     var delivery=document.querySelector('input[name="fulfillment"]:checked').value==='delivery';
