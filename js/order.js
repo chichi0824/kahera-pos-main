@@ -108,12 +108,23 @@
     cloud.createPublicOrder(payload).then(showSuccess).catch(function(error){$('form-error').textContent=error.message||'We could not send your order. Please try again.';button.disabled=false;button.textContent='Place order · '+money(total());});
   });
   $('order-again').addEventListener('click',function(){cart=[];requestId=null;$('customer-form').reset();setFulfillment();renderCart();$('order-success').hidden=true;document.querySelector('.layout').hidden=false;document.querySelector('.hero').hidden=false;window.scrollTo({top:0,behavior:'smooth'});});
-  cloud.getMenu().then(function(data){
-    categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
-    $('store-name').textContent=data.settings&&data.settings.bizName||"Victoria's";
-    $('store-note').textContent=data.settings&&data.settings.bizNote||'Freshly prepared favorites';
-    document.title='Order Online · '+$('store-name').textContent;
-    renderCategories();renderMenu();
-  }).catch(function(error){$('menu-grid').innerHTML='<p class="empty">The menu is temporarily unavailable. Please try again later. '+esc(error.message)+'</p>';});
+  cloud.getPublicSettings().then(function(settings){
+    if(!settings.customerOrderingEnabled){
+      $('ordering-closed').hidden=false;
+      document.querySelector('.layout').hidden=true;
+      document.querySelector('.hero').hidden=true;
+      document.title='Ordering temporarily closed';
+      return null;
+    }
+    return cloud.getMenu().then(function(data){
+      categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
+      $('store-name').textContent=data.settings&&data.settings.bizName||"Victoria's";
+      $('store-note').textContent=data.settings&&data.settings.bizNote||'Freshly prepared favorites';
+      document.title='Order Online · '+$('store-name').textContent;
+      renderCategories();renderMenu();
+    });
+  }).catch(function(error){
+    $('menu-grid').innerHTML='<p class="empty">Online ordering is temporarily unavailable. '+esc(error.message)+'</p>';
+  });
   setFulfillment();renderCart();
 })();
