@@ -2988,3 +2988,31 @@ tr.is-unpaid { background: var(--gold-soft); }
   .topbar { gap: 8px 6px; }
   .topbar > .top-tools { gap: 5px; }
 }
+
+
+/* Desktop/tablet navigation fills the free header space between brand and tools.
+   Mobile keeps its dedicated three-row layout above. */
+@media (min-width: 641px) {
+  .topbar > .brand {
+    flex: 0 0 auto;
+    margin-right: 0;
+  }
+
+  .topbar > .tabs {
+    flex: 1 1 auto;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    align-items: stretch;
+  }
+
+  .topbar > .tabs button {
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .topbar > .top-tools {
+    flex: 0 0 auto;
+    white-space: nowrap;
+  }
+}
