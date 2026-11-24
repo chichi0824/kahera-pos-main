@@ -94,6 +94,15 @@
           >
             Menu
           </button>
+          <button
+            role="tab"
+            id="tab-settings"
+            aria-controls="view-settings"
+            aria-selected="false"
+            data-view="settings"
+          >
+            Settings
+          </button>
         </nav>
         <div class="top-tools">
           <span class="clock" data-k="clock">--:--</span>
@@ -495,7 +504,7 @@
           <div class="view-head">
             <div>
               <p class="eyebrow">Central menu · Cloud database</p>
-              <h2>Menu &amp; settings</h2>
+              <h2>Menu</h2>
             </div>
             <p class="hint">
               Changes are saved to the shared database. Cashier devices receive
@@ -669,6 +678,112 @@ SQL</code></pre>
             </div>
           </div>
         </section>
+        <!-- SETTINGS -->
+        <section
+          id="view-settings"
+          class="view settings-view"
+          role="tabpanel"
+          aria-labelledby="tab-settings"
+          data-k="settingsView"
+          hidden
+        >
+          <div class="view-head settings-page-head">
+            <div>
+              <p class="eyebrow">OWNER CONTROL CENTER</p>
+              <h2>Settings</h2>
+              <p class="hint">Manage online ordering, alerts, system health and account access.</p>
+            </div>
+          </div>
+
+          <div class="settings-grid">
+            <section class="panel card-pad settings-card">
+              <div class="settings-card-head">
+                <div class="settings-icon">🛍️</div>
+                <div><p class="eyebrow">CUSTOMER EXPERIENCE</p><h3>Customer Ordering</h3></div>
+                <span class="settings-status" data-k="customerOrderingStatus">Checking…</span>
+              </div>
+              <p class="hint">Control whether customers can submit new orders through the customer ordering page. The page remains available when ordering is closed.</p>
+              <label class="settings-toggle">
+                <span><strong>Accept online orders</strong><small>Allow customers to submit new orders.</small></span>
+                <input type="checkbox" data-k="customerOrderingEnabled" disabled />
+              </label>
+              <p class="settings-feedback" data-k="customerOrderingFeedback" role="status">Loading shared setting…</p>
+              <p class="hint">Orders already received will remain in the Orders tab and can still be processed.</p>
+            </section>
+
+            <section class="panel card-pad settings-card">
+              <div class="settings-card-head">
+                <div class="settings-icon">🔔</div>
+                <div><p class="eyebrow">OWNER ALERTS</p><h3>Notifications &amp; Alerts</h3></div>
+              </div>
+              <p class="hint">Choose how this device alerts you when a customer order arrives. Browser permissions are managed by your browser.</p>
+              <label class="settings-toggle">
+                <span><strong>Voice notifications</strong><small>Speak when a new order arrives and when a reminder is due.</small></span>
+                <input type="checkbox" data-k="voiceAlertsEnabled" />
+              </label>
+              <label class="settings-toggle">
+                <span><strong>Browser notifications</strong><small>Show alerts even when Kahera is in another tab, if permission is granted.</small></span>
+                <input type="checkbox" data-k="browserAlertsEnabled" />
+              </label>
+              <label class="settings-toggle">
+                <span><strong>Floating order alert</strong><small>Keep an order reminder visible inside Kahera POS.</small></span>
+                <input type="checkbox" data-k="floatingAlertEnabled" />
+              </label>
+              <label class="settings-field">
+                <span><strong>Repeat reminder</strong><small>Repeat while online orders remain unacknowledged.</small></span>
+                <select data-k="reminderInterval">
+                  <option value="0">Off</option>
+                  <option value="1">Every 1 minute</option>
+                  <option value="2">Every 2 minutes</option>
+                  <option value="3">Every 3 minutes</option>
+                  <option value="5">Every 5 minutes</option>
+                  <option value="10">Every 10 minutes</option>
+                </select>
+              </label>
+              <div class="settings-actions">
+                <button type="button" class="btn small" data-k="testVoiceAlert">Test voice notification</button>
+                <button type="button" class="btn small ghost" data-k="requestBrowserPermission">Enable browser permission</button>
+              </div>
+              <p class="settings-feedback" data-k="notificationPermissionStatus" role="status">Checking browser permission…</p>
+            </section>
+
+            <section class="panel card-pad settings-card">
+              <div class="settings-card-head">
+                <div class="settings-icon">☁️</div>
+                <div><p class="eyebrow">SERVICE HEALTH</p><h3>System &amp; Cloud</h3></div>
+                <span class="settings-status" data-k="systemOverallStatus">Checking…</span>
+              </div>
+              <div class="settings-health-list">
+                <div><span>Cloud API</span><strong data-k="cloudConnectionStatus">Checking…</strong></div>
+                <div><span>Database connection</span><strong data-k="databaseConnectionStatus">Checking…</strong></div>
+                <div><span>Last successful POS sync</span><strong data-k="lastSyncStatus">Not synced yet</strong></div>
+                <div><span>Last health check</span><strong data-k="systemCheckedAt">Not checked yet</strong></div>
+              </div>
+              <div class="settings-actions">
+                <button type="button" class="btn small" data-k="refreshSystemStatus">Refresh status</button>
+              </div>
+              <p class="hint">This page reports connection health. It does not expose database credentials or technical configuration.</p>
+              <p class="settings-feedback" data-k="systemStatusFeedback" role="status"></p>
+            </section>
+
+            <section class="panel card-pad settings-card">
+              <div class="settings-card-head">
+                <div class="settings-icon">🔐</div>
+                <div><p class="eyebrow">OWNER ACCOUNT</p><h3>Account Security</h3></div>
+              </div>
+              <p class="hint">Change the password used to sign in to Kahera POS.</p>
+              <form class="settings-password-form" data-k="changePasswordForm">
+                <label>Current password<input type="password" data-k="currentPassword" autocomplete="current-password" required maxlength="200" /></label>
+                <label>New password<input type="password" data-k="newPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
+                <label>Confirm new password<input type="password" data-k="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
+                <p class="err" data-k="changePasswordError" role="alert"></p>
+                <button type="submit" class="btn primary">Change password</button>
+              </form>
+              <p class="hint">Use at least 8 characters. Keep your new password private.</p>
+            </section>
+          </div>
+        </section>
+
       </main>
 
       <footer class="app-footer">
