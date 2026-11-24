@@ -159,7 +159,7 @@ async function markOnlineOrderPaid(db,id,payment){
   const ref=method==='ewallet'&&typeof payment.ref==='string'?payment.ref.trim():'';
   const proof=method==='ewallet'&&typeof payment.paymentProof==='string'?payment.paymentProof:'';
   if(ref.length>40)throw new Error('Payment reference must be 40 characters or fewer.');
-  if(proof&&(!/^data:image\\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(proof)||proof.length>650000))throw new Error('E-wallet receipt image is invalid or too large.');
+  if(proof&&(!/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(proof)||proof.length>650000))throw new Error('E-wallet receipt image is invalid or too large.');
   const order=JSON.parse(row.payload_json);
   order.status='paid';order.paidAt=Date.now();order.method=method;order.ref=ref;order.tendered=order.totals.total;order.change=0;order.hasPaymentProof=!!proof;
   await db.prepare("UPDATE orders SET status='paid',payment_method=?,payment_reference=?,tendered=?,change_amount=0,payment_proof=?,payload_json=? WHERE id=? AND status='unpaid'")
