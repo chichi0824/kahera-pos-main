@@ -50,7 +50,9 @@
   /** Sum of price × qty for cart lines [{ price, qty }]. */
   function subtotal(lines) {
     return (lines || []).reduce(function (sum, l) {
-      return sum + Math.round(l.price) * clampInt(l.qty, 0, 9999);
+      return sum + (l.lineTotalOverridden === true && Number.isSafeInteger(l.lineTotal)
+        ? l.lineTotal
+        : Math.round(l.price) * clampInt(l.qty, 0, 9999));
     }, 0);
   }
 
@@ -148,7 +150,7 @@
         it.qty += l.qty;
         if (l.portion === 'half') it.halfQty += l.qty;
         else it.fullQty += l.qty;
-        it.amount += l.price * l.qty;
+        it.amount += l.lineTotalOverridden === true && Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty;
       });
     });
     s.avgTicket = s.count ? Math.round(s.net / s.count) : 0;
