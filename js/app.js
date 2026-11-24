@@ -35,6 +35,8 @@
   var toastTimer;
   var orderAlertAudio = null, orderAlertsEnabled = false, onlineOrdersInitialized = false;
   var originalDocumentTitle = document.title, titleAlertTimer = null;
+  var orderReminderTimer = null, orderAlertAcknowledged = false;
+  var orderAlertAckStorageKey = 'kahera-online-order-alert-acknowledged';
   function enableOrderAlerts() {
     try {
       var AudioCtor = window.AudioContext || window.webkitAudioContext;
@@ -85,9 +87,50 @@
     var unpaid = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; });
     button.hidden = unpaid.length === 0;
     if (unpaid.length) {
-      button.innerHTML = '<span class="floating-order-icon" aria-hidden="true">🔔</span><span class="floating-order-copy"><strong>Online order' + (unpaid.length === 1 ? '' : 's') + ' received</strong><small>' + unpaid.length + ' awaiting payment · Tap to view</small></span><span class="floating-order-count">' + unpaid.length + '</span>';
-      button.setAttribute('aria-label', unpaid.length + ' unpaid online orders. Open orders.');
+      button.innerHTML = '<span class="floating-order-icon" aria-hidden="true">' + (orderAlertAcknowledged ? '✓' : '🔔') + '</span><span class="floating-order-copy"><strong>' + (orderAlertAcknowledged ? 'Alert acknowledged' : 'Online order' + (unpaid.length === 1 ? '' : 's') + ' received') + '</strong><small>' + unpaid.length + ' awaiting payment · ' + (orderAlertAcknowledged ? 'Still needs attention' : 'Tap to acknowledge and view') + '</small></span><span class="floating-order-count">' + unpaid.length + '</span>';
+      button.classList.toggle('is-acknowledged', orderAlertAcknowledged);
+      button.setAttribute('aria-label', unpaid.length + ' unpaid online orders. ' + (orderAlertAcknowledged ? 'Alert acknowledged. Open orders.' : 'Acknowledge alert and open orders.'));
     }
+  }
+  function acknowledgeOrderAlert() {
+    orderAlertAcknowledged = true;
+    if (orderReminderTimer) clearInterval(orderReminderTimer);
+    orderReminderTimer = null;
+    try { localStorage.setItem(orderAlertAckStorageKey, String(Date.now())); } catch (e) {}
+    renderFloatingOrderAlert();
+    var count = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; }).length;
+    toast('Alert acknowledged · ' + count + ' online order' + (count === 1 ? '' : 's') + ' still awaiting payment');
+  }
+  function remindUnacknowledgedOrder() {
+    if (orderAlertAcknowledged) return;
+    var unpaid = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; });
+    if (!unpaid.length) {
+      if (orderReminderTimer) clearInterval(orderReminderTimer);
+      orderReminderTimer = null;
+      return;
+    }
+    var message = unpaid.length === 1 ? 'Reminder: online order ' + unpaid[0].no + ' is still awaiting attention' : 'Reminder: ' + unpaid.length + ' online orders are still awaiting attention';
+    orderAlertAcknowledged = false;
+    try { localStorage.removeItem(orderAlertAckStorageKey); } catch (e) {}
+    renderFloatingOrderAlert();
+    startOrderReminder();
+    toast(message);
+    playOrderAlert();
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        var notification = new Notification('Kahera order reminder', { body: message, tag: 'kahera-online-order-reminder', renotify: true, icon: 'icons/kahera-icon.png' });
+        notification.onclick = function(){ acknowledgeOrderAlert(); window.focus(); setView('orders'); notification.close(); };
+      } catch(e) {}
+    }
+    if (document.hidden) {
+      if (titleAlertTimer) clearInterval(titleAlertTimer);
+      var show = true;
+      titleAlertTimer = setInterval(function(){document.title=show?'🔔 Order needs attention · '+originalDocumentTitle:originalDocumentTitle;show=!show;},900);
+    }
+  }
+  function startOrderReminder() {
+    if (orderReminderTimer) clearInterval(orderReminderTimer);
+    orderReminderTimer = setInterval(remindUnacknowledgedOrder, 180000);
   }
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
@@ -103,7 +146,7 @@
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('New Kahera online order', { body: message, tag: 'kahera-new-online-orders', renotify: true, icon: 'icons/kahera-icon.png' });
-        notification.onclick = function(){ window.focus(); setView('orders'); notification.close(); };
+        notification.onclick = function(){ acknowledgeOrderAlert(); window.focus(); setView('orders'); notification.close(); };
       } catch(e) {}
     }
     if (document.hidden) {
@@ -112,6 +155,14 @@
       titleAlertTimer = setInterval(function(){document.title=show?'🔔 New order · '+originalDocumentTitle:originalDocumentTitle;show=!show;},900);
     }
   }
+  window.addEventListener('storage', function(event){
+    if (event.key === orderAlertAckStorageKey && event.newValue) {
+      orderAlertAcknowledged = true;
+      if (orderReminderTimer) clearInterval(orderReminderTimer);
+      orderReminderTimer = null;
+      renderFloatingOrderAlert();
+    }
+  });
   document.addEventListener('visibilitychange',function(){
     if (!document.hidden) {
       if (titleAlertTimer) clearInterval(titleAlertTimer);
@@ -1116,7 +1167,7 @@
       showOwnerLogin();
     });
     $('enableAlerts').addEventListener('click', enableOrderAlerts);
-    $('floatingOrderAlert').addEventListener('click', function(){ setView('orders'); });
+    $('floatingOrderAlert').addEventListener('click', function(){ acknowledgeOrderAlert(); setView('orders'); });
     updateOrderAlertButton();
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
@@ -1161,6 +1212,11 @@
       S.orders = results[0];
       S.nextNo = results[1];
       renderFloatingOrderAlert();
+      if (!S.orders.some(function(o){ return o.source === 'online' && o.status === 'unpaid'; })) {
+        if (orderReminderTimer) clearInterval(orderReminderTimer);
+        orderReminderTimer = null;
+        orderAlertAcknowledged = false;
+      }
       if(incoming.length)announceIncomingOrders(incoming);
       renderBrand();
       if (S.view === 'orders') renderOrders();
