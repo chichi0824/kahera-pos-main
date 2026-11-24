@@ -366,6 +366,7 @@
 
   // ---------- orders ----------
   var pendingVoid = null;
+  var pendingOnlinePaymentOrder = null, onlinePaymentProofData = '';
   function renderOrders() {
     var list = S.orders.slice().reverse();
     var unpaid = list.filter(function(o){return o.source==='online'&&o.status==='unpaid';});
@@ -375,7 +376,7 @@
     $('onlineOrders').innerHTML = unpaid.length ? '<div class="online-orders-head"><div><p class="eyebrow">CUSTOMER ORDERS</p><h3>Incoming online orders</h3></div><span class="pill unpaid">'+unpaid.length+' awaiting payment</span></div>'+unpaid.map(function(o){
       var fulfil=o.fulfillmentType==='delivery'?'Delivery':'Pickup';
       var address=o.fulfillmentType==='delivery'?(o.deliveryContactRequested?'Customer asked staff to contact them to confirm the delivery address':(o.deliveryAddress||'Address not provided')):'Pickup at store';
-      return '<article class="online-order-card"><div class="online-order-top"><div><span class="mono">'+esc(o.no)+'</span><span class="pill unpaid">Unpaid</span><span class="pill online">Online · '+fulfil+'</span></div><strong class="online-order-total">'+M.peso(o.totals.total)+'</strong></div><div class="online-order-customer"><strong>'+esc(o.customerName||'Customer')+'</strong><a href="tel:'+esc(o.customerPhone||'')+'">'+esc(o.customerPhone||'No contact number')+'</a></div><p class="online-order-address">'+esc(address)+'</p><ul class="online-order-lines">'+o.lines.map(function(l){return '<li><span>'+l.qty+' × '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name))+'</span><strong>'+M.peso(l.price*l.qty)+'</strong></li>';}).join('')+'</ul><div class="online-order-actions"><span class="hint">Cash on '+(o.fulfillmentType==='delivery'?'delivery':'pickup')+'</span><button type="button" class="btn primary small" data-mark-paid="'+esc(o.id)+'">Mark as Paid</button></div></article>';
+      return '<article class="online-order-card"><div class="online-order-top"><div><span class="mono">'+esc(o.no)+'</span><span class="pill unpaid">Unpaid</span><span class="pill online">Online · '+fulfil+'</span></div><strong class="online-order-total">'+M.peso(o.totals.total)+'</strong></div><div class="online-order-customer"><strong>'+esc(o.customerName||'Customer')+'</strong><a href="tel:'+esc(o.customerPhone||'')+'">'+esc(o.customerPhone||'No contact number')+'</a></div><p class="online-order-address">'+esc(address)+'</p><ul class="online-order-lines">'+o.lines.map(function(l){return '<li><span>'+l.qty+' × '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name))+'</span><strong>'+M.peso(l.price*l.qty)+'</strong></li>';}).join('')+'</ul><div class="online-order-actions"><span class="hint">Awaiting payment confirmation</span><button type="button" class="btn primary small" data-mark-paid="'+esc(o.id)+'">Mark as Paid</button></div></article>';
     }).join('') : '<div class="online-orders-empty"><strong>No unpaid online orders</strong><span>New customer orders will appear here automatically.</span></div>';
     if (!list.length) {
       $('ordersTable').innerHTML = '<tbody><tr><td class="empty">No orders yet today.</td></tr></tbody>';
@@ -830,29 +831,50 @@
     $('onlineOrders').addEventListener('click', function (e) {
       var t = e.target.closest('[data-mark-paid]');
       if (!t || t.disabled) return;
-      var onlineOrder = S.orders.filter(function (o) { return o.id === t.getAttribute('data-mark-paid'); })[0];
-      if (!onlineOrder || !window.confirm('Confirm that cash has been received for ' + onlineOrder.no + '?')) return;
-      t.disabled = true;
-      t.textContent = 'Saving…';
-      cloud.markOrderPaid(onlineOrder.id).then(function (updated) {
-        S.orders = S.orders.map(function (x) { return x.id === updated.id ? updated : x; });
-        renderOrders();
-        renderBrand();
-        toast(updated.no + ' marked paid');
-      }).catch(function (error) {
-        t.disabled = false;
-        t.textContent = 'Mark as Paid';
-        toast('Could not update payment: ' + error.message);
+      pendingOnlinePaymentOrder = S.orders.filter(function (o) { return o.id === t.getAttribute('data-mark-paid'); })[0] || null;
+      if (!pendingOnlinePaymentOrder) return;
+      onlinePaymentProofData = '';
+      $('onlinePayOrderLabel').textContent = pendingOnlinePaymentOrder.no + ' · ' + M.peso(pendingOnlinePaymentOrder.totals.total);
+      $('onlinePayRef').value = '';
+      $('onlinePayProofFile').value = '';
+      $('onlinePayProofPreview').hidden = true;
+      $('onlinePayProofImage').removeAttribute('src');
+      $('onlinePayError').textContent = '';
+      document.querySelector('input[name="online-payment-method"][value="cash"]').checked = true;
+      $('onlineEwalletFields').hidden = true;
+      $('onlinePayDlg').showModal();
+    });
+    document.querySelectorAll('input[name="online-payment-method"]').forEach(function(input){
+      input.addEventListener('change',function(){
+        $('onlineEwalletFields').hidden = document.querySelector('input[name="online-payment-method"]:checked').value !== 'ewallet';
       });
+    });
+    $('onlinePayClose').addEventListener('click',function(){$('onlinePayDlg').close();});
+    $('onlinePayProofFile').addEventListener('change',function(e){
+      var file=e.target.files&&e.target.files[0];if(!file)return;
+      $('onlinePayError').textContent='Preparing receipt photo…';
+      compressPaymentImage(file).then(function(data){
+        onlinePaymentProofData=data;$('onlinePayProofImage').src=data;$('onlinePayProofPreview').hidden=false;$('onlinePayError').textContent='Receipt photo attached.';
+      }).catch(function(error){onlinePaymentProofData='';$('onlinePayProofPreview').hidden=true;$('onlinePayError').textContent=error.message;});
+    });
+    $('onlinePayRemoveProof').addEventListener('click',function(){
+      onlinePaymentProofData='';$('onlinePayProofFile').value='';$('onlinePayProofPreview').hidden=true;$('onlinePayProofImage').removeAttribute('src');
+    });
+    $('onlinePayConfirm').addEventListener('click',function(){
+      if(!pendingOnlinePaymentOrder)return;
+      var method=document.querySelector('input[name="online-payment-method"]:checked').value;
+      var button=$('onlinePayConfirm');
+      button.disabled=true;button.textContent='Saving…';$('onlinePayError').textContent='';
+      cloud.markOrderPaid(pendingOnlinePaymentOrder.id,{method:method,ref:method==='ewallet'?$('onlinePayRef').value.trim():'',paymentProof:method==='ewallet'?onlinePaymentProofData:''}).then(function(updated){
+        S.orders=S.orders.map(function(x){return x.id===updated.id?updated:x;});
+        $('onlinePayDlg').close();pendingOnlinePaymentOrder=null;onlinePaymentProofData='';
+        renderOrders();renderBrand();toast(updated.no+' marked paid · '+(updated.method==='ewallet'?'E-wallet':'Cash'));
+      }).catch(function(error){$('onlinePayError').textContent='Could not update payment: '+error.message;}).finally(function(){button.disabled=false;button.textContent='Confirm payment received';});
     });
 
     $('ordersTable').addEventListener('click', function (e) {
       var t = e.target.closest('button');
       if (!t) return;
-      if (t.hasAttribute('data-mark-paid')) {
-        var onlineOrder=S.orders.filter(function(o){return o.id===t.getAttribute('data-mark-paid');})[0];
-        if(onlineOrder&&!t.disabled&&window.confirm('Confirm that cash has been received for '+onlineOrder.no+'?')){t.disabled=true;t.textContent='Saving…';cloud.markOrderPaid(onlineOrder.id).then(function(updated){S.orders=S.orders.map(function(x){return x.id===updated.id?updated:x;});renderOrders();renderBrand();toast(updated.no+' marked paid');}).catch(function(error){t.disabled=false;t.textContent='Mark as Paid';toast('Could not update payment: '+error.message);});}
-      }
       if (t.hasAttribute('data-slip')) showSlip(findOrder(t.getAttribute('data-slip')));
       if (t.hasAttribute('data-void')) { pendingVoid = t.getAttribute('data-void'); renderOrders(); }
       if (t.hasAttribute('data-void-no')) { pendingVoid = null; renderOrders(); }
