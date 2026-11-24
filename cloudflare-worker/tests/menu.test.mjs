@@ -188,3 +188,63 @@ test('requires customer name and contact number for online orders', () => {
     lines: [{ id: 'ulam-1', qty: 1 }]
   }), /Please complete your name, contact number/);
 });
+
+
+async function signedTestToken(secret, payload) {
+  const encode = value => Buffer.from(value).toString('base64url');
+  const encodedPayload = encode(JSON.stringify(payload));
+  const key = await crypto.subtle.importKey(
+    'raw', new TextEncoder().encode(secret),
+    { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']
+  );
+  const signature = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(encodedPayload));
+  return encodedPayload + '.' + Buffer.from(signature).toString('base64url');
+}
+
+test('rejects an expired owner session', async () => {
+  const env = authEnv();
+  const token = await signedTestToken(env.SESSION_SECRET, {
+    role: 'admin', exp: Math.floor(Date.now() / 1000) - 60
+  });
+  const response = await worker.fetch(authRequest('/api/auth/session', 'GET', undefined, token), env);
+  assert.equal(response.status, 401);
+  assert.deepEqual(await response.json(), { authenticated: false });
+});
+
+test('rejects a tampered owner session token', async () => {
+  const env = authEnv();
+  const login = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
+  const { token } = await login.json();
+  const tampered = token.slice(0, -1) + (token.endsWith('a') ? 'b' : 'a');
+  const response = await worker.fetch(authRequest('/api/auth/session', 'GET', undefined, tampered), env);
+  assert.equal(response.status, 401);
+});
+
+test('protects every owner-only data and mutation route without a session', async () => {
+  const env = authEnv();
+  const cases = [
+    ['/api/settings', 'GET'],
+    ['/api/settings', 'PUT', { customerOrderingEnabled: false }],
+    ['/api/system/status', 'GET'],
+    ['/api/menu', 'PUT', {}],
+    ['/api/shifts/current', 'GET'],
+    ['/api/reports?from=2026-11-23&to=2026-11-23', 'GET'],
+    ['/api/orders/next-number', 'GET'],
+    ['/api/orders', 'GET'],
+    ['/api/orders', 'POST', {}],
+    ['/api/orders/example/mark-paid', 'POST', { method: 'cash' }],
+    ['/api/orders/example/void', 'POST', {}],
+    ['/api/orders/example/payment-proof', 'GET']
+  ];
+  for (const [path, method, body] of cases) {
+    const response = await worker.fetch(authRequest(path, method, body), env);
+    assert.equal(response.status, 401, method + ' ' + path + ' must require owner authentication');
+  }
+});
+
+test('rejects login when the session signing secret is missing', async () => {
+  const env = authEnv();
+  delete env.SESSION_SECRET;
+  const response = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
+  assert.equal(response.status, 500);
+});
