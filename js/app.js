@@ -33,7 +33,19 @@
   var DISC_LABEL = { none: '', senior: 'Senior', pwd: 'PWD' };
 
   var toastTimer;
-  var orderAlertAudio = null, orderAlertsEnabled = false, onlineOrdersInitialized = false;
+  function normalizeNotificationSettings(value) {
+    value = value && typeof value === 'object' ? value : {};
+    var reminder = Number(value.reminderMinutes);
+    return {
+      voiceEnabled: value.voiceEnabled === true,
+      browserEnabled: value.browserEnabled !== false,
+      floatingEnabled: value.floatingEnabled !== false,
+      reminderMinutes: [0,1,2,3,5,10].indexOf(reminder) >= 0 ? reminder : 3
+    };
+  }
+  var notificationSettings = normalizeNotificationSettings(store.get('notificationSettings', null));
+  var orderAlertAudio = null, orderAlertsEnabled = notificationSettings.voiceEnabled, onlineOrdersInitialized = false;
+  var lastSuccessfulSyncAt = null;
   var originalDocumentTitle = document.title, titleAlertTimer = null;
   var orderReminderTimer = null, orderAlertAcknowledged = false;
   var orderAlertAckStorageKey = 'kahera-online-order-alert-acknowledged';
@@ -45,8 +57,11 @@
         if (orderAlertAudio.state === 'suspended') orderAlertAudio.resume();
       }
     } catch (e) {}
+    notificationSettings.voiceEnabled = true;
+    notificationSettings.browserEnabled = true;
+    store.set('notificationSettings', notificationSettings);
     if ('Notification' in window && Notification.permission === 'default') {
-      Notification.requestPermission().then(function(permission){ updateOrderAlertButton(); });
+      Notification.requestPermission().then(function(permission){ updateOrderAlertButton(); renderNotificationPermission(); });
     }
     orderAlertsEnabled = true;
     updateOrderAlertButton();
@@ -55,13 +70,13 @@
   }
   function updateOrderAlertButton() {
     var b = $('enableAlerts'); if (!b) return;
-    var granted = 'Notification' in window && Notification.permission === 'granted';
+    var granted = notificationSettings.browserEnabled && 'Notification' in window && Notification.permission === 'granted';
     b.classList.toggle('alerts-on', orderAlertsEnabled || granted);
     b.textContent = (orderAlertsEnabled || granted) ? '🔔 Alerts on' : '🔔 Enable alerts';
     b.title = granted ? 'Voice and browser notifications are available' : 'Enable voice and allow browser notifications when prompted';
   }
   function playOrderAlert() {
-    if (!orderAlertsEnabled && !(('Notification' in window) && Notification.permission === 'granted')) return;
+    if (!notificationSettings.voiceEnabled) return;
     try {
       var AudioCtor = window.AudioContext || window.webkitAudioContext;
       if (AudioCtor) {
@@ -83,7 +98,7 @@
     } catch (e) {}
   }
   function speakOrderAlert(count, reminder, test) {
-    if (!orderAlertsEnabled && !(('Notification' in window) && Notification.permission === 'granted')) return;
+    if (!notificationSettings.voiceEnabled) return;
     if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
       playOrderAlert();
       return;
@@ -106,6 +121,7 @@
   function renderFloatingOrderAlert() {
     var button = $('floatingOrderAlert');
     if (!button) return;
+    if (!notificationSettings.floatingEnabled) { button.hidden = true; return; }
     var unpaid = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; });
     button.hidden = unpaid.length === 0;
     if (unpaid.length) {
@@ -133,8 +149,8 @@
     }
     var message = unpaid.length === 1 ? 'Reminder: online order ' + unpaid[0].no + ' is still awaiting attention' : 'Reminder: ' + unpaid.length + ' online orders are still awaiting attention';
     toast(message);
-    speakOrderAlert(unpaid.length, true, false);
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if (notificationSettings.voiceEnabled) speakOrderAlert(unpaid.length, true, false);
+    if (notificationSettings.browserEnabled && 'Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('Kahera order reminder', { body: message, tag: 'kahera-online-order-reminder', renotify: true, icon: 'icons/kahera-icon.png' });
         notification.onclick = function(){ acknowledgeOrderAlert(); window.focus(); setView('orders'); notification.close(); };
@@ -148,7 +164,9 @@
   }
   function startOrderReminder() {
     if (orderReminderTimer) clearInterval(orderReminderTimer);
-    orderReminderTimer = setInterval(remindUnacknowledgedOrder, 180000);
+    orderReminderTimer = null;
+    if (!notificationSettings.reminderMinutes) return;
+    orderReminderTimer = setInterval(remindUnacknowledgedOrder, notificationSettings.reminderMinutes * 60000);
   }
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
@@ -164,8 +182,8 @@
     renderFloatingOrderAlert();
     startOrderReminder();
     toast(message);
-    speakOrderAlert(incoming.length, false, false);
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if (notificationSettings.voiceEnabled) speakOrderAlert(incoming.length, false, false);
+    if (notificationSettings.browserEnabled && 'Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('New Kahera online order', { body: message, tag: 'kahera-new-online-orders', renotify: true, icon: 'icons/kahera-icon.png' });
         notification.onclick = function(){ acknowledgeOrderAlert(); window.focus(); setView('orders'); notification.close(); };
@@ -297,6 +315,7 @@
     if (v === 'orders') renderOrders();
     if (v === 'shift') loadReportData();
     if (v === 'menu') renderMenuAdmin();
+    if (v === 'settings') renderSettings();
     renderMobileBar();
   }
 
@@ -1182,6 +1201,59 @@
       }).catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
 
+    $('settingsView').addEventListener('change', function (event) {
+      var target = event.target;
+      if (target.matches('[data-k="customerOrderingEnabled"]')) {
+        saveCustomerOrdering(target.checked);
+        return;
+      }
+      if (target.matches('[data-k="voiceAlertsEnabled"]')) notificationSettings.voiceEnabled = target.checked;
+      if (target.matches('[data-k="browserAlertsEnabled"]')) notificationSettings.browserEnabled = target.checked;
+      if (target.matches('[data-k="floatingAlertEnabled"]')) notificationSettings.floatingEnabled = target.checked;
+      if (target.matches('[data-k="reminderInterval"]')) notificationSettings.reminderMinutes = Number(target.value);
+      store.set('notificationSettings', notificationSettings);
+      orderAlertsEnabled = notificationSettings.voiceEnabled;
+      if (target.matches('[data-k="browserAlertsEnabled"]') && target.checked && 'Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission().then(function(){renderNotificationPermission();updateOrderAlertButton();});
+      }
+      if (notificationSettings.reminderMinutes && S.orders.some(function(o){return o.source==='online'&&o.status==='unpaid';}) && !orderAlertAcknowledged) startOrderReminder();
+      else if (orderReminderTimer && !notificationSettings.reminderMinutes) { clearInterval(orderReminderTimer); orderReminderTimer = null; }
+      renderNotificationPermission();
+      renderFloatingOrderAlert();
+      updateOrderAlertButton();
+      toast('Notification preferences saved on this device');
+    });
+    $('testVoiceAlert').addEventListener('click', function () {
+      notificationSettings.voiceEnabled = true;
+      orderAlertsEnabled = true;
+      store.set('notificationSettings', notificationSettings);
+      try { var AudioCtor=window.AudioContext||window.webkitAudioContext;if(AudioCtor){if(!orderAlertAudio)orderAlertAudio=new AudioCtor();if(orderAlertAudio.state==='suspended')orderAlertAudio.resume();} } catch(e) {}
+      speakOrderAlert(0, false, true);
+      updateOrderAlertButton();
+      $('voiceAlertsEnabled').checked = true;
+      toast('Voice notification test started');
+    });
+    $('requestBrowserPermission').addEventListener('click', function () {
+      if (!('Notification' in window)) { renderNotificationPermission(); return; }
+      notificationSettings.browserEnabled = true;
+      store.set('notificationSettings', notificationSettings);
+      Notification.requestPermission().then(function(){renderNotificationPermission();updateOrderAlertButton();});
+    });
+    $('refreshSystemStatus').addEventListener('click', function(){refreshSettingsStatus();refreshSharedData().catch(function(){});});
+    $('changePasswordForm').addEventListener('submit', function(event){
+      event.preventDefault();
+      var current=$('currentPassword').value,newPassword=$('newPassword').value,confirmPassword=$('confirmPassword').value;
+      $('changePasswordError').textContent='';
+      if(newPassword.length<8){$('changePasswordError').textContent='Use at least 8 characters for your new password.';return;}
+      if(newPassword!==confirmPassword){$('changePasswordError').textContent='The new passwords do not match.';return;}
+      var submit=$('changePasswordForm').querySelector('button[type="submit"]');
+      submit.disabled=true;submit.textContent='Updating password…';
+      cloud.changePassword({currentPassword:current,newPassword:newPassword,confirmPassword:confirmPassword}).then(function(){
+        $('changePasswordForm').reset();
+        toast('Password changed successfully');
+      }).catch(function(error){$('changePasswordError').textContent=error.message||'Could not change password.';}).finally(function(){submit.disabled=false;submit.textContent='Change password';});
+    });
+
     $('logout').addEventListener('click', function () {
       cloud.logout();
       if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
@@ -1198,6 +1270,74 @@
       de.setAttribute('data-theme', next);
       store.set('theme', next);
     });
+  }
+
+  function renderNotificationPermission() {
+    var status = $('notificationPermissionStatus');
+    if (!status) return;
+    if (!('Notification' in window)) status.textContent = 'Browser notifications are not supported by this browser.';
+    else if (Notification.permission === 'granted') status.textContent = notificationSettings.browserEnabled ? 'Browser permission granted on this device.' : 'Browser permission is granted, but notifications are turned off in Kahera settings.';
+    else if (Notification.permission === 'denied') status.textContent = 'Permission is blocked by the browser. Change it in your browser site settings.';
+    else status.textContent = 'Permission has not been requested yet.';
+  }
+  function renderSettings() {
+    $('voiceAlertsEnabled').checked = notificationSettings.voiceEnabled;
+    $('browserAlertsEnabled').checked = notificationSettings.browserEnabled;
+    $('floatingAlertEnabled').checked = notificationSettings.floatingEnabled;
+    $('reminderInterval').value = String(notificationSettings.reminderMinutes);
+    renderNotificationPermission();
+    refreshSettingsStatus();
+  }
+  function saveCustomerOrdering(enabled) {
+    var control = $('customerOrderingEnabled');
+    if (!enabled && !window.confirm('Close customer online ordering? Customers will no longer be able to submit new orders. Existing orders will remain in Kahera POS.')) {
+      control.checked = true; return;
+    }
+    control.disabled = true;
+    $('customerOrderingFeedback').textContent = 'Saving shared setting…';
+    cloud.saveSettings({customerOrderingEnabled:enabled}).then(function(settings){
+      control.checked = settings.customerOrderingEnabled;
+      $('customerOrderingStatus').textContent = settings.customerOrderingEnabled ? 'OPEN' : 'CLOSED';
+      $('customerOrderingStatus').className = 'settings-status ' + (settings.customerOrderingEnabled ? 'is-open' : 'is-closed');
+      $('customerOrderingFeedback').textContent = settings.customerOrderingEnabled ? 'Customers can place new online orders.' : 'The customer page is still accessible, but checkout is disabled.';
+      toast(settings.customerOrderingEnabled ? 'Customer ordering is now open' : 'Customer ordering is now closed');
+    }).catch(function(error){
+      control.checked = !enabled;
+      $('customerOrderingFeedback').textContent = error.message || 'Could not save customer ordering status.';
+      toast('Could not update customer ordering');
+    }).finally(function(){control.disabled=false;});
+  }
+  function refreshSettingsStatus() {
+    $('customerOrderingStatus').textContent = 'Checking…';
+    $('customerOrderingFeedback').textContent = 'Loading shared setting…';
+    $('cloudConnectionStatus').textContent = 'Checking…';
+    $('databaseConnectionStatus').textContent = 'Checking…';
+    $('systemOverallStatus').textContent = 'Checking…';
+    Promise.all([cloud.getSettings(),cloud.getSystemStatus()]).then(function(results){
+      var settings=results[0],health=results[1];
+      $('customerOrderingEnabled').checked = settings.customerOrderingEnabled;
+      $('customerOrderingEnabled').disabled = false;
+      $('customerOrderingStatus').textContent = settings.customerOrderingEnabled ? 'OPEN' : 'CLOSED';
+      $('customerOrderingStatus').className = 'settings-status ' + (settings.customerOrderingEnabled ? 'is-open' : 'is-closed');
+      $('customerOrderingFeedback').textContent = settings.customerOrderingEnabled ? 'Customers can place new online orders.' : 'The customer page is still accessible, but checkout is disabled.';
+      $('cloudConnectionStatus').textContent = health.cloud === 'connected' ? 'Connected' : 'Unavailable';
+      $('databaseConnectionStatus').textContent = health.database === 'connected' ? 'Connected' : 'Unavailable';
+      $('systemOverallStatus').textContent = 'Operational';
+      $('systemOverallStatus').className = 'settings-status is-open';
+      $('systemCheckedAt').textContent = new Date(health.checkedAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
+      $('systemStatusFeedback').textContent = '';
+    }).catch(function(error){
+      $('customerOrderingStatus').textContent = 'Unavailable';
+      $('customerOrderingStatus').className = 'settings-status is-closed';
+      $('customerOrderingFeedback').textContent = error.message || 'Could not load shared settings.';
+      $('customerOrderingEnabled').disabled = true;
+      $('cloudConnectionStatus').textContent = 'Unavailable';
+      $('databaseConnectionStatus').textContent = 'Not verified';
+      $('systemOverallStatus').textContent = 'Needs attention';
+      $('systemOverallStatus').className = 'settings-status is-closed';
+      $('systemStatusFeedback').textContent = error.message || 'Could not reach the cloud service.';
+    });
+    $('lastSyncStatus').textContent = lastSuccessfulSyncAt ? new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'}) : 'Waiting for first successful sync';
   }
 
   function tick() {
@@ -1233,6 +1373,8 @@
       onlineOrdersInitialized = true;
       S.orders = results[0];
       S.nextNo = results[1];
+      lastSuccessfulSyncAt = Date.now();
+      if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
       renderFloatingOrderAlert();
       if (!S.orders.some(function(o){ return o.source === 'online' && o.status === 'unpaid'; })) {
         if (orderReminderTimer) clearInterval(orderReminderTimer);
