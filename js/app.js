@@ -1528,8 +1528,9 @@
       if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
       renderFloatingOrderAlert();
       if (!S.orders.some(function(o){ return o.source === 'online' && o.status === 'unpaid'; })) {
-        if (orderReminderTimer) clearInterval(orderReminderTimer);
+        if (orderReminderTimer) clearTimeout(orderReminderTimer);
         orderReminderTimer = null;
+        orderReminderDueAt = null;
         orderAlertAcknowledged = false;
       }
       if(incoming.length)announceIncomingOrders(incoming);
