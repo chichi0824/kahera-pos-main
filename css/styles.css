@@ -2498,7 +2498,7 @@ select option {
 .order-source { display: block; color: var(--muted); font-size: .75rem; }
 .pill.unpaid { background: var(--gold-soft); color: var(--gold); }
 .pill.online { background: var(--accent-soft); color: var(--accent); }
-.pill.paid { background: var(--accent-soft); color: var(--accent); }
+.pill.paid { background: var(--accent-soft); color: var(--accent); white-space: nowrap; }
 tr.is-unpaid { background: var(--gold-soft); }
 @media (max-width: 620px) {
   .online-order-card { padding: 12px; }
