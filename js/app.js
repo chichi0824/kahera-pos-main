@@ -1144,7 +1144,7 @@
     byId('store-icon-input').addEventListener('change', function () {
       var file = this.files && this.files[0];
       if (!file) return;
-      if (!/^image\\/(png|jpeg|webp)$/.test(file.type)) { $('storeProfileError').textContent = 'Choose a PNG, JPG, or WebP image.'; this.value = ''; return; }
+      if (!/^image\/(png|jpeg|webp)$/.test(file.type)) { $('storeProfileError').textContent = 'Choose a PNG, JPG, or WebP image.'; this.value = ''; return; }
       if (file.size > 8 * 1024 * 1024) { $('storeProfileError').textContent = 'Choose an image smaller than 8 MB.'; this.value = ''; return; }
       $('storeProfileError').textContent = '';
       var reader = new FileReader();
