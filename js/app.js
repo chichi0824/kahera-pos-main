@@ -1262,7 +1262,6 @@
       S.cart = blankCart();
       showOwnerLogin();
     });
-    $('enableAlerts').addEventListener('click', enableOrderAlerts);
     $('floatingOrderAlert').addEventListener('click', function(){ acknowledgeOrderAlert(); setView('orders'); });
     updateOrderAlertButton();
     $('theme').addEventListener('click', function () {
