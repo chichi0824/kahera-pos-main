@@ -3566,3 +3566,13 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 .chart-detail strong{font-size:1.05rem}
 .chart-detail small{color:var(--muted);font-variant-numeric:tabular-nums}
 @media(max-width:560px){.report-chart-head{align-items:flex-start;flex-direction:column}.report-chart-toggle{align-self:flex-start}.report-interactive-bars{gap:4px}.report-interactive-bars .bar span{font-size:.58rem}.chart-detail{gap:8px;padding:10px}}
+
+
+/* Let the best-selling panel stretch to the full height of the sales-by-hour panel. */
+@media (min-width: 761px) {
+  .shift-grid > .panel:last-child {
+    height: auto;
+    min-height: 430px;
+    align-self: stretch;
+  }
+}
