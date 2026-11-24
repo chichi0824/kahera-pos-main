@@ -2814,3 +2814,116 @@ tr.is-unpaid { background: var(--gold-soft); }
   .top-tools .btn.small { padding: 5px 8px; font-size: 0.75rem; }
   .top-tools .icon-btn { width: 34px; height: 34px; }
 }
+
+
+/* Mobile header: preserve one horizontal toolbar and allow touch scrolling */
+@media (max-width: 640px) {
+  .topbar {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    padding: 4px 2px 8px;
+  }
+
+  .topbar::-webkit-scrollbar { display: none; }
+
+  .topbar > .brand {
+    flex: 0 0 auto;
+    min-width: 0;
+    margin-right: 2px;
+    gap: 7px;
+  }
+
+  .brand-mark {
+    width: 32px;
+    height: 32px;
+  }
+
+  .brand-name {
+    font-size: 1rem;
+    white-space: nowrap;
+  }
+
+  .brand-biz {
+    display: block;
+    max-width: 112px;
+    font-size: 0.65rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .topbar > .tabs {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 2px;
+    padding: 3px;
+    white-space: nowrap;
+  }
+
+  .topbar > .tabs button {
+    flex: 0 0 auto;
+    padding: 6px 9px;
+    font-size: 0.76rem;
+    white-space: nowrap;
+  }
+
+  .topbar > .top-tools {
+    flex: 0 0 auto;
+    flex-wrap: nowrap;
+    gap: 6px;
+    white-space: nowrap;
+  }
+
+  .top-tools .clock {
+    flex: 0 0 auto;
+    font-size: 0.68rem;
+    white-space: nowrap;
+  }
+
+  .top-tools .customer-order-link,
+  .top-tools [data-k="logout"] {
+    flex: 0 0 auto;
+    padding: 6px 8px;
+    font-size: 0.7rem;
+    line-height: 1.15;
+    white-space: nowrap;
+  }
+
+  .top-tools .icon-btn {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+  }
+
+  .app-footer {
+    margin-top: 22px;
+    padding-top: 10px;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar { gap: 8px; }
+  .brand-biz { max-width: 92px; }
+  .topbar > .tabs button {
+    padding: 6px 7px;
+    font-size: 0.72rem;
+  }
+  .top-tools { gap: 5px; }
+  .top-tools .customer-order-link,
+  .top-tools [data-k="logout"] {
+    padding: 6px 7px;
+    font-size: 0.66rem;
+  }
+}
