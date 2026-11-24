@@ -3249,3 +3249,49 @@ tr.is-unpaid { background: var(--gold-soft); }
   .tile.tile-choice .tile-option { min-height: 39px; padding: 5px 6px; font-size: .7rem; }
   .tile.tile-choice .tile-option strong { font-size: .7rem; }
 }
+
+
+/* Match customer ordering page price/portion button styling in the POS catalog. */
+.tile.tile-choice .tile-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: 100%;
+}
+.tile.tile-choice .tile-option {
+  flex: 1 1 78px;
+  min-width: 78px;
+  min-height: 0;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  padding: 7px 8px;
+  text-align: left;
+  font-size: .76rem;
+  font-weight: 800;
+  line-height: 1.25;
+  cursor: pointer;
+}
+.tile.tile-choice .tile-option strong {
+  color: inherit;
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.tile.tile-choice .tile-option:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.tile.tile-choice .tile-option:disabled {
+  opacity: .4;
+  cursor: not-allowed;
+}
+.tile.tile-choice .tile-option small {
+  color: var(--muted);
+  font-size: .68rem;
+}
