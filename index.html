@@ -97,7 +97,7 @@
         </nav>
         <div class="top-tools">
           <span class="clock" data-k="clock">--:--</span>
-          <a class="btn small customer-order-link" href="order.html" target="_blank" rel="noopener">Customer order page</a>
+          <button type="button" class="btn small customer-order-link" data-k="openOrderShare">Customer order page</button>
           <button
             type="button"
             class="icon-btn"
@@ -813,6 +813,26 @@ SQL</code></pre>
         <a class="btn primary" href="#k-order" data-k="mGo">Review order</a>
       </div>
 
+      <dialog class="order-share-dlg" data-k="orderShareDlg" aria-label="Share customer ordering page">
+        <div class="order-share-card">
+          <div class="order-share-head">
+            <div><p class="eyebrow">CUSTOMER ORDERING</p><h2>Share your order page</h2><p class="hint">Let customers open the menu and place an order from their phone.</p></div>
+            <button type="button" class="btn ghost" data-k="closeOrderShare" aria-label="Close">✕</button>
+          </div>
+          <label class="order-share-url-label">Customer order link
+            <span class="order-share-url-row"><input type="text" data-k="orderShareUrl" readonly aria-label="Customer ordering page link"><button type="button" class="btn primary" data-k="copyOrderShare">Copy link</button></span>
+          </label>
+          <div class="order-share-bottom">
+            <div class="order-share-qr"><img data-k="orderShareQr" alt="QR code for the customer ordering page"><small>Scan to open the ordering page</small></div>
+            <div class="order-share-actions">
+              <strong>Share with customers</strong>
+              <p class="hint">Use your device's share options to send the link through Messenger or another app.</p>
+              <button type="button" class="btn primary" data-k="shareOrderLink">Share link</button>
+              <p class="hint" data-k="orderShareFeedback" role="status" aria-live="polite"></p>
+            </div>
+          </div>
+        </div>
+      </dialog>
       <dialog class="slip-dlg" data-k="slipDlg" aria-label="Order slip">
         <div class="slip" data-k="slip"></div>
         <div class="dlg-actions">
