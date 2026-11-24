@@ -30,6 +30,11 @@
   root.KaheraCloud={
     login:function(password){return request("/api/auth/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){setToken(b.token);return true;});},
     checkSession:function(){return request("/api/auth/session",{method:"GET",cache:"no-store"}).then(function(){return true;}).catch(function(){setToken(null);return false;});},
+    getPublicSettings:function(){return request("/api/public/settings",{method:"GET",cache:"no-store"});},
+    getSettings:function(){return request("/api/settings",{method:"GET",cache:"no-store"});},
+    saveSettings:function(payload){return request("/api/settings",{method:"PUT",body:JSON.stringify(payload)});},
+    getSystemStatus:function(){return request("/api/system/status",{method:"GET",cache:"no-store"});},
+    changePassword:function(payload){return request("/api/auth/change-password",{method:"POST",body:JSON.stringify(payload)});},
     logout:function(){setToken(null);},
     getDeviceId:getDeviceId,newId:uuid,
     getMenu:function(){return request("/api/menu",{method:"GET",cache:"no-store"});},
