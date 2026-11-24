@@ -149,7 +149,7 @@ async function createOnlineOrder(db,b) {
   const lines=[];
   for(const line of b.lines){
     if(!line||!text(line.id,80)||!Number.isInteger(line.qty)||line.qty<1||line.qty>30||!(line.portion===undefined||['full','half'].includes(line.portion)))throw new Error('An order item is invalid.');
-    const item=await db.prepare('SELECT id,name,price,half_price AS halfPrice,available,sold_out AS soldOut,variants_json AS variantsJson FROM menu_items WHERE id=?').bind(line.id).first();
+    const item=await db.prepare('SELECT m.id,m.category_id AS categoryId,c.name AS categoryName,m.name,m.price,m.half_price AS halfPrice,m.available,m.sold_out AS soldOut,m.variants_json AS variantsJson FROM menu_items m LEFT JOIN menu_categories c ON c.id=m.category_id WHERE m.id=?').bind(line.id).first();
     if(!item||!item.available||item.soldOut)throw new Error('A selected item is unavailable. Refresh the menu and review your cart.');
     const variants=JSON.parse(item.variantsJson||'[]');
     let price=line.portion==='half'?item.halfPrice:item.price,variantName='';
@@ -160,7 +160,7 @@ async function createOnlineOrder(db,b) {
       price=v.price;variantName=v.name;
     }else if(line.variantId)throw new Error('A selected price option is invalid.');
     if(!Number.isSafeInteger(price)||price<1)throw new Error('The selected item price is invalid.');
-    lines.push({id:item.id,name:item.name,price,qty:line.qty,portion:variants.length?'full':(line.portion==='half'?'half':'full'),variantId:line.variantId||null,variantName,priceOverridden:false});
+    lines.push({id:item.id,name:item.name,categoryId:item.categoryId||null,categoryName:item.categoryName||'Uncategorized',price,qty:line.qty,portion:variants.length?'full':(line.portion==='half'?'half':'full'),variantId:line.variantId||null,variantName,priceOverridden:false});
   }
   const settingsRow=await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if(!settingsRow)throw new Error('The shared menu is not initialized.');
@@ -259,7 +259,7 @@ async function createOrder(db,b,deviceId) {
   if (existing) return rowOrder(existing);
   const menuRows = [];
   for (const line of b.lines) {
-    const item = await db.prepare('SELECT id,name,price,half_price AS halfPrice,available,sold_out AS soldOut,variants_json AS variantsJson FROM menu_items WHERE id=?').bind(line.id).first();
+    const item = await db.prepare('SELECT m.id,m.category_id AS categoryId,c.name AS categoryName,m.name,m.price,m.half_price AS halfPrice,m.available,m.sold_out AS soldOut,m.variants_json AS variantsJson FROM menu_items m LEFT JOIN menu_categories c ON c.id=m.category_id WHERE m.id=?').bind(line.id).first();
     if (!item || !item.available) throw new Error('A selected menu item is not available today. Refresh the menu and review the cart.');
     if (item.soldOut) throw new Error('A selected menu item is sold out. Refresh the menu and review the cart.');
     const portion = line.portion === 'half' ? 'half' : 'full';
@@ -291,6 +291,8 @@ async function createOrder(db,b,deviceId) {
     menuRows.push({
       id: item.id,
       name: item.name,
+      categoryId: item.categoryId || null,
+      categoryName: item.categoryName || 'Uncategorized',
       price: salePrice,
       priceOverridden: line.priceOverridden === true,
       lineTotal: line.lineTotalOverridden === true ? line.lineTotal : salePrice * line.qty,
