@@ -149,14 +149,21 @@ async function createOnlineOrder(db,b) {
   try{await db.batch(statements);}catch(error){const duplicate=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();if(duplicate)return rowOrder(duplicate);throw error;}
   return order;
 }
-async function markOnlineOrderPaid(db,id){
+async function markOnlineOrderPaid(db,id,payment){
   const row=await db.prepare('SELECT payload_json,status,source FROM orders WHERE id=?').bind(id).first();
   if(!row)throw new Error('Order not found.');
   if(row.source!=='online')throw new Error('Only online orders can be marked paid here.');
   if(row.status==='paid')return rowOrder(row);
   if(row.status!=='unpaid')throw new Error('This order cannot be marked paid.');
-  const order=JSON.parse(row.payload_json);order.status='paid';order.paidAt=Date.now();
-  await db.prepare("UPDATE orders SET status='paid',payload_json=? WHERE id=? AND status='unpaid'").bind(JSON.stringify(order),id).run();
+  const method=payment&&payment.method==='ewallet'?'ewallet':'cash';
+  const ref=method==='ewallet'&&typeof payment.ref==='string'?payment.ref.trim():'';
+  const proof=method==='ewallet'&&typeof payment.paymentProof==='string'?payment.paymentProof:'';
+  if(ref.length>40)throw new Error('Payment reference must be 40 characters or fewer.');
+  if(proof&&(!/^data:image\\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(proof)||proof.length>650000))throw new Error('E-wallet receipt image is invalid or too large.');
+  const order=JSON.parse(row.payload_json);
+  order.status='paid';order.paidAt=Date.now();order.method=method;order.ref=ref;order.tendered=order.totals.total;order.change=0;order.hasPaymentProof=!!proof;
+  await db.prepare("UPDATE orders SET status='paid',payment_method=?,payment_reference=?,tendered=?,change_amount=0,payment_proof=?,payload_json=? WHERE id=? AND status='unpaid'")
+    .bind(method,ref,order.tendered,proof||null,JSON.stringify(order),id).run();
   return order;
 }
 
@@ -335,7 +342,7 @@ export default {
    const proof=u.pathname.match(/^\/api\/orders\/([^/]+)\/payment-proof$/);
    if(proof&&request.method==='GET'){const row=await db.prepare('SELECT payment_proof FROM orders WHERE id=?').bind(decodeURIComponent(proof[1])).first();if(!row)return json({error:'Order not found.'},404,h);if(!row.payment_proof)return json({error:'No payment proof is attached to this order.'},404,h);return json({dataUrl:row.payment_proof},200,h);}
    const paid=u.pathname.match(/^\/api\/orders\/([^/]+)\/mark-paid$/);
-   if(paid&&request.method==='POST'){const order=await markOnlineOrderPaid(db,decodeURIComponent(paid[1]));return json({order},200,h);}
+   if(paid&&request.method==='POST'){const payment=await request.json();const order=await markOnlineOrderPaid(db,decodeURIComponent(paid[1]),payment);return json({order},200,h);}
    const v=u.pathname.match(/^\/api\/orders\/([^/]+)\/void$/);
    if(v&&request.method==='POST'){const oid=decodeURIComponent(v[1]);const r=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(oid).first();if(!r)return json({error:'Order not found.'},404,h);if(r.status==='void')return json({order:rowOrder(r)},200,h);const o=rowOrder(r);o.status='void';o.voidedAt=Date.now();await db.prepare("UPDATE orders SET status='void',voided_at=?,payload_json=? WHERE id=?").bind(new Date(o.voidedAt).toISOString(),JSON.stringify(o),oid).run();return json({order:o},200,h);}
    return json({error:'Not found.'},404,h);
