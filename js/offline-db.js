@@ -119,6 +119,48 @@
         return objectStore.clear();
       });
     },
+    savePendingTransaction: function (transactionRecord) {
+      if (!transactionRecord || typeof transactionRecord.id !== "string" || !transactionRecord.id) {
+        return Promise.reject(new Error("A transaction must have a stable ID before it can be queued."));
+      }
+      var record = Object.assign({}, transactionRecord, {
+        syncStatus: "pending",
+        queuedAt: transactionRecord.queuedAt || new Date().toISOString(),
+        attempts: Number(transactionRecord.attempts) || 0
+      });
+      return run(STORES.transactions, "readwrite", function (objectStore) {
+        return objectStore.put(record);
+      });
+    },
+    getPendingTransactions: function () {
+      return run(STORES.transactions, "readonly", function (objectStore) {
+        return objectStore.index("syncStatus").getAll("pending");
+      });
+    },
+    updateTransaction: function (id, changes) {
+      if (typeof id !== "string" || !id) return Promise.reject(new Error("A transaction ID is required."));
+      return open().then(function (db) {
+        return new Promise(function (resolve, reject) {
+          var tx = db.transaction(STORES.transactions, "readwrite");
+          var objectStore = tx.objectStore(STORES.transactions);
+          var request = objectStore.get(id);
+          var updated;
+          request.onsuccess = function () {
+            if (!request.result) {
+              tx.abort();
+              reject(new Error("The queued transaction could not be found."));
+              return;
+            }
+            updated = Object.assign({}, request.result, changes || {}, { id: id });
+            objectStore.put(updated);
+          };
+          tx.oncomplete = function () { resolve(updated); };
+          tx.onerror = tx.onabort = function () {
+            reject(tx.error || request.error || new Error("Could not update the queued transaction."));
+          };
+        });
+      });
+    },
     stores: Object.freeze({
       menu: STORES.menu,
       settings: STORES.settings,
