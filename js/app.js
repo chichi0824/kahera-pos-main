@@ -80,14 +80,14 @@
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
     var message = incoming.length===1 ? 'New online order '+incoming[0].no+' received' : incoming.length+' new online orders received';
-    toast(message);
-    playOrderAlert();
     var stamp = incoming.map(function(o){return o.id;}).join(',');
     try {
       var key='kahera-online-order-alert:'+stamp;
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key,'1');
     } catch(e) {}
+    toast(message);
+    playOrderAlert();
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('New Kahera online order', { body: message, tag: 'kahera-new-online-orders', renotify: true, icon: 'icons/kahera-icon.png' });
