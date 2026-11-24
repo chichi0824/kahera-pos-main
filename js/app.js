@@ -874,6 +874,43 @@
       n.focus(); setView(n.getAttribute('data-view'));
     });
 
+    var orderShareUrl = new URL('order.html', window.location.href).href;
+    $('openOrderShare').addEventListener('click', function () {
+      $('orderShareUrl').value = orderShareUrl;
+      $('orderShareQr').src = 'https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=12&data=' + encodeURIComponent(orderShareUrl);
+      $('orderShareFeedback').textContent = '';
+      if ($('orderShareDlg').showModal) $('orderShareDlg').showModal();
+      else $('orderShareDlg').setAttribute('open', '');
+    });
+    $('closeOrderShare').addEventListener('click', function () {
+      if ($('orderShareDlg').close) $('orderShareDlg').close();
+      else $('orderShareDlg').removeAttribute('open');
+    });
+    $('copyOrderShare').addEventListener('click', function () {
+      var field = $('orderShareUrl');
+      var copied = function () { $('orderShareFeedback').textContent = 'Link copied. You can now paste it into Messenger or any chat.'; };
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(orderShareUrl).then(copied).catch(function () {
+          field.focus(); field.select();
+          try { document.execCommand('copy'); copied(); } catch (e) { $('orderShareFeedback').textContent = 'Select and copy the link above.'; }
+        });
+      } else {
+        field.focus(); field.select();
+        try { document.execCommand('copy'); copied(); } catch (e) { $('orderShareFeedback').textContent = 'Select and copy the link above.'; }
+      }
+    });
+    $('shareOrderLink').addEventListener('click', function () {
+      if (navigator.share) {
+        navigator.share({ title: 'Order from our menu', text: 'You can place your order here:', url: orderShareUrl }).then(function () {
+          $('orderShareFeedback').textContent = 'Share sheet opened.';
+        }).catch(function (error) {
+          if (error && error.name !== 'AbortError') $('orderShareFeedback').textContent = 'Sharing was unavailable. Copy the link and paste it into Messenger.';
+        });
+      } else {
+        $('orderShareFeedback').textContent = 'Copy the link above, then paste it into Messenger.';
+      }
+    });
+
     $('cats').addEventListener('click', function (e) {
       var b = e.target.closest('[data-cat]');
       if (!b) return;
