@@ -145,7 +145,7 @@ async function createOnlineOrder(db,b) {
   const order={id:b.id,no,ts,type:'take',table:'',lines,totals,method:'cash',tendered:0,change:0,ref:'',status:'unpaid',shiftId:shift?shift.id:null,source:'online',customerName:b.customerName.trim(),customerPhone:b.customerPhone.trim(),fulfillmentType:b.fulfillmentType,deliveryAddress:address,deliveryContactRequested:contactRequested,hasPaymentProof:false};
   const statements=[db.prepare("INSERT INTO orders(id,order_no,shift_id,device_id,created_at,order_type,table_no,payment_method,payment_reference,tendered,change_amount,status,totals_json,payload_json,source,customer_name,customer_phone,fulfillment_type,delivery_address,delivery_contact_requested) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
     .bind(order.id,order.no,order.shiftId,'online',new Date(ts).toISOString(),'take','', 'cash','',0,0,'unpaid',JSON.stringify(totals),JSON.stringify(order),'online',order.customerName,order.customerPhone,order.fulfillmentType,order.deliveryAddress,contactRequested?1:0)];
-  lines.forEach(line=>statements.push(db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)').bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty,line.portion)));
+  lines.forEach(line=>statements.push(db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)').bind(order.id,line.id,line.name,line.price,line.qty,line.lineTotalOverridden === true ? line.lineTotal : line.price*line.qty,line.portion)));
   try{await db.batch(statements);}catch(error){const duplicate=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();if(duplicate)return rowOrder(duplicate);throw error;}
   return order;
 }
@@ -177,7 +177,7 @@ async function reportData(db,from,to) {
 }
 function calculateTotals(lines, settings, kind, diners, holders) {
   const vatReg = settings.vatRegistered !== false;
-  const gross = lines.reduce((sum, line) => sum + line.price * line.qty, 0);
+  const gross = lines.reduce((sum, line) => sum + (line.lineTotalOverridden === true ? line.lineTotal : line.price * line.qty), 0);
   diners = Math.max(1, Math.min(99, Number.parseInt(diners, 10) || 1));
   holders = Math.max(0, Math.min(diners, Number.parseInt(holders, 10) || 0));
   kind = kind === 'senior' || kind === 'pwd' ? kind : 'none';
@@ -210,7 +210,7 @@ function validateOrder(b) {
   if (!b || !text(b.id, 80) || !['dine', 'take'].includes(b.type) ||
       !Array.isArray(b.lines) || !b.lines.length || b.lines.length > 50) throw new Error('Order details are incomplete.');
   for (const line of b.lines) {
-    if (!line || !text(line.id, 80) || !['full','half'].includes(line.portion || 'full') || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99) throw new Error('An order item is invalid.');
+    if (!line || !text(line.id, 80) || !['full','half'].includes(line.portion || 'full') || !Number.isInteger(line.qty) || line.qty < 1 || line.qty > 99 || (line.lineTotalOverridden === true && (!Number.isSafeInteger(line.lineTotal) || line.lineTotal < 1 || line.lineTotal > 10000000000))) throw new Error('An order item is invalid.');
   }
   if (!b.totals || !['none', 'senior', 'pwd'].includes(b.totals.discountKind) ||
       !Number.isInteger(b.totals.diners) || b.totals.diners < 1 || b.totals.diners > 99 || !Number.isInteger(b.totals.idHolders) || b.totals.idHolders < 0 || b.totals.idHolders > b.totals.diners) throw new Error('Discount details are invalid.');
@@ -259,6 +259,8 @@ async function createOrder(db,b,deviceId) {
       name: item.name,
       price: salePrice,
       priceOverridden: line.priceOverridden === true,
+      lineTotal: line.lineTotalOverridden === true ? line.lineTotal : salePrice * line.qty,
+      lineTotalOverridden: line.lineTotalOverridden === true,
       qty: line.qty,
       portion,
       variantId: line.variantId || null,
@@ -288,7 +290,7 @@ async function createOrder(db,b,deviceId) {
   ];
   order.lines.forEach(line=>statements.push(
     db.prepare('INSERT INTO order_items(order_id,menu_item_id,item_name,unit_price,quantity,line_total,portion) VALUES(?,?,?,?,?,?,?)')
-      .bind(order.id,line.id,line.name,line.price,line.qty,line.price*line.qty,line.portion||'full')
+      .bind(order.id,line.id,line.name,line.price,line.qty,line.lineTotalOverridden === true ? line.lineTotal : line.price*line.qty,line.portion||'full')
   ));
   try { await db.batch(statements); }
   catch(error) {
