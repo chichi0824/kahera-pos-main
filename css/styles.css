@@ -3408,3 +3408,14 @@ tr.is-unpaid { background: var(--gold-soft); }
 @media (prefers-reduced-motion: reduce) {
   .floating-order-alert { animation: none; }
 }
+
+
+.floating-order-alert.is-acknowledged {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--ink);
+}
+.floating-order-alert.is-acknowledged .floating-order-count {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
