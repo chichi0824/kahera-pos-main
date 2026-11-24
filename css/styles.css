@@ -3125,3 +3125,60 @@ tr.is-unpaid { background: var(--gold-soft); }
   flex: 1 1 auto;
   width: 1%;
 }
+
+
+/* Final cart layout: item/portion, quantity, editable line total. */
+.lines .line {
+  grid-template-columns: minmax(0, 1fr) 76px minmax(92px, 104px);
+  align-items: center;
+  column-gap: 9px;
+}
+.lines .line .line-price {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  min-width: 0;
+  margin: 0;
+}
+.lines .line .line-price .unit-currency {
+  flex: 0 0 auto;
+  color: var(--muted);
+  font-size: .76rem;
+}
+.lines .line .line-price input {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 4px;
+  text-align: right;
+  font: 700 .8rem var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  background: var(--surface-2);
+  border: 1px solid var(--line);
+  border-radius: 7px;
+}
+.lines .line .line-price input:focus {
+  border-color: var(--accent);
+  outline: 2px solid color-mix(in srgb, var(--accent) 22%, transparent);
+}
+@media (max-width: 560px) {
+  .lines .line {
+    grid-template-columns: minmax(0, 1fr) 68px minmax(84px, 92px);
+    column-gap: 5px;
+    row-gap: 5px;
+  }
+  .lines .line .stepper {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .lines .line .line-price {
+    grid-column: 3;
+    grid-row: 1;
+  }
+  .lines .line .line-price input {
+    font-size: .7rem;
+    padding: 5px 2px;
+  }
+}
