@@ -114,6 +114,9 @@
       categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
       $('store-name').textContent=data.settings&&data.settings.bizName||"Victoria's";
       $('store-note').textContent=data.settings&&data.settings.bizNote||'Freshly prepared favorites';
+      var storeIcon=data.settings&&data.settings.brandIcon||'icons/kahera-icon.png';
+      $('order-brand-icon').src=storeIcon;
+      var orderFavicon=$('order-favicon');if(orderFavicon)orderFavicon.href=storeIcon;
       document.title='Order Online · '+$('store-name').textContent;
       renderCategories();renderMenu();
     });
