@@ -243,6 +243,8 @@
     S.nextNo = 'K-0001';
     S.shift = null;
     S.reportMode = 'day';
+    S.chartMetric = 'sales';
+    S.chartSelectedIndex = -1;
     S.reportDate = manilaToday();
     S.calendarMonth = S.reportDate.slice(0,7);
     S.customFrom = S.reportDate;
@@ -612,21 +614,27 @@
       ['Discounts',M.peso(s.discounts),'Senior / PWD'],
       ['VAT removed',M.peso(s.vatRemoved),'discounted sales']
     ].map(function(k){return'<div class="panel kpi"><span class="eyebrow">'+k[0]+'</span><b>'+k[1]+'</b><small>'+k[2]+'</small></div>';}).join('');
-    var bars='',labels='',chartValues=[],chartLabels=[],chartTitle='Sales by hour';
+    var bars='',labels='',salesValues=[],orderValues=[],chartValues=[],chartLabels=[],chartTitle='Sales by hour';
     if(S.reportMode==='day'){
-      var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12;
+      var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12,hourCounts={};
+      S.reportOrders.forEach(function(o){if(o.status==='void'||o.reportDate!==S.reportDate)return;var hour=Number(new Intl.DateTimeFormat('en-GB',{timeZone:'Asia/Manila',hour:'2-digit',hourCycle:'h23'}).format(new Date(o.ts)));hourCounts[hour]=(hourCounts[hour]||0)+1;});
       while(hi-lo<5){if(lo>0)lo--;if(hi-lo<5&&hi<23)hi++;}
-      for(var hour=lo;hour<=hi;hour++){chartValues.push(s.byHour[hour]||0);chartLabels.push((hour%12||12)+(hour<12?'a':'p'));}
+      for(var hour=lo;hour<=hi;hour++){salesValues.push(s.byHour[hour]||0);orderValues.push(hourCounts[hour]||0);chartLabels.push((hour%12||12)+(hour<12?'a':'p'));}
     }else{
-      var span=Math.round((new Date(range.to+'T00:00:00Z')-new Date(range.from+'T00:00:00Z'))/86400000),monthly=span>62,trend={};
-      S.reportOrders.forEach(function(o){if(o.status==='void')return;var key=monthly?o.reportDate.slice(0,7):o.reportDate;trend[key]=(trend[key]||0)+o.totals.total;});
-      if(monthly){var startMonth=range.from.slice(0,7),endMonth=range.to.slice(0,7),cur=startMonth;while(cur<=endMonth){chartLabels.push(new Date(cur+'-01T00:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'short'}));chartValues.push(trend[cur]||0);var p=cur.split('-').map(Number),next=new Date(Date.UTC(p[0],p[1],1));cur=next.toISOString().slice(0,7);}}
-      else{var curDate=range.from;while(curDate<=range.to){chartLabels.push(String(Number(curDate.slice(8))));chartValues.push(trend[curDate]||0);curDate=dateShift(curDate,1);}}
+      var span=Math.round((new Date(range.to+'T00:00:00Z')-new Date(range.from+'T00:00:00Z'))/86400000),monthly=span>62,trend={},trendCounts={};
+      S.reportOrders.forEach(function(o){if(o.status==='void')return;var key=monthly?o.reportDate.slice(0,7):o.reportDate;trend[key]=(trend[key]||0)+o.totals.total;trendCounts[key]=(trendCounts[key]||0)+1;});
+      if(monthly){var startMonth=range.from.slice(0,7),endMonth=range.to.slice(0,7),cur=startMonth;while(cur<=endMonth){var monthLabel=new Date(cur+'-01T00:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'short'});chartLabels.push(monthLabel);salesValues.push(trend[cur]||0);orderValues.push(trendCounts[cur]||0);var p=cur.split('-').map(Number),next=new Date(Date.UTC(p[0],p[1],1));cur=next.toISOString().slice(0,7);}}
+      else{var curDate=range.from;while(curDate<=range.to){chartLabels.push(String(Number(curDate.slice(8))));salesValues.push(trend[curDate]||0);orderValues.push(trendCounts[curDate]||0);curDate=dateShift(curDate,1);}}
       chartTitle=monthly?'Sales by month':'Sales by day';
     }
-    var max=chartValues.reduce(function(m,v){return Math.max(m,v);},0);
-    chartValues.forEach(function(v,i){var pct=max?Math.round(v/max*100):0,lab=chartLabels[i];bars+='<div class="bar'+(v?'':' zero')+'" style="height:'+Math.max(pct,1)+'%" title="'+lab+': '+M.peso(v)+'">'+(v?'<span>'+(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100))+'</span>':'')+'</div>';labels+='<span>'+lab+'</span>';});
+    var chartMetric=S.chartMetric==='orders'?'orders':'sales';chartValues=chartMetric==='orders'?orderValues:salesValues;
+    var max=chartValues.reduce(function(m,v){return Math.max(m,v);},0),peakIndex=chartValues.reduce(function(best,v,i){return best<0||v>chartValues[best]?i:best;},-1);
+    if(S.chartSelectedIndex==null||S.chartSelectedIndex<0||S.chartSelectedIndex>=chartValues.length)S.chartSelectedIndex=peakIndex;
+    chartValues.forEach(function(v,i){var pct=max?Math.round(v/max*100):0,lab=chartLabels[i],selected=i===S.chartSelectedIndex;bars+='<button type="button" class="bar'+(v?'':' zero')+(selected?' is-selected':'')+'" style="height:'+Math.max(pct,2)+'%" data-chart-index="'+i+'" aria-pressed="'+selected+'" aria-label="'+lab+', '+(chartMetric==='sales'?M.peso(v):v+' orders')+'">'+(v?'<span>'+(chartMetric==='sales'?(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100)):v)+'</span>':'')+'</button>';labels+='<span>'+lab+'</span>';});
+    var selectedValue=S.chartSelectedIndex>=0?chartValues[S.chartSelectedIndex]:0,selectedLabel=S.chartSelectedIndex>=0?chartLabels[S.chartSelectedIndex]:'—',peakLabel=peakIndex>=0?chartLabels[peakIndex]:'—',peakValue=peakIndex>=0?chartValues[peakIndex]:0;
     $('reportChartTitle').textContent=chartTitle;$('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
+    $('chartMetricSales').setAttribute('aria-pressed',String(chartMetric==='sales'));$('chartMetricOrders').setAttribute('aria-pressed',String(chartMetric==='orders'));
+    $('chartDetail').innerHTML='<div><span class="eyebrow">Selected '+(S.reportMode==='day'?'hour':'period')+'</span><strong>'+selectedLabel+'</strong><small>'+(chartMetric==='sales'?M.peso(selectedValue):selectedValue+' orders')+'</small></div><div><span class="eyebrow">Peak '+(S.reportMode==='day'?'hour':'period')+'</span><strong>'+peakLabel+'</strong><small>'+(chartMetric==='sales'?M.peso(peakValue):peakValue+' orders')+'</small></div>';
     $('split').innerHTML=['cash','ewallet','card'].map(function(m){var v=s.byMethod[m]||0,pct=s.net?Math.round(v/s.net*100):0;return'<div class="split-row"><span>'+METHOD_LABEL[m]+'</span><span class="split-track"><span class="split-fill" style="width:'+pct+'%;display:block"></span></span><b>'+M.peso(v)+' · '+pct+'%</b></div>';}).join('');
     var top=s.topCategories||[];
     $('topItems').innerHTML=top.length?'<thead><tr><th>Item / selected option</th><th class="num">Qty</th><th class="num">Sales</th></tr></thead>'+top.map(function(category){return'<tbody><tr class="top-category-heading"><th colspan="3">'+'<span class="top-category-name">'+esc(category.name)+'</span><small class="top-category-count">'+category.qty+' sold</small></th></tr>'+category.items.map(function(item){var options=item.options.map(function(option){return esc(option.name)+' × '+option.qty;}).join(' · ');return'<tr><td>'+esc(item.name)+'<br><small class="portion-breakdown">'+options+'</small></td><td class="num mono">'+item.qty+'</td><td class="num mono">'+M.peso(item.amount)+'</td></tr>';}).join('')+'</tbody>';}).join(''):'<tbody><tr><td class="empty">No item sales in this period.</td></tr></tbody>';
@@ -1101,6 +1109,9 @@
       }
     });
 
+    $('chartMetricSales').addEventListener('click',function(){S.chartMetric='sales';S.chartSelectedIndex=-1;renderShift();});
+    $('chartMetricOrders').addEventListener('click',function(){S.chartMetric='orders';S.chartSelectedIndex=-1;renderShift();});
+    $('bars').addEventListener('click',function(e){var bar=e.target.closest('[data-chart-index]');if(!bar)return;S.chartSelectedIndex=Number(bar.getAttribute('data-chart-index'));renderShift();});
     $('copyCsv').addEventListener('click',copyReportCsv);
     $('dlCsv').addEventListener('click',downloadCsv);
     $('reportPeriodModes').addEventListener('click',function(e){var b=e.target.closest('[data-report-mode]');if(!b)return;S.reportMode=b.getAttribute('data-report-mode');if(S.reportMode==='custom'){S.customFrom=S.reportDate;S.customTo=S.reportDate;}loadReportData();});
