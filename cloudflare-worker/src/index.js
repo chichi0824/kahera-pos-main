@@ -12,6 +12,31 @@ function bearer(r) { const h=r.headers.get('Authorization')||'';return h.startsW
 function uuid(){return crypto.randomUUID();}
 function pad(n){return String(n).padStart(4,'0');}
 function text(v,max){return typeof v==='string'&&v.trim().length>0&&v.length<=max;}
+async function storedOwnerPassword(db,password,env){
+  const row=await db.prepare('SELECT salt,password_hash AS passwordHash FROM admin_credentials WHERE id=1').first();
+  if(row){const actual=await hashOwnerPassword(password,row.salt);return eq(actual,row.passwordHash);}
+  return text(env.ADMIN_PASSWORD,200)&&eq(password,env.ADMIN_PASSWORD);
+}
+async function hashOwnerPassword(password,saltText){
+  const key=await crypto.subtle.importKey('raw',new TextEncoder().encode(password),'PBKDF2',false,['deriveBits']);
+  const bits=await crypto.subtle.deriveBits({name:'PBKDF2',salt:unb64(saltText),iterations:150000,hash:'SHA-256'},key,256);
+  return b64(new Uint8Array(bits));
+}
+async function setOwnerPassword(db,password){
+  const salt=b64(crypto.getRandomValues(new Uint8Array(16)));
+  const passwordHash=await hashOwnerPassword(password,salt);
+  await db.prepare('INSERT OR REPLACE INTO admin_credentials(id,salt,password_hash,updated_at) VALUES(1,?,?,CURRENT_TIMESTAMP)').bind(salt,passwordHash).run();
+}
+async function getAppSettings(db){
+  const row=await db.prepare('SELECT customer_ordering_enabled AS customerOrderingEnabled,updated_at AS updatedAt FROM app_settings WHERE id=1').first();
+  if(!row)throw new Error('Application settings are not initialized. Apply migration 0003_owner_settings.sql to D1.');
+  return {customerOrderingEnabled:!!row.customerOrderingEnabled,updatedAt:row.updatedAt||null};
+}
+async function saveAppSettings(db,body){
+  if(!body||typeof body.customerOrderingEnabled!=='boolean')throw new Error('Customer ordering status is invalid.');
+  await db.prepare('UPDATE app_settings SET customer_ordering_enabled=?,updated_at=CURRENT_TIMESTAMP WHERE id=1').bind(body.customerOrderingEnabled?1:0).run();
+  return getAppSettings(db);
+}
 async function menu(db) {
   const s=await db.prepare('SELECT settings_json FROM store_settings WHERE id=1').first();
   if(!s)throw new Error('Shared menu is not initialized. Run migration 0002_seed_shared_menu.sql against the remote D1 database.');
@@ -119,6 +144,8 @@ async function createOnlineOrder(db,b) {
   const address=details.address,contactRequested=details.contactRequested;
   const existing=await db.prepare('SELECT payload_json,status,voided_at FROM orders WHERE id=?').bind(b.id).first();
   if(existing)return rowOrder(existing);
+  const availability=await getAppSettings(db);
+  if(!availability.customerOrderingEnabled)throw new Error('Online ordering is temporarily closed. Please check back later.');
   const lines=[];
   for(const line of b.lines){
     if(!line||!text(line.id,80)||!Number.isInteger(line.qty)||line.qty<1||line.qty>30||!(line.portion===undefined||['full','half'].includes(line.portion)))throw new Error('An order item is invalid.');
@@ -316,9 +343,11 @@ export default {
   try {
    if(!db)return json({error:'Cloudflare D1 binding kahera_db is missing.'},500,h);
    if(u.pathname==='/api/auth/login'&&request.method==='POST'){
-     if(!text(env.ADMIN_PASSWORD,200))return json({error:'Owner login is not configured. Set ADMIN_PASSWORD in Worker secrets.'},503,h);
      const body=await request.json();
-     if(!body||!text(body.password,200)||!eq(body.password,env.ADMIN_PASSWORD))return json({error:'Incorrect password.'},401,h);
+     if(!body||!text(body.password,200))return json({error:'Enter your owner password.'},400,h);
+     const credential=await db.prepare('SELECT id FROM admin_credentials WHERE id=1').first();
+     if(!credential&&!text(env.ADMIN_PASSWORD,200))return json({error:'Owner login is not configured. Set ADMIN_PASSWORD in Worker secrets.'},503,h);
+     if(!await storedOwnerPassword(db,body.password,env))return json({error:'Incorrect password.'},401,h);
      return json({token:await makeToken(env.SESSION_SECRET)},200,h);
    }
    if(u.pathname==='/api/auth/session'&&request.method==='GET'){
@@ -326,13 +355,29 @@ export default {
    }
    // Public menu reads are needed by the future customer ordering page.
    // All operational and administrative API routes require the owner session.
-   if(!((u.pathname==='/api/menu'&&request.method==='GET')||(u.pathname==='/api/public/orders'&&request.method==='POST'))&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
+   if(!((u.pathname==='/api/menu'&&request.method==='GET')||(u.pathname==='/api/public/settings'&&request.method==='GET')||(u.pathname==='/api/public/orders'&&request.method==='POST'))&&!await isAdmin(bearer(request),env.SESSION_SECRET)){
      return json({error:'Owner login required.'},401,h);
    }
    // Report rollover is best-effort and must never block menu, register, or sales APIs.
    try { await runDailySchedule(db,new Date()); } catch (scheduleError) { /* sales remain available */ }
+   if(u.pathname==='/api/public/settings'&&request.method==='GET')return json(await getAppSettings(db),200,h);
    if(u.pathname==='/api/public/orders'&&request.method==='POST'){const b=await request.json();return json({order:await createOnlineOrder(db,b)},201,h);}
    if(u.pathname==='/api/menu'&&request.method==='GET')return json(await menu(db),200,h);
+   if(u.pathname==='/api/settings'&&request.method==='GET')return json(await getAppSettings(db),200,h);
+   if(u.pathname==='/api/settings'&&request.method==='PUT')return json(await saveAppSettings(db,await request.json()),200,h);
+   if(u.pathname==='/api/system/status'&&request.method==='GET'){
+     await db.prepare('SELECT 1 AS ok').first();
+     return json({cloud:'connected',database:'connected',checkedAt:new Date().toISOString()},200,h);
+   }
+   if(u.pathname==='/api/auth/change-password'&&request.method==='POST'){
+     const body=await request.json();
+     if(!body||!text(body.currentPassword,200))return json({error:'Enter your current password.'},400,h);
+     if(!text(body.newPassword,200)||body.newPassword.length<8)return json({error:'Your new password must be at least 8 characters.'},400,h);
+     if(body.newPassword!==body.confirmPassword)return json({error:'The new passwords do not match.'},400,h);
+     if(!await storedOwnerPassword(db,body.currentPassword,env))return json({error:'Your current password is incorrect.'},400,h);
+     await setOwnerPassword(db,body.newPassword);
+     return json({ok:true,message:'Owner password updated.'},200,h);
+   }
    if(u.pathname==='/api/menu'&&request.method==='PUT'){await saveMenu(db,await request.json());return json({ok:true,message:'Shared menu saved to Cloudflare D1.'},200,h);}
    if(u.pathname==='/api/shifts/current'&&request.method==='GET')return json({shift:await currentShift(db)},200,h);
    if(u.pathname==='/api/reports'&&request.method==='GET')return json(await reportData(db,u.searchParams.get('from')||'',u.searchParams.get('to')||''),200,h);
