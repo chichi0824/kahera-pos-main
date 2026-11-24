@@ -3321,3 +3321,15 @@ tr.is-unpaid { background: var(--gold-soft); }
 .tile.tile-choice .tile-option:nth-child(3):last-child {
   flex-basis: 100%;
 }
+
+
+/* Payment method selector for confirming incoming online orders. */
+.online-pay-dialog { display:grid; gap:14px; }
+.online-pay-dialog .report-calendar-head { align-items:flex-start; }
+.online-pay-dialog .report-calendar-head h3 { margin:0; }
+.online-pay-method { display:grid; gap:8px; margin:0; padding:0; border:0; }
+.online-pay-method legend { margin-bottom:7px; font-weight:800; }
+.online-pay-field { display:grid; gap:5px; margin:10px 0; font-size:.86rem; font-weight:700; }
+.online-pay-field input { width:100%; min-height:42px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); }
+.online-pay-dialog .dlg-actions { justify-content:flex-end; }
+.online-pay-dialog .dlg-actions .btn { min-height:42px; }
