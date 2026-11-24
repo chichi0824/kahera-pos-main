@@ -130,12 +130,29 @@
       button.setAttribute('aria-label', unpaid.length + ' unpaid online orders. ' + (orderAlertAcknowledged ? 'Alert acknowledged. Open orders.' : 'Acknowledge alert and open orders.'));
     }
   }
+  function unpaidOnlineOrderIds() {
+    return S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; })
+      .map(function(o){ return String(o.id); });
+  }
+  function readAcknowledgedOrderIds() {
+    try {
+      var saved = JSON.parse(localStorage.getItem(orderAlertAckStorageKey) || 'null');
+      return Array.isArray(saved) ? saved.map(String) : [];
+    } catch (e) { return []; }
+  }
+  function syncOrderAlertAcknowledgement() {
+    var unpaidIds = unpaidOnlineOrderIds();
+    var acknowledgedIds = readAcknowledgedOrderIds();
+    orderAlertAcknowledged = unpaidIds.length > 0 &&
+      unpaidIds.every(function(id){ return acknowledgedIds.indexOf(id) !== -1; });
+    return orderAlertAcknowledged;
+  }
   function acknowledgeOrderAlert() {
     orderAlertAcknowledged = true;
     if (orderReminderTimer) clearTimeout(orderReminderTimer);
     orderReminderTimer = null;
     orderReminderDueAt = null;
-    try { localStorage.setItem(orderAlertAckStorageKey, String(Date.now())); } catch (e) {}
+    try { localStorage.setItem(orderAlertAckStorageKey, JSON.stringify(unpaidOnlineOrderIds())); } catch (e) {}
     renderFloatingOrderAlert();
     var count = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; }).length;
     toast('Alert acknowledged · ' + count + ' online order' + (count === 1 ? '' : 's') + ' still awaiting payment');
@@ -214,11 +231,13 @@
     }
   }
   window.addEventListener('storage', function(event){
-    if (event.key === orderAlertAckStorageKey && event.newValue) {
-      orderAlertAcknowledged = true;
-      if (orderReminderTimer) clearTimeout(orderReminderTimer);
-      orderReminderTimer = null;
-      orderReminderDueAt = null;
+    if (event.key === orderAlertAckStorageKey) {
+      syncOrderAlertAcknowledgement();
+      if (orderAlertAcknowledged) {
+        if (orderReminderTimer) clearTimeout(orderReminderTimer);
+        orderReminderTimer = null;
+        orderReminderDueAt = null;
+      }
       renderFloatingOrderAlert();
     }
   });
@@ -1524,6 +1543,7 @@
       onlineOrdersInitialized = true;
       S.orders = results[0];
       S.nextNo = results[1];
+      syncOrderAlertAcknowledgement();
       lastSuccessfulSyncAt = Date.now();
       if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
       renderFloatingOrderAlert();
@@ -1532,6 +1552,7 @@
         orderReminderTimer = null;
         orderReminderDueAt = null;
         orderAlertAcknowledged = false;
+        try { localStorage.removeItem(orderAlertAckStorageKey); } catch (e) {}
       }
       if(incoming.length)announceIncomingOrders(incoming);
       renderBrand();
