@@ -3497,3 +3497,9 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
   .order-share-qr img { width: 148px; height: 148px; }
   .order-share-url-row { flex-direction: column; }
 }
+
+
+/* Category headers in the best-selling items report */
+#topItems .top-category-heading th { padding-top: 14px; background: var(--surface-2, var(--surface)); color: var(--ink); font-weight: 800; }
+#topItems .top-category-heading small { margin-left: 8px; color: var(--muted); font-size: .76rem; font-weight: 600; }
+#topItems .portion-breakdown { display: block; margin-top: 3px; color: var(--muted); font-size: .75rem; }
