@@ -659,7 +659,10 @@
   }
 
   // ---------- events ----------
+  var eventsBound = false;
   function bind() {
+    if (eventsBound) return;
+    eventsBound = true;
     root.querySelector('[data-open-view="data-guide"]').addEventListener('click', function () {
       setView('data-guide');
     });
