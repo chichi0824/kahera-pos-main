@@ -733,6 +733,50 @@
 
   // ---------- calendar-based reporting ----------
   var reportLoadSequence=0,lastReportRefresh=0;
+  function localPendingOrder(record) {
+    if (!record || !record.payload) return null;
+    var p = record.payload, ts = Date.parse(record.createdAt || record.queuedAt || '') || Date.now();
+    var date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ts));
+    return {
+      id: record.id,
+      no: 'PENDING SYNC',
+      ts: ts,
+      reportDate: date,
+      type: p.type,
+      table: p.table || '',
+      lines: clone(p.lines || []),
+      totals: clone(p.totals || {}),
+      method: p.method,
+      tendered: p.tendered,
+      change: (Number(p.tendered) || 0) - (Number(p.totals && p.totals.total) || 0),
+      ref: p.ref || '',
+      status: 'paid',
+      localPending: true,
+      syncStatus: record.syncStatus || 'pending',
+      hasPaymentProof: !!p.paymentProof
+    };
+  }
+  function getLocalPendingOrders() {
+    var offline = window.KaheraOfflineDB;
+    if (!offline) return Promise.resolve([]);
+    return offline.getAll('transactions').then(function (records) {
+      return records.filter(function (record) {
+        return record.syncStatus === 'pending' || record.syncStatus === 'needs-review';
+      }).map(localPendingOrder).filter(Boolean);
+    }).catch(function (error) {
+      console.warn('Could not restore local pending sales:', error);
+      return [];
+    });
+  }
+  function mergeOrdersById(primary, extra) {
+    var merged = (primary || []).slice(), seen = {};
+    merged.forEach(function (order) { seen[order.id] = true; });
+    (extra || []).forEach(function (order) {
+      if (!seen[order.id]) { merged.push(order); seen[order.id] = true; }
+    });
+    return merged;
+  }
+
   function loadReportData(){
     lastReportRefresh=Date.now();
     var sequence=++reportLoadSequence,period=reportRange(),month=monthBounds(S.calendarMonth);
@@ -743,9 +787,12 @@
     byId('reportFrom').value=S.customFrom;byId('reportTo').value=S.customTo;
     $('reportPeriodModes').querySelectorAll('[data-report-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-report-mode')===S.reportMode));});
     $('reportLoading').hidden=false;
-    return cloud.getReports(from,to).then(function(data){
+    return Promise.all([cloud.getReports(from,to), getLocalPendingOrders()]).then(function(results){
       if(sequence!==reportLoadSequence)return;
-      S.reportDays=data.days||[];S.calendarOrders=data.orders||[];S.reportOrders=S.calendarOrders.slice();
+      var data=results[0],localOrders=results[1].filter(function(o){return o.reportDate>=from&&o.reportDate<=to;});
+      S.reportDays=data.days||[];
+      S.calendarOrders=mergeOrdersById(data.orders||[],localOrders);
+      S.reportOrders=S.calendarOrders.slice();
       var current=reportRange();S.reportOrders=S.reportOrders.filter(function(o){return o.reportDate>=current.from&&o.reportDate<=current.to;});
       $('reportLoading').hidden=true;renderShift();
     }).catch(function(error){if(sequence!==reportLoadSequence)return;$('reportLoading').hidden=true;toast('Could not load reports: '+error.message);});
@@ -1671,11 +1718,16 @@
       S.shift = shift || null;
       return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
-      var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
-      var incoming=onlineOrdersInitialized ? results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;}) : [];
-      onlineOrdersInitialized = true;
-      S.orders = results[0];
-      S.nextNo = results[1];
+      return getLocalPendingOrders().then(function (localOrders) {
+        var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
+        var incoming=onlineOrdersInitialized ? results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;}) : [];
+        onlineOrdersInitialized = true;
+        S.orders = mergeOrdersById(results[0], localOrders);
+        S.nextNo = results[1];
+        return { incoming: incoming };
+      });
+    }).then(function (meta) {
+      var incoming=meta.incoming;
       syncOrderAlertAcknowledgement();
       lastSuccessfulSyncAt = Date.now();
       if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
