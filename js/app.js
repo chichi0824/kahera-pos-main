@@ -269,6 +269,30 @@
   // ---------- state ----------
   var S = {};
   var sharedMenuReady = false;
+  function cacheSharedSnapshot(shared) {
+    var offline = window.KaheraOfflineDB;
+    if (!offline || !shared) return Promise.resolve(false);
+    var cachedAt = new Date().toISOString();
+    return Promise.all([
+      offline.put('menu', {
+        id: 'current',
+        categories: clone(shared.categories || []),
+        items: clone(shared.menu || []),
+        cachedAt: cachedAt
+      }),
+      offline.put('settings', {
+        id: 'current',
+        values: clone(shared.settings || {}),
+        cachedAt: cachedAt
+      })
+    ]).then(function () {
+      store.set('offlineSnapshotAt', cachedAt);
+      return true;
+    }).catch(function (error) {
+      console.warn('Could not save the offline menu snapshot:', error);
+      return false;
+    });
+  }
   function blankCart() {
     return { type: 'dine', table: '', lines: [] };
   }
@@ -1603,7 +1627,7 @@
       error.textContent='';button.disabled=true;button.textContent='Signing in…';
       cloud.login(password).then(function(){
         return cloud.getMenu().then(function(remote){
-          var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;
+          var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;cacheSharedSnapshot(shared);
           panel.hidden=true;root.hidden=false;startApp();
         });
       }).catch(function(err){cloud.logout();error.textContent=err.message||'Unable to sign in.';}).finally(function(){button.disabled=false;button.textContent='Sign in';});
@@ -1612,7 +1636,7 @@
   cloud.checkSession().then(function(authenticated){
     if(!authenticated){showOwnerLogin();return;}
     cloud.getMenu().then(function(remote){
-      var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;root.hidden=false;startApp();
+      var shared=normalizeSharedMenu(remote);SAMPLE.settings=shared.settings;SAMPLE.categories=shared.categories;SAMPLE.menu=shared.menu;sharedMenuReady=true;cacheSharedSnapshot(shared);root.hidden=false;startApp();
     }).catch(function(err){
       if (/Owner login required/i.test(err && err.message || '')) {
         cloud.logout();
