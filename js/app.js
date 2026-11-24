@@ -597,7 +597,7 @@
     if (S.method === 'cash') {
       tendered = M.toCentavos(byId('k-tendered').value);
       if (isNaN(tendered)) { err.textContent = 'Enter the cash received, for example 500 or 1,000.00.'; byId('k-tendered').focus(); return; }
-      if (tendered < t.total) { err.textContent = 'Cash received is ' + M.peso(t.total - t.total).replace('₱','') + ' short of the total.'; byId('k-tendered').focus(); return; }
+      if (tendered < t.total) { err.textContent = 'Cash received is ' + M.peso(t.total - tendered) + ' short of the total.'; byId('k-tendered').focus(); return; }
     } else {
       ref = byId('k-ref').value.trim();
       if (S.method === 'ewallet' ? (ref.length < 4 && !paymentProofData) : ref.length < 4) { err.textContent = S.method === 'ewallet' ? 'Enter a reference number or attach a payment confirmation photo.' : 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
@@ -1655,6 +1655,8 @@
     setView(S.view);
     tick(); setInterval(tick, 30000);
     refreshSharedData().catch(function (error) { toast('Cloud sync unavailable: ' + error.message); });
+    syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } });
+    window.addEventListener('online', function () { syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } }); });
     if (refreshInterval) clearInterval(refreshInterval);
     refreshInterval = setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
   }
