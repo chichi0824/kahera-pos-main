@@ -787,7 +787,7 @@
     byId('reportFrom').value=S.customFrom;byId('reportTo').value=S.customTo;
     $('reportPeriodModes').querySelectorAll('[data-report-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-report-mode')===S.reportMode));});
     $('reportLoading').hidden=false;
-    return Promise.all([cloud.getReports(from,to), getLocalPendingOrders()]).then(function(results){
+    return Promise.all([cloud.getReports(from,to).catch(function(error){if(cloud.isNetworkError&&cloud.isNetworkError(error))return {days:[],orders:[],localOnly:true};throw error;}), getLocalPendingOrders()]).then(function(results){
       if(sequence!==reportLoadSequence)return;
       var data=results[0],localOrders=results[1].filter(function(o){return o.reportDate>=from&&o.reportDate<=to;});
       S.reportDays=data.days||[];
