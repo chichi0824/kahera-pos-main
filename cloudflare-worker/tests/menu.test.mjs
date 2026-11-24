@@ -215,7 +215,7 @@ test('rejects a tampered owner session token', async () => {
   const env = authEnv();
   const login = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
   const { token } = await login.json();
-  const tampered = token.slice(0, -1) + (token.endsWith('a') ? 'b' : 'a');
+  const tampered = (token[0] === 'a' ? 'b' : 'a') + token.slice(1);
   const response = await worker.fetch(authRequest('/api/auth/session', 'GET', undefined, tampered), env);
   assert.equal(response.status, 401);
 });
