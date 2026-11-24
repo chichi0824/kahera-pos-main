@@ -856,8 +856,10 @@
   function bind() {
     if (eventsBound) return;
     eventsBound = true;
-    root.querySelector('[data-open-view="data-guide"]').addEventListener('click', function () {
-      setView('data-guide');
+    root.querySelectorAll('[data-open-view]').forEach(function (button) {
+      button.addEventListener('click', function () {
+        setView(button.getAttribute('data-open-view'));
+      });
     });
     $('tabs').addEventListener('click', function (e) {
       var b = e.target.closest('[data-view]');
