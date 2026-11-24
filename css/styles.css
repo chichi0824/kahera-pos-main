@@ -3295,3 +3295,16 @@ tr.is-unpaid { background: var(--gold-soft); }
   color: var(--muted);
   font-size: .68rem;
 }
+
+
+/* Keep catalog choices in a predictable two-column layout. */
+.tile.tile-choice .tile-option {
+  flex: 1 1 calc(50% - 3px);
+  min-width: 0;
+}
+.tile.tile-choice .tile-option:only-child {
+  flex-basis: 100%;
+}
+.tile.tile-choice .tile-option:nth-child(3):last-child {
+  flex-basis: 100%;
+}
