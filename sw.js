@@ -1,33 +1,68 @@
-/* Kahera POS — sw.js
- * Offline support: cache the app shell on install, serve cache-first,
- * refresh the cache in the background. Bump CACHE when files change. */
-const CACHE = 'kahera-v2.9.22-menu-search-filters-sticky-add';
+/* Kahera POS — service worker
+ * Offline foundation: cache the app shell, serve navigations from the network
+ * when available, and use cached same-origin assets when the device is offline.
+ * Bump CACHE whenever the app shell or offline modules change. */
+const CACHE = 'kahera-v3.0.0-offline-foundation';
 const SHELL = [
-  './', 'index.html', 'order.html', 'css/styles.css', 'css/order.css', 'js/order.js', 'js/money.js', 'js/store.js',
-  'js/menu-sample.js', 'js/cloud.js', 'js/app.js', 'manifest.webmanifest', 'icons/kahera-icon.png'
+  './', 'index.html', 'order.html', 'css/styles.css', 'css/order.css',
+  'js/order.js', 'js/money.js', 'js/store.js', 'js/menu-sample.js',
+  'js/offline-db.js', 'js/cloud.js', 'js/app.js',
+  'manifest.webmanifest', 'icons/kahera-icon.png'
 ];
 
-self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE)
+      .then((cache) => cache.addAll(SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-self.addEventListener('activate', (e) => {
-  e.waitUntil(
+self.addEventListener('activate', (event) => {
+  event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(
+        keys.filter((key) => key.startsWith('kahera-') && key !== CACHE)
+          .map((key) => caches.delete(key))
+      ))
       .then(() => self.clients.claim())
   );
 });
 
-self.addEventListener('fetch', (e) => {
-  if (e.request.method !== 'GET') return;
-  e.respondWith(
-    fetch(e.request).then((res) => {
-      if (res && res.ok && new URL(e.request.url).origin === location.origin) {
-        const copy = res.clone();
-        caches.open(CACHE).then((c) => c.put(e.request, copy));
-      }
-      return res;
-    }).catch(() => caches.match(e.request))
+self.addEventListener('fetch', (event) => {
+  const request = event.request;
+  if (request.method !== 'GET') return;
+
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) return;
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      }).catch(async () => {
+        return (await caches.match(request)) ||
+          (await caches.match('./index.html')) ||
+          Response.error();
+      })
+    );
+    return;
+  }
+
+  event.respondWith(
+    caches.match(request).then((cached) => {
+      const networkUpdate = fetch(request).then((response) => {
+        if (response && response.ok) {
+          const copy = response.clone();
+          caches.open(CACHE).then((cache) => cache.put(request, copy));
+        }
+        return response;
+      });
+      return cached || networkUpdate;
+    })
   );
 });
