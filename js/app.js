@@ -50,14 +50,15 @@
     }
     orderAlertsEnabled = true;
     updateOrderAlertButton();
-    toast('Order alerts enabled on this device');
+    toast('Voice order alerts enabled on this device');
+    speakOrderAlert(0, false, true);
   }
   function updateOrderAlertButton() {
     var b = $('enableAlerts'); if (!b) return;
     var granted = 'Notification' in window && Notification.permission === 'granted';
     b.classList.toggle('alerts-on', orderAlertsEnabled || granted);
     b.textContent = (orderAlertsEnabled || granted) ? '🔔 Alerts on' : '🔔 Enable alerts';
-    b.title = granted ? 'Sound and browser notifications are available' : 'Enable sound and allow browser notifications when prompted';
+    b.title = granted ? 'Voice and browser notifications are available' : 'Enable voice and allow browser notifications when prompted';
   }
   function playOrderAlert() {
     if (!orderAlertsEnabled && !(('Notification' in window) && Notification.permission === 'granted')) return;
@@ -80,6 +81,27 @@
         });
       }
     } catch (e) {}
+  }
+  function speakOrderAlert(count, reminder, test) {
+    if (!orderAlertsEnabled && !(('Notification' in window) && Notification.permission === 'granted')) return;
+    if (!('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) {
+      playOrderAlert();
+      return;
+    }
+    try {
+      window.speechSynthesis.cancel();
+      var phrase = test ? 'Voice order alerts are enabled.' :
+        reminder ? (count === 1 ? 'Reminder. You have one online order waiting for attention.' : 'Reminder. You have ' + count + ' online orders waiting for attention.') :
+        (count === 1 ? 'You have one new order.' : 'You have ' + count + ' new orders.');
+      var utterance = new SpeechSynthesisUtterance(phrase);
+      utterance.lang = 'en-PH';
+      utterance.rate = 0.92;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+      window.speechSynthesis.speak(utterance);
+    } catch (e) {
+      playOrderAlert();
+    }
   }
   function renderFloatingOrderAlert() {
     var button = $('floatingOrderAlert');
@@ -110,12 +132,8 @@
       return;
     }
     var message = unpaid.length === 1 ? 'Reminder: online order ' + unpaid[0].no + ' is still awaiting attention' : 'Reminder: ' + unpaid.length + ' online orders are still awaiting attention';
-    orderAlertAcknowledged = false;
-    try { localStorage.removeItem(orderAlertAckStorageKey); } catch (e) {}
-    renderFloatingOrderAlert();
-    startOrderReminder();
     toast(message);
-    playOrderAlert();
+    speakOrderAlert(unpaid.length, true, false);
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('Kahera order reminder', { body: message, tag: 'kahera-online-order-reminder', renotify: true, icon: 'icons/kahera-icon.png' });
@@ -141,8 +159,12 @@
       if (localStorage.getItem(key)) return;
       localStorage.setItem(key,'1');
     } catch(e) {}
+    orderAlertAcknowledged = false;
+    try { localStorage.removeItem(orderAlertAckStorageKey); } catch (e) {}
+    renderFloatingOrderAlert();
+    startOrderReminder();
     toast(message);
-    playOrderAlert();
+    speakOrderAlert(incoming.length, false, false);
     if ('Notification' in window && Notification.permission === 'granted') {
       try {
         var notification = new Notification('New Kahera online order', { body: message, tag: 'kahera-new-online-orders', renotify: true, icon: 'icons/kahera-icon.png' });
