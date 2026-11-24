@@ -167,7 +167,7 @@
   function renderTile(m,bumpId){
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
     var hasOptions=hasPriceOptions(m),availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
-    var disabled=!!m.soldOut;
+    var disabled=m.soldOut===true||m.available===false;
     var actions='';
     if(hasOptions){
       actions=m.variants.map(function(v){
