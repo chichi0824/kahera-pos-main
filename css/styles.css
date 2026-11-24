@@ -3499,38 +3499,39 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
 }
 
 
-/* Category headers in the best-selling items report */
+/* Compact neutral category headers in the best-selling items report */
 table[data-k="topItems"] .top-category-heading th {
   display: table-cell;
-  padding: 15px 16px;
-  background: var(--accent);
-  color: #fff;
+  padding: 7px 12px;
+  background: #f1f2f3;
+  color: #25282b;
   text-align: left;
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: .08em;
+  font-size: .86rem;
+  font-weight: 800;
+  letter-spacing: .045em;
   text-transform: uppercase;
-  border-top: 3px solid color-mix(in srgb, var(--accent) 72%, #000);
-  border-bottom: 2px solid color-mix(in srgb, var(--accent) 72%, #000);
+  border-top: 1px solid #d9dcdf;
+  border-bottom: 1px solid #d9dcdf;
 }
 table[data-k="topItems"] .top-category-name {
   display: inline-block;
-  margin-right: 12px;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 900;
-  letter-spacing: .09em;
+  margin-right: 8px;
+  color: #25282b;
+  font-size: .86rem;
+  font-weight: 800;
+  letter-spacing: .045em;
 }
 table[data-k="topItems"] .top-category-count {
   display: inline-block;
   margin: 0;
-  padding: 5px 10px;
+  padding: 2px 7px;
+  border: 1px solid #d9dcdf;
   border-radius: 999px;
   background: #fff;
-  color: #40552e;
-  font-size: .76rem;
-  font-weight: 900;
-  letter-spacing: .04em;
+  color: #555b61;
+  font-size: .7rem;
+  font-weight: 700;
+  letter-spacing: .02em;
   white-space: nowrap;
   vertical-align: middle;
 }
