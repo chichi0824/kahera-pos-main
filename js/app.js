@@ -803,6 +803,25 @@
       byId('k-order').scrollIntoView({ behavior: 'smooth', block: 'start' });
     });
 
+    $('onlineOrders').addEventListener('click', function (e) {
+      var t = e.target.closest('[data-mark-paid]');
+      if (!t || t.disabled) return;
+      var onlineOrder = S.orders.filter(function (o) { return o.id === t.getAttribute('data-mark-paid'); })[0];
+      if (!onlineOrder || !window.confirm('Confirm that cash has been received for ' + onlineOrder.no + '?')) return;
+      t.disabled = true;
+      t.textContent = 'Saving…';
+      cloud.markOrderPaid(onlineOrder.id).then(function (updated) {
+        S.orders = S.orders.map(function (x) { return x.id === updated.id ? updated : x; });
+        renderOrders();
+        renderBrand();
+        toast(updated.no + ' marked paid');
+      }).catch(function (error) {
+        t.disabled = false;
+        t.textContent = 'Mark as Paid';
+        toast('Could not update payment: ' + error.message);
+      });
+    });
+
     $('ordersTable').addEventListener('click', function (e) {
       var t = e.target.closest('button');
       if (!t) return;
