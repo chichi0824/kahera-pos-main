@@ -518,12 +518,16 @@
           </div>
           <div class="menu-admin" style="margin-top: 12px">
             <div class="panel menu-list-panel">
-              <div
-                class="menu-admin-filters"
-                data-k="menuAdminFilters"
-                role="group"
-                aria-label="Filter menu by category"
-              ></div>
+              <div class="menu-admin-toolbar">
+                <label class="menu-admin-search" for="menu-admin-search">
+                  <span class="sr-only">Search menu items</span>
+                  <input id="menu-admin-search" type="search" data-k="menuAdminSearch" placeholder="Search items by name…" autocomplete="off" />
+                </label>
+                <div class="menu-admin-filter-groups">
+                  <div class="menu-admin-filters" data-k="menuAdminFilters" role="group" aria-label="Filter menu by category"></div>
+                  <div class="menu-admin-filters menu-availability-filters" data-k="menuAvailabilityFilters" role="group" aria-label="Filter menu by availability"></div>
+                </div>
+              </div>
               <div class="table-wrap">
                 <table class="data" data-k="menuTable"></table>
               </div>

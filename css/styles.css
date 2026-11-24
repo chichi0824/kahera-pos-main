@@ -3599,3 +3599,42 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 }
 
 .menu-duplicate-note{display:block;color:var(--danger,#b42318);font-size:.75rem;font-weight:650;margin-top:4px}.menu-item-fields input[aria-invalid="true"]{border-color:var(--danger,#b42318)}
+
+/* Menu admin search, availability filters, and sticky add-item panel. */
+.menu-admin-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid var(--line);
+  display: grid;
+  gap: 10px;
+}
+.menu-admin-search input {
+  width: 100%;
+  min-width: 0;
+}
+.menu-admin-filter-groups {
+  display: grid;
+  gap: 8px;
+}
+.menu-admin-filter-groups .menu-admin-filters {
+  padding: 0;
+  border: 0;
+}
+.menu-admin-filters.menu-availability-filters {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.menu-admin > .form-grid {
+  position: sticky;
+  top: 12px;
+  align-self: start;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+@media (max-width: 960px) {
+  .menu-admin > .form-grid {
+    position: sticky;
+    top: 10px;
+    max-height: min(72vh, 680px);
+  }
+}

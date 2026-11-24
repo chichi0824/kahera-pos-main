@@ -313,7 +313,7 @@
     });
     syncCartPrices();
     S.view = store.get('view', 'register');
-    S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash'; S.menuAdminCat = 'all';
+    S.cat = 'all'; S.q = ''; S.paying = false; S.method = 'cash'; S.menuAdminCat = 'all'; S.menuAdminAvailability = 'all'; S.menuAdminQuery = '';
   }
   function saveCart() { store.set('cart', S.cart); }
   function syncCartPrices() {
@@ -803,13 +803,28 @@
       return m.id !== excludeId && String(m.name || '').trim().toLocaleLowerCase() === normalized;
     })[0] || null;
   }
+  function menuItemIsAvailable(item) {
+    if (item.available === false || item.soldOut) return false;
+    if (hasPriceOptions(item)) return (item.variants || []).some(function (variant) { return variant.available !== false && !variant.soldOut; });
+    return true;
+  }
   function renderMenuAdmin() {
+    var searchField = byId('menu-admin-search');
+    if (searchField && searchField.value !== (S.menuAdminQuery || '')) searchField.value = S.menuAdminQuery || '';
     var catOpts = function (sel) { return S.categories.map(function (c) { return '<option value="' + esc(c.id) + '"' + (c.id === sel ? ' selected' : '') + '>' + esc(categoryLabel(c)) + '</option>'; }).join(''); };
     var defaultCat = S.categories.filter(function (c) { return c.id === 'meals' || c.name.toLowerCase() === 'ulam'; })[0] || S.categories[0];
     $('newCat').innerHTML = catOpts(defaultCat.id);
     updateNewVariantControl();
     $('menuAdminFilters').innerHTML = '<button type="button" class="chip" data-admin-cat="all" aria-pressed="' + (S.menuAdminCat === 'all') + '">All</button>' + S.categories.map(function (c) { return '<button type="button" class="chip" data-admin-cat="' + esc(c.id) + '" aria-pressed="' + (S.menuAdminCat === c.id) + '">' + esc(categoryLabel(c)) + '</button>'; }).join('');
-    var visibleMenu = S.menu.filter(function (m) { return S.menuAdminCat === 'all' || m.cat === S.menuAdminCat; });
+    $('menuAvailabilityFilters').innerHTML = [{id:'all',label:'All status'},{id:'available',label:'Available'},{id:'unavailable',label:'Unavailable'}].map(function (filter) { return '<button type="button" class="chip" data-admin-availability="' + filter.id + '" aria-pressed="' + ((S.menuAdminAvailability || 'all') === filter.id) + '">' + filter.label + '</button>'; }).join('');
+    var query = String(S.menuAdminQuery || '').trim().toLocaleLowerCase();
+    var visibleMenu = S.menu.filter(function (m) {
+      var categoryMatch = S.menuAdminCat === 'all' || m.cat === S.menuAdminCat;
+      var searchMatch = !query || String(m.name || '').toLocaleLowerCase().indexOf(query) !== -1;
+      var available = menuItemIsAvailable(m);
+      var availabilityMatch = (S.menuAdminAvailability || 'all') === 'all' || ((S.menuAdminAvailability === 'available') === available);
+      return categoryMatch && searchMatch && availabilityMatch;
+    });
     var h = '<colgroup><col class="menu-col-item"><col class="menu-col-category hide-sm"><col class="menu-col-pricing"><col class="menu-col-status"><col class="menu-col-delete"></colgroup><thead><tr><th>Item</th><th class="hide-sm">Category</th><th>Pricing / Options</th><th>Status</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     var adminCategories = orderedCategories().filter(function (c) { return S.menuAdminCat === 'all' || c.id === S.menuAdminCat; });
     adminCategories.forEach(function (cat) {
@@ -1240,6 +1255,13 @@
     $('menuAdminFilters').addEventListener('click', function (e) {
       var b = e.target.closest('[data-admin-cat]'); if (!b) return;
       S.menuAdminCat = b.getAttribute('data-admin-cat'); renderMenuAdmin();
+    });
+    $('menuAvailabilityFilters').addEventListener('click', function (e) {
+      var b = e.target.closest('[data-admin-availability]'); if (!b) return;
+      S.menuAdminAvailability = b.getAttribute('data-admin-availability'); renderMenuAdmin();
+    });
+    $('menuAdminSearch').addEventListener('input', function (e) {
+      S.menuAdminQuery = e.target.value; renderMenuAdmin();
     });
     $('menuTable').addEventListener('click', function (e) {
       var tr = e.target.closest('[data-item]');
