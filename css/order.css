@@ -70,3 +70,12 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
   line-height: 1;
   box-shadow: 0 2px 8px rgba(0,0,0,.18);
 }
+
+
+/* Customer ordering closed state */
+.ordering-closed { width:min(620px,calc(100% - 32px)); margin:clamp(42px,9vh,100px) auto; padding:clamp(26px,5vw,46px); border:1px solid var(--line); border-radius:22px; background:var(--surface); box-shadow:var(--shadow); text-align:center; }
+.ordering-closed[hidden] { display:none; }
+.ordering-closed .closed-mark { width:54px; height:54px; display:grid; place-items:center; margin:0 auto 18px; border-radius:16px; background:var(--gold-soft); color:var(--gold); font-size:1.8rem; font-weight:800; }
+.ordering-closed .eyebrow { color:var(--muted); font-size:.72rem; font-weight:800; letter-spacing:.12em; }
+.ordering-closed h1 { margin:8px 0; font-size:clamp(1.55rem,4vw,2.2rem); line-height:1.15; }
+.ordering-closed p:last-child { max-width:430px; margin:10px auto 0; color:var(--muted); }
