@@ -337,7 +337,7 @@
     h += '<div class="row"><span>' + esc(o.no) + '</span><span>' + new Date(o.ts).toLocaleString('en-PH', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) + '</span></div>';
     h += '<div class="row"><span>' + (o.type === 'dine' ? 'Dine-in' + (o.table ? ' · Table ' + esc(o.table) : '') : 'Take-out') + '</span><span>' + METHOD_LABEL[o.method] + '</span></div><hr>';
     o.lines.forEach(function (l) {
-      h += '<div class="row"><span>' + l.qty + ' × ' + (l.variantName ? esc(l.name) + ' · ' + esc(l.variantName) : (l.portion === 'half' ? 'Half ' : '') + esc(l.name)) + '</span><span>' + M.peso(l.price * l.qty, { symbol: false }) + '</span></div>';
+      h += '<div class="row"><span>' + l.qty + ' × ' + (l.variantName ? esc(l.name) + ' · ' + esc(l.variantName) : (l.portion === 'half' ? 'Half ' : '') + esc(l.name)) + '</span><span>' + M.peso(l.lineTotalOverridden === true ? l.lineTotal : l.price * l.qty, { symbol: false }) + '</span></div>';
     });
     h += '<hr><div class="row"><span>Subtotal</span><span>' + M.peso(t.gross, { symbol: false }) + '</span></div>';
     if (t.discountKind !== 'none') {
@@ -633,7 +633,7 @@
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
     var fullPrice=chosen?chosen.price:m.price,halfPrice=chosen?null:m.halfPrice,portion='full';
     var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.portion===portion&&x.price===fullPrice;})[0];
-    if(l)l.qty=Math.min(99,(Number(l.qty)||0)+1);else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
+    if(l){l.qty=Math.min(99,(Number(l.qty)||0)+1);l.lineTotal=null;l.lineTotalOverridden=false;}else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
     saveCart();renderCart();renderGrid(id);
   }
   var choosingItemId=null;
@@ -748,6 +748,8 @@
       if (line.qty > 1) {
         // Change exactly one serving; keep the remaining quantity unchanged.
         line.qty -= 1;
+        line.lineTotal = null;
+        line.lineTotalOverridden = false;
         var matchingLine = S.cart.lines.filter(function (candidate, index) {
           return index !== lineIndex &&
             candidate.id === line.id &&
