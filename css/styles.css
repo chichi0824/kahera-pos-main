@@ -3463,3 +3463,37 @@ tr.is-unpaid { background: var(--gold-soft); }
   .settings-health-list > div { align-items: flex-start; flex-direction: column; gap: 4px; }
   .settings-health-list strong { text-align: left; }
 }
+
+
+/* Customer ordering link sharing dialog */
+dialog.order-share-dlg {
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 0;
+  width: min(560px, calc(100vw - 28px));
+  max-width: 560px;
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 24px 80px rgba(0,0,0,.25);
+}
+dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
+.order-share-card { display: grid; gap: 18px; padding: 22px; }
+.order-share-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; }
+.order-share-head h2 { margin: 2px 0 6px; font-size: 1.3rem; }
+.order-share-head .hint { margin: 0; }
+.order-share-url-label { display: grid; gap: 7px; font-weight: 700; }
+.order-share-url-row { display: flex; gap: 8px; }
+.order-share-url-row input { min-width: 0; flex: 1; }
+.order-share-bottom { display: grid; grid-template-columns: 190px 1fr; gap: 20px; align-items: center; }
+.order-share-qr { display: grid; justify-items: center; gap: 8px; padding: 12px; border: 1px solid var(--line); border-radius: 14px; background: #fff; color: #263126; }
+.order-share-qr img { display: block; width: 160px; height: 160px; object-fit: contain; }
+.order-share-qr small { font-size: .75rem; text-align: center; }
+.order-share-actions { display: grid; gap: 9px; }
+.order-share-actions .hint { margin: 0; }
+.order-share-actions .btn { justify-self: start; }
+@media (max-width: 480px) {
+  .order-share-card { padding: 16px; }
+  .order-share-bottom { grid-template-columns: 1fr; }
+  .order-share-qr img { width: 148px; height: 148px; }
+  .order-share-url-row { flex-direction: column; }
+}
