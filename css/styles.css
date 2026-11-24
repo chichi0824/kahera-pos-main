@@ -3500,7 +3500,7 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
 
 
 /* Category headers in the best-selling items report */
-#topItems .top-category-heading th {
+table[data-k="topItems"] .top-category-heading th {
   display: table-cell;
   padding: 15px 16px;
   background: var(--accent);
@@ -3513,7 +3513,7 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
   border-top: 3px solid color-mix(in srgb, var(--accent) 72%, #000);
   border-bottom: 2px solid color-mix(in srgb, var(--accent) 72%, #000);
 }
-#topItems .top-category-name {
+table[data-k="topItems"] .top-category-name {
   display: inline-block;
   margin-right: 12px;
   color: #fff;
@@ -3521,7 +3521,7 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
   font-weight: 900;
   letter-spacing: .09em;
 }
-#topItems .top-category-count {
+table[data-k="topItems"] .top-category-count {
   display: inline-block;
   margin: 0;
   padding: 5px 10px;
@@ -3534,14 +3534,14 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
   white-space: nowrap;
   vertical-align: middle;
 }
-#topItems .portion-breakdown { display: block; margin-top: 4px; color: var(--muted); font-size: .78rem; }
+table[data-k="topItems"] .portion-breakdown { display: block; margin-top: 4px; color: var(--muted); font-size: .78rem; }
 
 /* Keep the report panels aligned while allowing the long best-selling list to scroll. */
 .shift-grid { align-items: stretch; }
 .shift-grid > .panel { min-height: 430px; }
 .shift-grid > .panel:last-child { height: 430px; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
 .shift-grid > .panel:last-child .table-wrap { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
-#topItems .portion-breakdown { line-height: 1.45; }
+table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 @media (max-width: 760px) {
   .shift-grid > .panel:last-child { height: 430px; }
 }
