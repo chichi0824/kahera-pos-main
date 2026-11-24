@@ -78,6 +78,8 @@
     S.cart = store.get('cart', null) || blankCart();
     if (!Array.isArray(S.cart.lines)) S.cart.lines = [];
     S.cart.lines.forEach(function (line) {
+      line.qty = Math.max(1, Math.min(99, Number(line.qty) || 1));
+      line.price = Math.max(0, Math.round(Number(line.price) || 0));
       line.portion = line.portion === 'half' ? 'half' : 'full';
       line.fullPrice = line.fullPrice || (line.portion === 'full' ? line.price : line.price * 2);
       line.halfPrice = line.halfPrice || null;
@@ -631,7 +633,7 @@
     var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
     var fullPrice=chosen?chosen.price:m.price,halfPrice=chosen?null:m.halfPrice,portion='full';
     var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.portion===portion&&x.price===fullPrice;})[0];
-    if(l)l.qty=Math.min(99,l.qty+1);else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
+    if(l)l.qty=Math.min(99,(Number(l.qty)||0)+1);else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
     saveCart();renderCart();renderGrid(id);
   }
   var choosingItemId=null;
@@ -653,7 +655,7 @@
   function stepLine(i, d) {
     var l = S.cart.lines[i];
     if (!l) return;
-    l.qty += d;
+    l.qty = (Number(l.qty) || 0) + Number(d);
     if (l.qty <= 0) S.cart.lines.splice(i, 1);
     saveCart(); renderCart(); renderGrid();
   }
