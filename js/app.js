@@ -205,11 +205,10 @@
           : '<span class="portion-label">Full</span>');
         return '<li class="line">' +
           '<span class="l-name"><span class="line-item-name">' + esc(l.name) + '</span>' + portionControl + '</span>' +
-          '<label class="line-price"><span class="sr-only">Line total</span><span class="unit-currency" aria-hidden="true">₱</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-total="' + i + '" aria-label="Editable line total for ' + esc(l.name) + '" value="' + ((Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty) / 100).toFixed(2) + '"></label>' +
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
-          '' +
+          '<label class="line-price"><span class="sr-only">Line total</span><span class="unit-currency" aria-hidden="true">₱</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-total="' + i + '" aria-label="Editable line total for ' + esc(l.name) + '" value="' + ((Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty) / 100).toFixed(2) + '"></label>' +
           '</li>';
       }).join('');
     }
