@@ -47,7 +47,7 @@
   var orderAlertAudio = null, orderAlertsEnabled = notificationSettings.voiceEnabled, onlineOrdersInitialized = false;
   var lastSuccessfulSyncAt = null;
   var originalDocumentTitle = document.title, titleAlertTimer = null;
-  var orderReminderTimer = null, orderAlertAcknowledged = false;
+  var orderReminderTimer = null, orderReminderDueAt = null, orderAlertAcknowledged = false;
   var orderAlertAckStorageKey = 'kahera-online-order-alert-acknowledged';
   function enableOrderAlerts() {
     try {
@@ -132,8 +132,9 @@
   }
   function acknowledgeOrderAlert() {
     orderAlertAcknowledged = true;
-    if (orderReminderTimer) clearInterval(orderReminderTimer);
+    if (orderReminderTimer) clearTimeout(orderReminderTimer);
     orderReminderTimer = null;
+    orderReminderDueAt = null;
     try { localStorage.setItem(orderAlertAckStorageKey, String(Date.now())); } catch (e) {}
     renderFloatingOrderAlert();
     var count = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; }).length;
@@ -143,8 +144,9 @@
     if (orderAlertAcknowledged) return;
     var unpaid = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; });
     if (!unpaid.length) {
-      if (orderReminderTimer) clearInterval(orderReminderTimer);
+      if (orderReminderTimer) clearTimeout(orderReminderTimer);
       orderReminderTimer = null;
+      orderReminderDueAt = null;
       return;
     }
     var message = unpaid.length === 1 ? 'Reminder: online order ' + unpaid[0].no + ' is still awaiting attention' : 'Reminder: ' + unpaid.length + ' online orders are still awaiting attention';
@@ -162,11 +164,27 @@
       titleAlertTimer = setInterval(function(){document.title=show?'🔔 Order needs attention · '+originalDocumentTitle:originalDocumentTitle;show=!show;},900);
     }
   }
-  function startOrderReminder() {
-    if (orderReminderTimer) clearInterval(orderReminderTimer);
+  function scheduleOrderReminder(delay) {
+    if (orderReminderTimer) clearTimeout(orderReminderTimer);
     orderReminderTimer = null;
-    if (!notificationSettings.reminderMinutes) return;
-    orderReminderTimer = setInterval(remindUnacknowledgedOrder, notificationSettings.reminderMinutes * 60000);
+    if (orderAlertAcknowledged || !notificationSettings.reminderMinutes) {
+      orderReminderDueAt = null;
+      return;
+    }
+    var wait = typeof delay === 'number' ? Math.max(0, delay) : notificationSettings.reminderMinutes * 60000;
+    orderReminderDueAt = Date.now() + wait;
+    orderReminderTimer = setTimeout(function () {
+      orderReminderTimer = null;
+      orderReminderDueAt = null;
+      remindUnacknowledgedOrder();
+      if (!orderAlertAcknowledged && notificationSettings.reminderMinutes &&
+          S.orders.some(function (o) { return o.source === 'online' && o.status === 'unpaid'; })) {
+        scheduleOrderReminder();
+      }
+    }, wait);
+  }
+  function startOrderReminder() {
+    scheduleOrderReminder();
   }
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
@@ -198,15 +216,27 @@
   window.addEventListener('storage', function(event){
     if (event.key === orderAlertAckStorageKey && event.newValue) {
       orderAlertAcknowledged = true;
-      if (orderReminderTimer) clearInterval(orderReminderTimer);
+      if (orderReminderTimer) clearTimeout(orderReminderTimer);
       orderReminderTimer = null;
+      orderReminderDueAt = null;
       renderFloatingOrderAlert();
     }
   });
-  document.addEventListener('visibilitychange',function(){
+  document.addEventListener('visibilitychange', function () {
     if (!document.hidden) {
       if (titleAlertTimer) clearInterval(titleAlertTimer);
-      titleAlertTimer=null;document.title=originalDocumentTitle;
+      titleAlertTimer = null;
+      document.title = originalDocumentTitle;
+      if (orderReminderDueAt && Date.now() >= orderReminderDueAt && !orderAlertAcknowledged) {
+        if (orderReminderTimer) clearTimeout(orderReminderTimer);
+        orderReminderTimer = null;
+        orderReminderDueAt = null;
+        remindUnacknowledgedOrder();
+        if (!orderAlertAcknowledged && notificationSettings.reminderMinutes &&
+            S.orders.some(function (o) { return o.source === 'online' && o.status === 'unpaid'; })) {
+          scheduleOrderReminder();
+        }
+      }
     }
   });
   function toast(msg) {
@@ -1336,7 +1366,7 @@
         Notification.requestPermission().then(function(){renderNotificationPermission();updateOrderAlertButton();});
       }
       if (notificationSettings.reminderMinutes && S.orders.some(function(o){return o.source==='online'&&o.status==='unpaid';}) && !orderAlertAcknowledged) startOrderReminder();
-      else if (orderReminderTimer && !notificationSettings.reminderMinutes) { clearInterval(orderReminderTimer); orderReminderTimer = null; }
+      else if (orderReminderTimer && !notificationSettings.reminderMinutes) { clearTimeout(orderReminderTimer); orderReminderTimer = null; orderReminderDueAt = null; }
       renderNotificationPermission();
       renderFloatingOrderAlert();
       updateOrderAlertButton();
@@ -1498,8 +1528,9 @@
       if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
       renderFloatingOrderAlert();
       if (!S.orders.some(function(o){ return o.source === 'online' && o.status === 'unpaid'; })) {
-        if (orderReminderTimer) clearInterval(orderReminderTimer);
+        if (orderReminderTimer) clearTimeout(orderReminderTimer);
         orderReminderTimer = null;
+        orderReminderDueAt = null;
         orderAlertAcknowledged = false;
       }
       if(incoming.length)announceIncomingOrders(incoming);
