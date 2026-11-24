@@ -60,7 +60,7 @@ export function validateMenu(b) {
     for(const v of variants){if(!v||!text(v.id,80)||variantIds.has(v.id)||!text(v.name,30)||variantNames.has(v.name.toLowerCase())||!Number.isSafeInteger(v.price)||v.price<1||v.price>100000000||!(v.available===undefined||typeof v.available==='boolean')||!(v.soldOut===undefined||typeof v.soldOut==='boolean'))throw new Error('A menu price option is invalid.');variantIds.add(v.id);variantNames.add(v.name.toLowerCase());}
     items.add(m.id);
   }
-  if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean'||!(b.settings.brandIcon===undefined||b.settings.brandIcon===''||(typeof b.settings.brandIcon==='string'&&b.settings.brandIcon.length<=120000&&/^data:image\\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(b.settings.brandIcon))))throw new Error('Store settings are invalid.');
+  if(typeof b.settings.bizName!=='string'||typeof b.settings.bizNote!=='string'||typeof b.settings.vatRegistered!=='boolean'||!(b.settings.brandIcon===undefined||b.settings.brandIcon===''||(typeof b.settings.brandIcon==='string'&&b.settings.brandIcon.length<=120000&&/^data:image\/jpeg;base64,[A-Za-z0-9+/]+=*$/.test(b.settings.brandIcon))))throw new Error('Store settings are invalid.');
 }
 export async function saveMenu(db,b) {
   validateMenu(b);
