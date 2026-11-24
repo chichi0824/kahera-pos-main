@@ -3437,11 +3437,12 @@ tr.is-unpaid { background: var(--gold-soft); }
 .settings-page-head .hint { margin-top: 4px; }
 .settings-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin-top: 14px; align-items: stretch; }
 .settings-card { height: 100%; align-content: start; }
-.settings-store-card { margin-bottom: 14px; }
-.settings-store-form { display: grid; gap: 12px; max-width: 680px; }
+.settings-store-card { margin-bottom: 14px; min-width: 0; }
+.settings-store-form > button[type="submit"] { width: 100%; }
+.settings-store-form { display: grid; gap: 12px; width: 100%; max-width: none; }
 .settings-store-form > label { display: grid; gap: 5px; font-size: .82rem; font-weight: 700; }
-.settings-store-form input:not([type="file"]) { width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); }
-.store-icon-editor { display: flex; align-items: center; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
+.settings-store-form input:not([type="file"]) { box-sizing: border-box; width: 100%; min-height: 42px; padding: 9px 11px; border: 1px solid var(--line); border-radius: 9px; background: var(--surface); color: var(--ink); }
+.store-icon-editor { box-sizing: border-box; width: 100%; display: flex; align-items: center; gap: 14px; padding: 12px; border: 1px solid var(--line); border-radius: 12px; }
 .store-icon-editor > img { width: 76px; height: 76px; flex: 0 0 76px; border-radius: 14px; object-fit: cover; background: var(--surface-2); }
 .store-icon-editor > div { display: grid; gap: 6px; min-width: 0; }
 .store-icon-editor label { font-size: .82rem; font-weight: 700; }
