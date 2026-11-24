@@ -3353,3 +3353,58 @@ tr.is-unpaid { background: var(--gold-soft); }
 @media (max-width: 560px) {
   .top-tools .alert-enable { min-height: 32px; padding: 5px 8px; font-size: .72rem; }
 }
+
+
+/* Persistent owner alert for unpaid customer orders */
+.floating-order-alert {
+  position: fixed;
+  right: 22px;
+  bottom: calc(22px + env(safe-area-inset-bottom, 0px));
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: min(310px, calc(100vw - 32px));
+  padding: 12px 14px;
+  border: 1px solid #b45309;
+  border-radius: 14px;
+  background: #fff7e6;
+  color: #713f12;
+  box-shadow: 0 10px 30px rgba(42, 27, 10, .24);
+  text-align: left;
+  cursor: pointer;
+  animation: floating-order-enter .22s ease-out;
+}
+.floating-order-alert[hidden] { display: none; }
+.floating-order-alert:hover { transform: translateY(-2px); box-shadow: 0 14px 34px rgba(42, 27, 10, .28); }
+.floating-order-icon { font-size: 1.35rem; flex: 0 0 auto; }
+.floating-order-copy { display: grid; gap: 2px; min-width: 0; flex: 1; }
+.floating-order-copy strong { font-size: .88rem; line-height: 1.2; }
+.floating-order-copy small { font-size: .73rem; line-height: 1.25; opacity: .88; }
+.floating-order-count {
+  display: grid;
+  place-items: center;
+  min-width: 27px;
+  height: 27px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: #b45309;
+  color: #fff;
+  font-size: .82rem;
+  font-weight: 850;
+}
+@keyframes floating-order-enter {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 560px) {
+  .floating-order-alert {
+    right: 12px;
+    bottom: calc(88px + env(safe-area-inset-bottom, 0px));
+    width: min(290px, calc(100vw - 24px));
+    padding: 10px 12px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .floating-order-alert { animation: none; }
+}
