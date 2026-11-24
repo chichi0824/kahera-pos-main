@@ -709,7 +709,52 @@ database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"</code></pre>
             </div>
 
             <div class="panel card-pad">
-              <h3>8. Restoring data or recovering from a mistake</h3>
+              <h3>8. One-time pre-live reset (test data only)</h3>
+              <p>Before the first real business day, you may clear the test transactions and test shift/report history so the live system starts with clean sales records. This is a deliberate, irreversible production-data operation. Do not use it after real transactions have started.</p>
+              <p><strong>What this reset clears:</strong></p>
+              <ul>
+                <li>All order line items in <code>order_items</code>.</li>
+                <li>All POS and online orders in <code>orders</code>, including unpaid online orders and attached payment proof.</li>
+                <li>All cashier shifts and daily report records in <code>shifts</code>.</li>
+              </ul>
+              <p><strong>What it keeps:</strong></p>
+              <ul>
+                <li>Menu categories, menu items, prices, price options, availability, sold-out flags, and menu photos.</li>
+                <li>Store/business profile settings, customer ordering setting, and owner/admin credentials.</li>
+                <li>Database schema and migration history.</li>
+              </ul>
+              <p class="hint">The reset does not delete browser-local carts or locally acknowledged order reminders. Clear browser/site data separately only if you intentionally want to reset a particular device.</p>
+              <p><strong>Before you run anything:</strong></p>
+              <ol>
+                <li>Choose a maintenance window when all cashiers are logged out and no one is taking customer orders.</li>
+                <li>Temporarily disable customer ordering in POS Settings and stop using all cashier devices. Confirm there are no new incoming orders.</li>
+                <li>Export a full remote backup and keep it somewhere private outside the repository.</li>
+                <li>Inspect the remote database name/ID and count the records. Confirm every order and shift is test data and that the owner approves clearing it.</li>
+                <li>If any real sale, customer order, or report exists, do not run this reset. Stop and ask for a selective cleanup plan instead.</li>
+              </ol>
+              <p><strong>Inspect the data first:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT source, status, COUNT(*) AS total FROM orders GROUP BY source, status;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS order_items FROM order_items;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS shifts FROM shifts;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_receipt_number FROM order_counters WHERE id = 1;"</code></pre>
+              <p><strong>After backup and approval, clear the records in this exact order:</strong></p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="DELETE FROM order_items;"
+npx wrangler d1 execute kahera-db --remote --command="DELETE FROM orders;"
+npx wrangler d1 execute kahera-db --remote --command="DELETE FROM shifts;"</code></pre>
+              <p>Deleting child order items first avoids leaving orphaned line items. Orders are deleted before shifts because orders can reference a shift.</p>
+              <p><strong>Optional: restart receipt numbering at 1.</strong> Do this only if the owner explicitly wants a fresh receipt sequence and all test orders have been removed:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="UPDATE order_counters SET value = 0 WHERE id = 1;"</code></pre>
+              <p>Then verify that the transaction tables are empty:</p>
+              <pre><code>npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS orders_remaining FROM orders;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS order_items_remaining FROM order_items;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT COUNT(*) AS shifts_remaining FROM shifts;"
+npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_receipt_number FROM order_counters WHERE id = 1;"</code></pre>
+              <p>Confirm the menu, prices, store profile, owner login, and customer ordering configuration are still correct. Re-enable customer ordering only when the business is ready to go live.</p>
+              <p class="hint">Never run a blanket reset on a live database. Do not delete the database, drop tables, remove migrations, or clear menu/settings tables as part of this procedure. If a command fails partway through, stop, inspect the counts, and do not blindly rerun the whole sequence.</p>
+            </div>
+
+            <div class="panel card-pad">
+              <h3>9. Restoring data or recovering from a mistake</h3>
               <ul>
                 <li>Stop making further manual changes and record what happened, when, and which command was run.</li>
                 <li>Do not immediately import an old SQL export over the live database. A restore can overwrite newer orders and settings.</li>
@@ -721,7 +766,7 @@ database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"</code></pre>
             </div>
 
             <div class="panel card-pad">
-              <h3>9. Live-operation checklist</h3>
+              <h3>10. Live-operation checklist</h3>
               <ul>
                 <li>Confirm the production D1 database name and ID in <code>wrangler.toml</code>.</li>
                 <li>Confirm owner login works and the owner password is strong and private.</li>
@@ -737,7 +782,7 @@ database_id = "96b04312-003f-49e9-a5e4-1646babb4a53"</code></pre>
             </div>
 
             <div class="panel card-pad">
-              <h3>10. Quick reference</h3>
+              <h3>11. Quick reference</h3>
               <ul>
                 <li><strong>Database:</strong> <code>kahera-db</code></li>
                 <li><strong>Worker:</strong> <code>kahera-menu-api</code></li>
