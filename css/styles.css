@@ -2927,3 +2927,64 @@ tr.is-unpaid { background: var(--gold-soft); }
     font-size: 0.66rem;
   }
 }
+
+
+/* Mobile header layout: brand, controls, then navigation */
+@media (max-width: 640px) {
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 10px 8px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    overflow: visible;
+    padding: 4px 0 8px;
+  }
+
+  .topbar > .brand {
+    order: 1;
+    flex: 0 0 100%;
+    width: 100%;
+    margin: 0;
+  }
+
+  .topbar > .top-tools {
+    order: 2;
+    flex: 0 0 100%;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 7px;
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 1px 0 3px;
+  }
+
+  .topbar > .top-tools::-webkit-scrollbar { display: none; }
+
+  .topbar > .tabs {
+    order: 3;
+    flex: 0 0 auto;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: hidden;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .topbar > .tabs::-webkit-scrollbar { display: none; }
+}
+
+@media (max-width: 380px) {
+  .topbar { gap: 8px 6px; }
+  .topbar > .top-tools { gap: 5px; }
+}
