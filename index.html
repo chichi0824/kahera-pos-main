@@ -458,20 +458,23 @@
           </div>
 
           <div class="shift-grid" style="margin-top: 14px">
-            <div class="panel card-pad">
-              <h3 data-k="reportChartTitle">Sales by hour</h3>
+            <div class="panel card-pad report-hourly-panel">
+              <div class="report-chart-head">
+                <div><p class="eyebrow">Sales performance</p><h3 data-k="reportChartTitle">Sales by hour</h3></div>
+                <div class="report-chart-toggle" role="group" aria-label="Chart metric">
+                  <button type="button" class="btn small" data-k="chartMetricSales" aria-pressed="true">Sales</button>
+                  <button type="button" class="btn small" data-k="chartMetricOrders" aria-pressed="false">Orders</button>
+                </div>
+              </div>
               <div
-                class="bars"
+                class="bars report-interactive-bars"
                 data-k="bars"
-                role="img"
-                aria-label="Net sales by hour"
+                role="group"
+                aria-label="Interactive sales chart. Select a bar to inspect its value."
               ></div>
-              <div
-                class="bar-labels"
-                data-k="barLabels"
-                aria-hidden="true"
-              ></div>
-              <h3 style="margin-top: 6px">Payment mix</h3>
+              <div class="bar-labels" data-k="barLabels" aria-hidden="true"></div>
+              <div class="chart-detail" data-k="chartDetail" aria-live="polite"></div>
+              <h3 style="margin-top: 18px">Payment mix</h3>
               <div class="split" data-k="split"></div>
             </div>
             <div class="panel card-pad">
