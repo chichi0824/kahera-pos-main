@@ -113,7 +113,8 @@
     return cloud.getMenu().then(function(data){
       categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
       $('store-name').textContent=data.settings&&data.settings.bizName||"Victoria's";
-      $('store-note').textContent=data.settings&&data.settings.bizNote||'Freshly prepared favorites';
+      var storeSubtitle=data.settings&&data.settings.bizNote||'';
+      $('store-note').textContent=storeSubtitle?'Order Online · '+storeSubtitle:'Order Online';
       var storeIcon=data.settings&&data.settings.brandIcon||'icons/kahera-icon.png';
       $('order-brand-icon').src=storeIcon;
       var orderFavicon=$('order-favicon');if(orderFavicon)orderFavicon.href=storeIcon;
