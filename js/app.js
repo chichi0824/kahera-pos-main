@@ -65,17 +65,29 @@
         if (!orderAlertAudio) orderAlertAudio = new AudioCtor();
         if (orderAlertAudio.state === 'suspended') orderAlertAudio.resume();
         var ctx = orderAlertAudio, now = ctx.currentTime;
-        [0,0.22,0.44].forEach(function(offset,i){
+        // A louder, longer two-part chime that is easier to notice in a busy shop.
+        [0,0.18,0.36,0.72,0.90].forEach(function(offset,i){
           var osc=ctx.createOscillator(),gain=ctx.createGain();
-          osc.type='sine';osc.frequency.value=i===1?1046:880;
+          osc.type='triangle';
+          osc.frequency.value=[880,1174,1396,1174,1396][i];
           gain.gain.setValueAtTime(0.0001,now+offset);
-          gain.gain.exponentialRampToValueAtTime(0.18,now+offset+0.025);
-          gain.gain.exponentialRampToValueAtTime(0.0001,now+offset+0.16);
+          gain.gain.exponentialRampToValueAtTime(0.38,now+offset+0.025);
+          gain.gain.exponentialRampToValueAtTime(0.0001,now+offset+0.28);
           osc.connect(gain);gain.connect(ctx.destination);
-          osc.start(now+offset);osc.stop(now+offset+0.18);
+          osc.start(now+offset);osc.stop(now+offset+0.30);
         });
       }
     } catch (e) {}
+  }
+  function renderFloatingOrderAlert() {
+    var button = $('floatingOrderAlert');
+    if (!button) return;
+    var unpaid = S.orders.filter(function(o){ return o.source === 'online' && o.status === 'unpaid'; });
+    button.hidden = unpaid.length === 0;
+    if (unpaid.length) {
+      button.innerHTML = '<span class="floating-order-icon" aria-hidden="true">🔔</span><span class="floating-order-copy"><strong>Online order' + (unpaid.length === 1 ? '' : 's') + ' received</strong><small>' + unpaid.length + ' awaiting payment · Tap to view</small></span><span class="floating-order-count">' + unpaid.length + '</span>';
+      button.setAttribute('aria-label', unpaid.length + ' unpaid online orders. Open orders.');
+    }
   }
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
@@ -1104,6 +1116,7 @@
       showOwnerLogin();
     });
     $('enableAlerts').addEventListener('click', enableOrderAlerts);
+    $('floatingOrderAlert').addEventListener('click', function(){ setView('orders'); });
     updateOrderAlertButton();
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
@@ -1147,6 +1160,7 @@
       onlineOrdersInitialized = true;
       S.orders = results[0];
       S.nextNo = results[1];
+      renderFloatingOrderAlert();
       if(incoming.length)announceIncomingOrders(incoming);
       renderBrand();
       if (S.view === 'orders') renderOrders();
