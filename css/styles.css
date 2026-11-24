@@ -3016,3 +3016,97 @@ tr.is-unpaid { background: var(--gold-soft); }
     white-space: nowrap;
   }
 }
+
+
+/* Cart rows: keep item, unit price, quantity controls, and extended amount
+   aligned on one horizontal line at desktop and mobile widths. */
+.lines .line {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 68px 76px 82px;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  padding: 11px 0;
+}
+.lines .line .l-name {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap;
+  gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+}
+.lines .line .line-item-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.lines .line .portion-wrap,
+.lines .line .portion-label {
+  flex: 0 0 auto;
+  margin: 0;
+}
+.lines .line .line-price {
+  display: block;
+  min-width: 0;
+  margin: 0;
+}
+.lines .line .line-price input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  padding: 6px 3px;
+  text-align: right;
+  font: 600 .78rem var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+.lines .line .stepper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+}
+.lines .line .stepper button {
+  width: 25px;
+  height: 30px;
+  flex: 0 0 25px;
+}
+.lines .line .stepper span {
+  min-width: 1.5ch;
+  font-size: .82rem;
+}
+.lines .line .l-amt {
+  display: block;
+  min-width: 0;
+  text-align: right;
+  white-space: nowrap;
+  font: 700 .78rem var(--f-mono);
+  font-variant-numeric: tabular-nums;
+}
+@media (max-width: 560px) {
+  .lines .line {
+    grid-template-columns: minmax(0, 1fr) 57px 70px 76px;
+    gap: 5px;
+    padding: 10px 0;
+  }
+  .lines .line .line-item-name { font-size: .8rem; }
+  .lines .line .portion-label { font-size: .68rem; }
+  .lines .line .portion-select {
+    min-width: 0;
+    max-width: 56px;
+    padding: 4px 15px 4px 4px;
+    font-size: .68rem;
+  }
+  .lines .line .line-price input,
+  .lines .line .l-amt { font-size: .7rem; }
+  .lines .line .stepper { gap: 1px; }
+  .lines .line .stepper button {
+    width: 22px;
+    height: 28px;
+    flex-basis: 22px;
+    padding: 0;
+  }
+}
