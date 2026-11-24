@@ -3503,3 +3503,16 @@ dialog.order-share-dlg::backdrop { background: rgba(10,16,13,.58); }
 #topItems .top-category-heading th { padding: 14px 10px 12px; background: color-mix(in srgb, var(--accent) 13%, var(--surface)); color: var(--ink); font-size: .95rem; font-weight: 900; letter-spacing: .035em; text-transform: uppercase; border-top: 2px solid var(--line); border-bottom: 1px solid var(--line); border-left: 4px solid var(--accent); }
 #topItems .top-category-heading small { margin-left: 8px; color: var(--ink); font-size: .78rem; font-weight: 800; letter-spacing: 0; text-transform: uppercase; }
 #topItems .portion-breakdown { display: block; margin-top: 3px; color: var(--muted); font-size: .75rem; }
+
+/* Keep the report panels aligned while allowing the long best-selling list to scroll. */
+.shift-grid { align-items: stretch; }
+.shift-grid > .panel { min-height: 430px; }
+.shift-grid > .panel:last-child { height: 430px; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.shift-grid > .panel:last-child .table-wrap { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
+#topItems .top-category-heading th { display: flex; align-items: center; gap: 10px; }
+#topItems .top-category-name { min-width: 0; }
+#topItems .top-category-count { display: inline-flex; align-items: center; margin: 0; padding: 3px 8px; border-radius: 999px; background: var(--surface-2); color: var(--muted); font-size: .7rem; font-weight: 800; letter-spacing: .04em; white-space: nowrap; }
+#topItems .portion-breakdown { line-height: 1.45; }
+@media (max-width: 760px) {
+  .shift-grid > .panel:last-child { height: 430px; }
+}
