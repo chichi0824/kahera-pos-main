@@ -3333,3 +3333,23 @@ tr.is-unpaid { background: var(--gold-soft); }
 .online-pay-field input { width:100%; min-height:42px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--surface); color:var(--ink); }
 .online-pay-dialog .dlg-actions { justify-content:flex-end; }
 .online-pay-dialog .dlg-actions .btn { min-height:42px; }
+
+
+/* Make the order-alert control visible in the POS header. */
+.top-tools .alert-enable {
+  min-height: 34px;
+  padding: 6px 10px;
+  border: 1px solid var(--gold);
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-weight: 800;
+  white-space: nowrap;
+}
+.top-tools .alert-enable.alerts-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+@media (max-width: 560px) {
+  .top-tools .alert-enable { min-height: 32px; padding: 5px 8px; font-size: .72rem; }
+}
