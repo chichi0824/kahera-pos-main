@@ -33,6 +33,79 @@
   var DISC_LABEL = { none: '', senior: 'Senior', pwd: 'PWD' };
 
   var toastTimer;
+  var orderAlertAudio = null, orderAlertsEnabled = false, onlineOrdersInitialized = false;
+  var originalDocumentTitle = document.title, titleAlertTimer = null;
+  function enableOrderAlerts() {
+    try {
+      var AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtor) {
+        if (!orderAlertAudio) orderAlertAudio = new AudioCtor();
+        if (orderAlertAudio.state === 'suspended') orderAlertAudio.resume();
+      }
+    } catch (e) {}
+    if ('Notification' in window && Notification.permission === 'default') {
+      Notification.requestPermission().then(function(permission){ updateOrderAlertButton(); });
+    }
+    orderAlertsEnabled = true;
+    updateOrderAlertButton();
+    toast('Order alerts enabled on this device');
+  }
+  function updateOrderAlertButton() {
+    var b = $('enableAlerts'); if (!b) return;
+    var granted = 'Notification' in window && Notification.permission === 'granted';
+    b.classList.toggle('alerts-on', orderAlertsEnabled || granted);
+    b.textContent = (orderAlertsEnabled || granted) ? '🔔 Alerts on' : '🔔 Enable alerts';
+    b.title = granted ? 'Sound and browser notifications are available' : 'Enable sound and allow browser notifications when prompted';
+  }
+  function playOrderAlert() {
+    if (!orderAlertsEnabled && !(('Notification' in window) && Notification.permission === 'granted')) return;
+    try {
+      var AudioCtor = window.AudioContext || window.webkitAudioContext;
+      if (AudioCtor) {
+        if (!orderAlertAudio) orderAlertAudio = new AudioCtor();
+        if (orderAlertAudio.state === 'suspended') orderAlertAudio.resume();
+        var ctx = orderAlertAudio, now = ctx.currentTime;
+        [0,0.22,0.44].forEach(function(offset,i){
+          var osc=ctx.createOscillator(),gain=ctx.createGain();
+          osc.type='sine';osc.frequency.value=i===1?1046:880;
+          gain.gain.setValueAtTime(0.0001,now+offset);
+          gain.gain.exponentialRampToValueAtTime(0.18,now+offset+0.025);
+          gain.gain.exponentialRampToValueAtTime(0.0001,now+offset+0.16);
+          osc.connect(gain);gain.connect(ctx.destination);
+          osc.start(now+offset);osc.stop(now+offset+0.18);
+        });
+      }
+    } catch (e) {}
+  }
+  function announceIncomingOrders(incoming) {
+    if (!incoming.length) return;
+    var message = incoming.length===1 ? 'New online order '+incoming[0].no+' received' : incoming.length+' new online orders received';
+    toast(message);
+    playOrderAlert();
+    var stamp = incoming.map(function(o){return o.id;}).join(',');
+    try {
+      var key='kahera-online-order-alert:'+stamp;
+      if (localStorage.getItem(key)) return;
+      localStorage.setItem(key,'1');
+    } catch(e) {}
+    if ('Notification' in window && Notification.permission === 'granted') {
+      try {
+        var notification = new Notification('New Kahera online order', { body: message, tag: 'kahera-new-online-orders', renotify: true, icon: 'icons/kahera-icon.png' });
+        notification.onclick = function(){ window.focus(); setView('orders'); notification.close(); };
+      } catch(e) {}
+    }
+    if (document.hidden) {
+      if (titleAlertTimer) clearInterval(titleAlertTimer);
+      var show = true;
+      titleAlertTimer = setInterval(function(){document.title=show?'🔔 New order · '+originalDocumentTitle:originalDocumentTitle;show=!show;},900);
+    }
+  }
+  document.addEventListener('visibilitychange',function(){
+    if (!document.hidden) {
+      if (titleAlertTimer) clearInterval(titleAlertTimer);
+      titleAlertTimer=null;document.title=originalDocumentTitle;
+    }
+  });
   function toast(msg) {
     var t = $('toast');
     t.textContent = msg;
@@ -1030,6 +1103,8 @@
       S.cart = blankCart();
       showOwnerLogin();
     });
+    $('enableAlerts').addEventListener('click', enableOrderAlerts);
+    updateOrderAlertButton();
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
       var cur = de.getAttribute('data-theme') || (window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
@@ -1068,10 +1143,11 @@
       return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
       var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
-      var incoming=results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;});
+      var incoming=onlineOrdersInitialized ? results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;}) : [];
+      onlineOrdersInitialized = true;
       S.orders = results[0];
       S.nextNo = results[1];
-      if(incoming.length)toast(incoming.length===1?'New online order '+incoming[0].no+' received':'You have '+incoming.length+' new online orders');
+      if(incoming.length)announceIncomingOrders(incoming);
       renderBrand();
       if (S.view === 'orders') renderOrders();
       if (S.view === 'shift' && reportRange().to >= manilaToday() && Date.now()-lastReportRefresh>30000) loadReportData();
