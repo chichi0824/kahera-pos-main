@@ -3546,3 +3546,23 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 @media (max-width: 760px) {
   .shift-grid > .panel:last-child { height: 430px; }
 }
+
+
+/* Interactive report chart */
+.report-hourly-panel{min-width:0}
+.report-chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+.report-chart-head .eyebrow{margin:0 0 3px}
+.report-chart-head h3{margin:0}
+.report-chart-toggle{display:flex;gap:4px;padding:3px;border:1px solid var(--line);border-radius:10px;background:var(--surface-2)}
+.report-chart-toggle .btn{border:0;background:transparent;color:var(--muted);min-height:30px;padding:5px 11px}
+.report-chart-toggle .btn[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.report-interactive-bars .bar{appearance:none;display:block;width:100%;padding:0;border:0;cursor:pointer;transition:height .22s ease,filter .15s ease,opacity .15s ease}
+.report-interactive-bars .bar:hover,.report-interactive-bars .bar:focus-visible{filter:brightness(.9);outline:2px solid var(--ink);outline-offset:2px}
+.report-interactive-bars .bar.is-selected{background:var(--ink);box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--accent)}
+.report-interactive-bars .bar.zero.is-selected{background:var(--surface-2)}
+.chart-detail{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:14px 0 4px;padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface-2)}
+.chart-detail>div{display:grid;gap:3px;min-width:0}
+.chart-detail .eyebrow{margin:0;font-size:.65rem}
+.chart-detail strong{font-size:1.05rem}
+.chart-detail small{color:var(--muted);font-variant-numeric:tabular-nums}
+@media(max-width:560px){.report-chart-head{align-items:flex-start;flex-direction:column}.report-chart-toggle{align-self:flex-start}.report-interactive-bars{gap:4px}.report-interactive-bars .bar span{font-size:.58rem}.chart-detail{gap:8px;padding:10px}}
