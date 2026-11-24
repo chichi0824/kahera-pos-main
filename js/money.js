@@ -131,9 +131,9 @@
   function summarize(orders) {
     var s = {
       count: 0, voided: 0, gross: 0, discounts: 0, vatRemoved: 0, net: 0, avgTicket: 0,
-      byMethod: { cash: 0, ewallet: 0, card: 0 }, byHour: {}, topItems: []
+      byMethod: { cash: 0, ewallet: 0, card: 0 }, byHour: {}, topItems: [], topCategories: []
     };
-    var items = {};
+    var items = {}, categories = {};
     (orders || []).forEach(function (o) {
       if (o.status === 'void') { s.voided++; return; }
       s.count++;
@@ -144,18 +144,35 @@
       s.byMethod[o.method] = (s.byMethod[o.method] || 0) + o.totals.total;
       var h = Number(new Intl.DateTimeFormat('en-US', { timeZone: 'Asia/Manila', hour: '2-digit', hourCycle: 'h23' }).format(new Date(o.ts)));
       s.byHour[h] = (s.byHour[h] || 0) + o.totals.total;
-      o.lines.forEach(function (l) {
-        var key = l.id || l.name;
-        var it = items[key] || (items[key] = { name: l.name, qty: 0, fullQty: 0, halfQty: 0, amount: 0 });
-        it.qty += l.qty;
-        if (l.portion === 'half') it.halfQty += l.qty;
-        else it.fullQty += l.qty;
-        it.amount += l.lineTotalOverridden === true && Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty;
+      (o.lines || []).forEach(function (l) {
+        var category = l.categoryName || 'Uncategorized';
+        var categoryKey = category.toLowerCase();
+        var group = categories[categoryKey] || (categories[categoryKey] = { name: category, qty: 0, amount: 0, items: {} });
+        var key = (l.id || l.name).toString();
+        var item = group.items[key] || (group.items[key] = { name: l.name, qty: 0, fullQty: 0, halfQty: 0, amount: 0, options: {} });
+        var option = l.variantName || (l.portion === 'half' ? 'Half' : 'Full');
+        var optionKey = option.toLowerCase();
+        var optionRow = item.options[optionKey] || (item.options[optionKey] = { name: option, qty: 0, amount: 0 });
+        var lineAmount = l.lineTotalOverridden === true && Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty;
+        item.qty += l.qty; group.qty += l.qty;
+        if (l.portion === 'half' && !l.variantName) item.halfQty += l.qty;
+        else if (!l.variantName) item.fullQty += l.qty;
+        item.amount += lineAmount; group.amount += lineAmount;
+        optionRow.qty += l.qty; optionRow.amount += lineAmount;
       });
     });
     s.avgTicket = s.count ? Math.round(s.net / s.count) : 0;
-    s.topItems = Object.keys(items).map(function (k) { return items[k]; })
-      .sort(function (a, b) { return b.qty - a.qty || b.amount - a.amount; });
+    s.topCategories = Object.keys(categories).map(function (key) {
+      var group = categories[key];
+      group.items = Object.keys(group.items).map(function (itemKey) {
+        var item = group.items[itemKey];
+        item.options = Object.keys(item.options).map(function (optionKey) { return item.options[optionKey]; })
+          .sort(function (a, b) { return b.qty - a.qty || b.amount - a.amount; });
+        return item;
+      }).sort(function (a, b) { return b.qty - a.qty || b.amount - a.amount; });
+      return group;
+    }).sort(function (a, b) { return b.qty - a.qty || b.amount - a.amount; });
+    s.topItems = s.topCategories.reduce(function (all, category) { return all.concat(category.items); }, []);
     return s;
   }
 
