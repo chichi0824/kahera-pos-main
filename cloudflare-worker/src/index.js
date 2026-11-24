@@ -207,7 +207,14 @@ async function reportData(db,from,to) {
   if(!/^\d{4}-\d{2}-\d{2}$/.test(from)||!/^\d{4}-\d{2}-\d{2}$/.test(to)||from>to)throw new Error('Choose a valid reporting date range.');
   const days=await db.prepare("SELECT s.id,s.report_date AS date,s.started_at AS startedAt,s.ended_at AS endedAt,s.status,s.close_reason AS closeReason,COUNT(CASE WHEN o.status!='unpaid' THEN o.id END) AS orderCount FROM shifts s LEFT JOIN orders o ON o.shift_id=s.id WHERE s.report_date BETWEEN ? AND ? GROUP BY s.id ORDER BY s.report_date").bind(from,to).all();
   const rows=await db.prepare("SELECT o.payload_json,o.status,o.voided_at,o.payment_proof,COALESCE(s.report_date,date(o.created_at,'+8 hours')) AS reportDate FROM orders o LEFT JOIN shifts s ON s.id=o.shift_id WHERE o.status!='unpaid' AND COALESCE(s.report_date,date(o.created_at,'+8 hours')) BETWEEN ? AND ? ORDER BY o.created_at,o.order_no").bind(from,to).all();
-  return {days:days.results||[],orders:(rows.results||[]).map(r=>({...rowOrder(r),reportDate:r.reportDate||'',hasPaymentProof:!!r.payment_proof}))};
+  const categoryRows=await db.prepare('SELECT m.id,c.name AS categoryName FROM menu_items m LEFT JOIN menu_categories c ON c.id=m.category_id').all();
+  const categoryByItem={};(categoryRows.results||[]).forEach(row=>{categoryByItem[row.id]=row.categoryName||'Uncategorized';});
+  const orders=(rows.results||[]).map(r=>{
+    const order={...rowOrder(r),reportDate:r.reportDate||'',hasPaymentProof:!!r.payment_proof};
+    order.lines=(order.lines||[]).map(line=>({...line,categoryName:line.categoryName||categoryByItem[line.id]||'Uncategorized'}));
+    return order;
+  });
+  return {days:days.results||[],orders};
 }
 function calculateTotals(lines, settings, kind, diners, holders) {
   const vatReg = settings.vatRegistered !== false;
