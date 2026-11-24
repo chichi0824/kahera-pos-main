@@ -128,7 +128,7 @@
   // ---------- views ----------
   function setView(v) {
     S.view = v; store.set('view', v);
-    root.querySelectorAll('[data-view]').forEach(function (b) {
+    root.querySelectorAll('[role="tab"][data-view]').forEach(function (b) {
       var on = b.getAttribute('data-view') === v;
       b.setAttribute('aria-selected', String(on));
       b.tabIndex = on ? 0 : -1;
@@ -660,6 +660,9 @@
 
   // ---------- events ----------
   function bind() {
+    root.querySelector('[data-open-view="data-guide"]').addEventListener('click', function () {
+      setView('data-guide');
+    });
     $('tabs').addEventListener('click', function (e) {
       var b = e.target.closest('[data-view]');
       if (b) setView(b.getAttribute('data-view'));
