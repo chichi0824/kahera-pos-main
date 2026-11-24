@@ -246,5 +246,5 @@ test('rejects login when the session signing secret is missing', async () => {
   const env = authEnv();
   delete env.SESSION_SECRET;
   const response = await worker.fetch(authRequest('/api/auth/login', 'POST', { password: 'test-owner-password' }), env);
-  assert.equal(response.status, 500);
+  assert.equal(response.status, 503);
 });
