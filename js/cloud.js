@@ -46,6 +46,7 @@
     createPublicOrder:function(order){return request("/api/public/orders",{method:"POST",body:JSON.stringify(order)}).then(function(b){return b.order;});},
     markOrderPaid:function(orderId,payment){return request("/api/orders/"+encodeURIComponent(orderId)+"/mark-paid",{method:"POST",body:JSON.stringify(payment||{method:"cash"})}).then(function(b){return b.order;});},
     createOrder:function(order){var payload=Object.assign({},order,{id:order.id||uuid(),deviceId:order.deviceId||getDeviceId()});return request("/api/orders",{method:"POST",body:JSON.stringify(payload)}).then(function(b){return b.order;});},
+    isNetworkError:function(error){return !!(error&&(error.name==="TypeError"||/network|failed to fetch|load failed|offline/i.test(error.message||"")));},
     getPaymentProof:function(orderId){return request("/api/orders/"+encodeURIComponent(orderId)+"/payment-proof",{method:"GET",cache:"no-store"}).then(function(b){return b.dataUrl;});},
     voidOrder:function(orderId){return request("/api/orders/"+encodeURIComponent(orderId)+"/void",{method:"POST",body:"{}"}).then(function(b){return b.order;});}
   };
