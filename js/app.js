@@ -167,11 +167,21 @@
   function renderTile(m,bumpId){
     var n=qtyInCart(m.id),photo=m.image?'<img class="tile-photo" src="'+esc(m.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
     var hasOptions=hasPriceOptions(m),availableVariants=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
-    var prices=hasOptions?availableVariants.map(function(v){return v.price;}):[m.price];
-    var disabled=(!hasOptions&&!!m.soldOut)||(hasOptions&&!availableVariants.length);
-    var priceLabel=hasOptions?(availableVariants.length?'From '+M.peso(Math.min.apply(null,prices)):'No options available'):M.peso(m.price);
-    var hasListedSoldOut=hasOptions&&m.variants.some(function(v){return v.available!==false&&v.soldOut;});var statusLabel=m.soldOut?'Sold Out':(hasOptions&&!availableVariants.length?(hasListedSoldOut?'All options sold out':'No options'):'');
-    return '<button type="button" class="tile'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" data-add="'+esc(m.id)+'"'+(disabled?' aria-disabled="true"':'')+' style="--c:'+catColor(m.cat)+'" aria-label="'+esc(m.name)+', '+priceLabel+(n?', '+n+' in order':'')+(statusLabel?', '+statusLabel.toLowerCase():'')+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span><span class="t-price">'+priceLabel+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+(n?'<span class="t-qty" aria-hidden="true">'+n+'</span>':'')+'</button>';
+    var disabled=!!m.soldOut;
+    var actions='';
+    if(hasOptions){
+      actions=m.variants.map(function(v){
+        var off=disabled||v.available===false||v.soldOut===true;
+        return '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'>'+esc(v.name)+'<strong>'+M.peso(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
+      }).join('');
+    }else if(m.halfPrice){
+      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Full<strong>'+M.peso(m.price)+'</strong></button>'+
+        '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="half"'+(disabled?' disabled':'')+'>Half<strong>'+M.peso(m.halfPrice)+'</strong></button>';
+    }else{
+      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Add<strong>'+M.peso(m.price)+'</strong></button>';
+    }
+    var statusLabel=disabled?'Sold Out':(hasOptions&&!availableVariants.length?'No options available':'');
+    return '<article class="tile tile-choice'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" style="--c:'+catColor(m.cat)+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+actions+'</div>'+(n?'<span class="t-qty" aria-label="'+n+' in order">'+n+'</span>':'')+'</article>';
   }
 
   function qtyInCart(id) {
@@ -198,11 +208,7 @@
       $('lines').innerHTML = '<li class="empty">Tap a menu item to start an order.</li>';
     } else {
       $('lines').innerHTML = c.lines.map(function (l, i) {
-        var portionControl = l.variantName ? '<span class="portion-label">' + esc(l.variantName) + '</span>' : (l.halfPrice
-          ? '<label class="portion-wrap"><span class="sr-only">Portion</span><select class="portion-select" data-portion="' + i + '" aria-label="Portion for ' + esc(l.name) + '">' +
-            '<option value="full"' + (l.portion === 'full' ? ' selected' : '') + '>Full</option>' +
-            '<option value="half"' + (l.portion === 'half' ? ' selected' : '') + '>Half</option></select></label>'
-          : '<span class="portion-label">Full</span>');
+        var portionControl = '<span class="portion-label">' + esc(l.variantName || (l.portion === 'half' ? 'Half' : 'Full')) + '</span>';
         return '<li class="line">' +
           '<span class="l-name"><span class="line-item-name">' + esc(l.name) + '</span>' + portionControl + '</span>' +
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
@@ -625,15 +631,20 @@
   }
 
   // ---------- cart mutations ----------
-  function addItem(id,variant){
-    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;if(!hasPriceOptions(m)&&m.soldOut){toast(m.name+' is sold out');return;}
-    var hasOptions=hasPriceOptions(m),options=hasOptions?m.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
-    if(hasOptions&&!options.length){toast(m.name+' has no available options today');return;}
-    if(hasOptions&&!variant){showVariantPicker(Object.assign({},m,{variants:options}));return;}
-    var chosen=variant||null,price=chosen?chosen.price:m.price,key=chosen?chosen.id:'default';
-    var fullPrice=chosen?chosen.price:m.price,halfPrice=chosen?null:m.halfPrice,portion='full';
-    var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.portion===portion&&x.price===fullPrice;})[0];
-    if(l){l.qty=Math.min(99,(Number(l.qty)||0)+1);l.lineTotal=null;l.lineTotalOverridden=false;}else S.cart.lines.push({id:m.id,name:m.name,price:fullPrice,fullPrice:fullPrice,halfPrice:halfPrice,portion:portion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
+  function addItem(id,variant,portion){
+    var m=S.menu.filter(function(x){return x.id===id;})[0];if(!m)return;
+    if(m.soldOut||m.available===false){toast(m.name+' is sold out');return;}
+    var hasOptions=hasPriceOptions(m),chosen=variant||null;
+    if(hasOptions){
+      if(!chosen||chosen.available===false||chosen.soldOut){toast('Choose an available option');return;}
+    }else if(portion==='half'&&!m.halfPrice){return;}
+    var selectedPortion=hasOptions?'full':(portion==='half'?'half':'full');
+    var fullPrice=chosen?chosen.price:m.price,halfPrice=chosen?null:(m.halfPrice||null);
+    var price=selectedPortion==='half'?halfPrice:fullPrice;
+    var key=chosen?chosen.id:'default';
+    var l=S.cart.lines.filter(function(x){return x.id===id&&(x.variantId||'default')===key&&x.portion===selectedPortion&&x.price===price;})[0];
+    if(l){l.qty=Math.min(99,(Number(l.qty)||0)+1);l.lineTotal=null;l.lineTotalOverridden=false;}
+    else S.cart.lines.push({id:m.id,name:m.name,price:price,fullPrice:fullPrice,halfPrice:halfPrice,portion:selectedPortion,variantId:chosen?chosen.id:null,variantName:chosen?chosen.name:'',optionPrice:chosen?chosen.price:null,qty:1});
     saveCart();renderCart();renderGrid(id);
   }
   var choosingItemId=null;
@@ -704,12 +715,11 @@
     });
     $('grid').addEventListener('click', function (e) {
       var b = e.target.closest('[data-add]');
-      if (b) addItem(b.getAttribute('data-add'));
-    });
-    root.addEventListener('click',function(e){
-      var option=e.target.closest('[data-variant-id]');if(!option)return;
-      var item=S.menu.filter(function(m){return m.id===choosingItemId;})[0],selected=item&&item.variants?item.variants.filter(function(v){return v.id===option.getAttribute('data-variant-id')&&v.available!==false;})[0]:null;
-      var dlg=$('variantDlg');if(dlg&&dlg.close)dlg.close();if(selected)addItem(item.id,selected);choosingItemId=null;
+      if (!b || b.disabled) return;
+      var itemId=b.getAttribute('data-add'),variantId=b.getAttribute('data-variant'),portion=b.getAttribute('data-portion')||'full';
+      var item=S.menu.filter(function(m){return m.id===itemId;})[0];
+      var variant=item&&Array.isArray(item.variants)?item.variants.filter(function(v){return v.id===variantId;})[0]:null;
+      addItem(itemId,variant,portion);
     });
 
     $('otype').addEventListener('click', function (e) {
