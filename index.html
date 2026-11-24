@@ -14,7 +14,7 @@
     <meta name="theme-color" content="#b2c48a" />
     <!--BUILD:REPO-ONLY-->
     <link rel="manifest" href="manifest.webmanifest" />
-    <link rel="icon" href="icons/kahera-icon.png" type="image/png" />
+    <link id="app-favicon" rel="icon" href="icons/kahera-icon.png" type="image/png" />
     <link rel="apple-touch-icon" href="icons/kahera-icon.png" />
     <!--/BUILD:REPO-ONLY-->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -35,7 +35,7 @@
     <!-- Owner-only POS login. Public ordering will use a separate page. -->
     <section id="owner-login" class="owner-login" hidden aria-labelledby="owner-login-title">
       <form id="owner-login-form" class="owner-login-card">
-        <img src="icons/kahera-icon.png" alt="" width="52" height="52" />
+        <img id="login-brand-icon" src="icons/kahera-icon.png" alt="" width="52" height="52" />
         <p class="eyebrow">KAHERA · OWNER ACCESS</p>
         <h1 id="owner-login-title">Welcome back</h1>
         <p class="owner-login-copy">Sign in to access the point-of-sale system.</p>
@@ -49,7 +49,7 @@
     <div class="app" id="kahera" hidden>
       <header class="topbar">
         <div class="brand">
-          <img class="brand-mark" src="icons/kahera-icon.png" alt="Kahera" />
+          <img class="brand-mark" data-k="brandIcon" src="icons/kahera-icon.png" alt="Store icon" />
           <div style="min-width: 0">
             <h1 class="brand-name">Victoria's</h1>
             <p class="brand-biz" data-k="biz">
@@ -529,19 +529,6 @@
               </div>
             </div>
             <div class="form-grid">
-              <form class="panel card-pad" data-k="settingsForm">
-                <h3>Store</h3>
-                <label for="k-biz"
-                  >Business name<input
-                    id="k-biz"
-                    maxlength="60"
-                    autocomplete="organization"
-                /></label>
-                <label for="k-biznote"
-                  >Subtitle<input id="k-biznote" maxlength="80"
-                /></label>
-
-              </form>
               <form class="panel card-pad" data-k="addForm">
                 <h3>Add item</h3>
                 <label for="k-newname"
@@ -699,6 +686,33 @@ SQL</code></pre>
               <p class="hint">Manage online ordering, alerts, system health and account access.</p>
             </div>
           </div>
+
+          <section class="panel card-pad settings-card settings-store-card">
+            <div class="settings-card-head">
+              <div class="settings-icon">🏪</div>
+              <div><p class="eyebrow">STORE IDENTITY</p><h3>Business Profile</h3></div>
+            </div>
+            <p class="hint">Update the business details and icon shown in the POS, customer ordering page, and order slips.</p>
+            <form class="settings-store-form" data-k="storeProfileForm">
+              <label for="k-biz">Business name
+                <input id="k-biz" maxlength="60" autocomplete="organization" required />
+              </label>
+              <label for="k-biznote">Subtitle
+                <input id="k-biznote" maxlength="80" />
+              </label>
+              <div class="store-icon-editor">
+                <img id="store-icon-preview" src="icons/kahera-icon.png" alt="Current store icon preview" />
+                <div>
+                  <label for="store-icon-input">Store icon</label>
+                  <input id="store-icon-input" type="file" accept="image/png,image/jpeg,image/webp" />
+                  <p class="hint">Choose a square image. It will be resized for a clean display.</p>
+                  <button type="button" class="btn small ghost" data-k="resetStoreIcon">Use default icon</button>
+                </div>
+              </div>
+              <p class="err" data-k="storeProfileError" role="alert"></p>
+              <button type="submit" class="btn primary">Save business profile</button>
+            </form>
+          </section>
 
           <div class="settings-grid">
             <section class="panel card-pad settings-card">
