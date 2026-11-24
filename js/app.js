@@ -795,7 +795,7 @@
       renderGrid();
       toast('Menu saved to the shared database. Cashiers will see it shortly.');
     }).catch(function (err) {
-      return cloud.getMenu().then(function(remote){var restored=normalizeSharedMenu(remote);S.settings=restored.settings;S.categories=restored.categories;S.menu=restored.menu;syncCartPrices();}).catch(function(){}).then(function(){renderMenuAdmin();renderGrid();toast('Menu was not saved: '+err.message);throw err;});
+      return cloud.getMenu().then(function(remote){var restored=normalizeSharedMenu(remote);S.settings=restored.settings;S.categories=restored.categories;S.menu=restored.menu;syncCartPrices();}).catch(function(){}).then(function(){renderBrand();renderMenuAdmin();renderGrid();toast('Menu was not saved: '+err.message);throw err;});
     });
     return menuSaveChain;
   }
