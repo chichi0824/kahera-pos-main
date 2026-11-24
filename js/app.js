@@ -205,11 +205,11 @@
           : '<span class="portion-label">Full</span>');
         return '<li class="line">' +
           '<span class="l-name"><span class="line-item-name">' + esc(l.name) + '</span>' + portionControl + '</span>' +
-          '<label class="line-price"><span class="sr-only">Unit price</span><span class="unit-currency" aria-hidden="true">₱</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-price="' + i + '" aria-label="Unit price per item for ' + esc(l.name) + '" value="' + (l.price / 100).toFixed(2) + '"></label>' +
+          '<label class="line-price"><span class="sr-only">Line total</span><span class="unit-currency" aria-hidden="true">₱</span><input type="number" min="0.01" step="0.01" inputmode="decimal" data-line-total="' + i + '" aria-label="Editable line total for ' + esc(l.name) + '" value="' + ((Number.isSafeInteger(l.lineTotal) ? l.lineTotal : l.price * l.qty) / 100).toFixed(2) + '"></label>' +
           '<span class="stepper"><button type="button" data-line="' + i + '" data-d="-1" aria-label="Remove one ' + esc(l.name) + '">−</button>' +
           '<span aria-label="Quantity">' + l.qty + '</span>' +
           '<button type="button" data-line="' + i + '" data-d="1" aria-label="Add one ' + esc(l.name) + '">+</button></span>' +
-          '<strong class="l-amt" aria-label="Line total for ' + esc(l.name) + '">' + M.peso(l.price * l.qty) + '</strong>' +
+          '' +
           '</li>';
       }).join('');
     }
@@ -657,6 +657,8 @@
     var l = S.cart.lines[i];
     if (!l) return;
     l.qty = (Number(l.qty) || 0) + Number(d);
+    l.lineTotal = null;
+    l.lineTotalOverridden = false;
     if (l.qty <= 0) S.cart.lines.splice(i, 1);
     saveCart(); renderCart(); renderGrid();
   }
@@ -721,19 +723,19 @@
       if (b) stepLine(+b.getAttribute('data-line'), +b.getAttribute('data-d'));
     });
     $('lines').addEventListener('change', function (e) {
-      var priceInput = e.target.closest('[data-line-price]');
-      if (priceInput) {
-        var priceLine = S.cart.lines[+priceInput.getAttribute('data-line-price')];
-        var adjusted = M.toCentavos(priceInput.value);
-        if (!priceLine) return;
-        if (isNaN(adjusted) || adjusted < 1 || adjusted > 100000000) {
-          toast('Enter a valid price greater than ₱0.');
+      var amountInput = e.target.closest('[data-line-total]');
+      if (amountInput) {
+        var amountLine = S.cart.lines[+amountInput.getAttribute('data-line-total')];
+        var adjustedTotal = M.toCentavos(amountInput.value);
+        if (!amountLine) return;
+        if (isNaN(adjustedTotal) || adjustedTotal < 1 || adjustedTotal > 10000000000) {
+          toast('Enter a valid line total greater than ₱0.');
           renderCart();
           return;
         }
-        priceLine.price = adjusted;
-        priceLine.priceOverridden = true;
-        saveCart(); renderCart(); renderGrid();
+        amountLine.lineTotal = adjustedTotal;
+        amountLine.lineTotalOverridden = true;
+        saveCart(); renderCart();
         return;
       }
       var sel = e.target.closest('[data-portion]');
@@ -770,6 +772,8 @@
         line.portion = nextPortion;
         line.price = nextPrice;
         line.priceOverridden = false;
+        line.lineTotal = null;
+        line.lineTotalOverridden = false;
       }
       saveCart(); renderCart(); renderGrid();
     });
