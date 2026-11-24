@@ -3466,7 +3466,8 @@ tr.is-unpaid { background: var(--gold-soft); }
   .settings-grid { grid-template-columns: minmax(0,1fr); }
 }
 @media (max-width: 560px) {
-  .settings-card-head { align-items: flex-start; flex-wrap: wrap; }\n  .store-icon-editor { align-items: flex-start; }
+  .settings-card-head { align-items: flex-start; flex-wrap: wrap; }
+  .store-icon-editor { align-items: flex-start; }
   .settings-card-head .settings-status { margin-left: auto; }
   .settings-toggle, .settings-field { gap: 8px; }
   .settings-field { align-items: flex-start; flex-direction: column; }
