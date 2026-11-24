@@ -2536,3 +2536,177 @@ tr.is-unpaid { background: var(--gold-soft); }
 .top-tools .customer-order-link:active {
   transform: translateY(1px);
 }
+
+
+/* ---------- Responsive POS header refinement ---------- */
+/* Keep the rounded section tabs, but give the brand and utility controls
+   their own predictable rows on smaller screens. */
+@media (max-width: 900px) {
+  .topbar {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "brand brand"
+      "tools tools"
+      "tabs tabs";
+    align-items: center;
+    gap: 12px;
+  }
+
+  .topbar > .brand {
+    grid-area: brand;
+    margin-right: 0;
+    min-width: 0;
+  }
+
+  .topbar > .top-tools {
+    grid-area: tools;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .topbar > .tabs {
+    grid-area: tabs;
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .topbar > .tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .topbar > .tabs button {
+    flex: 1 0 auto;
+    justify-content: center;
+    white-space: nowrap;
+  }
+
+  .topbar > .top-tools .clock {
+    margin-right: auto;
+    white-space: nowrap;
+    font-size: 0.82rem;
+  }
+
+  .topbar > .top-tools .customer-order-link {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 38px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    font-size: 0.84rem;
+    line-height: 1.2;
+    white-space: nowrap;
+    text-decoration: none;
+  }
+
+  .topbar > .top-tools [data-k="logout"] {
+    min-height: 38px;
+    padding: 7px 12px;
+    border-radius: 9px;
+    font-size: 0.84rem;
+    line-height: 1.2;
+    white-space: nowrap;
+  }
+
+  .topbar > .top-tools .icon-btn {
+    width: 38px;
+    height: 38px;
+    flex: 0 0 38px;
+  }
+}
+
+@media (max-width: 560px) {
+  .app {
+    padding-top: 10px;
+  }
+
+  .topbar {
+    gap: 10px;
+  }
+
+  .topbar > .brand {
+    gap: 10px;
+  }
+
+  .topbar > .brand .brand-mark {
+    width: 44px;
+    height: 44px;
+    object-fit: cover;
+  }
+
+  .topbar > .brand .brand-name {
+    font-size: clamp(1.2rem, 6vw, 1.5rem);
+  }
+
+  .topbar > .brand .brand-biz {
+    max-width: calc(100vw - 88px);
+    font-size: 0.76rem;
+  }
+
+  .topbar > .top-tools {
+    gap: 6px;
+  }
+
+  .topbar > .top-tools .clock {
+    font-size: 0.76rem;
+  }
+
+  .topbar > .top-tools .customer-order-link {
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 0.76rem;
+  }
+
+  .topbar > .top-tools [data-k="logout"] {
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 0.76rem;
+  }
+
+  .topbar > .top-tools .icon-btn {
+    width: 36px;
+    height: 36px;
+    flex-basis: 36px;
+  }
+
+  .topbar > .tabs {
+    gap: 3px;
+    padding: 4px;
+  }
+
+  .topbar > .tabs button {
+    min-height: 48px;
+    padding: 8px 12px;
+    font-size: 0.84rem;
+  }
+
+  .topbar > .tabs .count {
+    font-size: 0.68rem;
+  }
+}
+
+@media (max-width: 380px) {
+  .topbar > .top-tools {
+    gap: 5px;
+  }
+
+  .topbar > .top-tools .customer-order-link {
+    padding-inline: 7px;
+    font-size: 0.72rem;
+  }
+
+  .topbar > .top-tools [data-k="logout"] {
+    padding-inline: 7px;
+    font-size: 0.72rem;
+  }
+}
