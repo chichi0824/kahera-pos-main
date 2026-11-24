@@ -961,7 +961,9 @@
 
     $('logout').addEventListener('click', function () {
       cloud.logout();
-      window.location.reload();
+      if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
+      S.cart = blankCart();
+      showOwnerLogin();
     });
     $('theme').addEventListener('click', function () {
       var de = document.documentElement;
