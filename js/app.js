@@ -549,14 +549,55 @@
     $('complete').textContent = 'Complete sale · ' + M.peso(t.total);
   }
 
+  function syncPendingTransactions() {
+    var offline = window.KaheraOfflineDB;
+    if (!offline || !navigator.onLine || !cloud.checkSession) return Promise.resolve([]);
+    return cloud.checkSession().then(function (authenticated) {
+      if (!authenticated) return [];
+      return offline.getPendingTransactions().then(function (records) {
+        return records.reduce(function (chain, record) {
+          return chain.then(function (synced) {
+            return cloud.createOrder(record.payload).then(function (order) {
+              return offline.updateTransaction(record.id, {
+                syncStatus: 'synced',
+                syncedAt: new Date().toISOString(),
+                serverOrder: order,
+                lastError: ''
+              }).then(function () {
+                var index = S.orders.findIndex(function (item) { return item.id === order.id; });
+                if (index >= 0) S.orders[index] = order;
+                else S.orders.push(order);
+                return synced.concat([order]);
+              });
+            }).catch(function (error) {
+              if (cloud.isNetworkError && cloud.isNetworkError(error)) {
+                return offline.updateTransaction(record.id, {
+                  attempts: (Number(record.attempts) || 0) + 1,
+                  lastError: error.message || 'Network unavailable'
+                }).then(function () { return synced; });
+              }
+              return offline.updateTransaction(record.id, {
+                syncStatus: 'needs-review',
+                lastError: error.message || 'The server rejected this transaction.'
+              }).then(function () { return synced; });
+            });
+          });
+        }, Promise.resolve([]));
+      });
+    }).catch(function (error) {
+      console.warn('Pending transaction sync could not run:', error);
+      return [];
+    });
+  }
+
   function completeSale() {
-    var t = totals(), err = $('payErr');
+    var t = totals(), err = $('payErr'), offline = window.KaheraOfflineDB;
     if (!S.cart.lines.length || S.savingSale) return;
     var tendered = t.total, ref = '';
     if (S.method === 'cash') {
       tendered = M.toCentavos(byId('k-tendered').value);
       if (isNaN(tendered)) { err.textContent = 'Enter the cash received, for example 500 or 1,000.00.'; byId('k-tendered').focus(); return; }
-      if (tendered < t.total) { err.textContent = 'Cash received is ' + M.peso(t.total - tendered) + ' short of the total.'; byId('k-tendered').focus(); return; }
+      if (tendered < t.total) { err.textContent = 'Cash received is ' + M.peso(t.total - t.total).replace('₱','') + ' short of the total.'; byId('k-tendered').focus(); return; }
     } else {
       ref = byId('k-ref').value.trim();
       if (S.method === 'ewallet' ? (ref.length < 4 && !paymentProofData) : ref.length < 4) { err.textContent = S.method === 'ewallet' ? 'Enter a reference number or attach a payment confirmation photo.' : 'Type the reference number from the customer\'s payment confirmation.'; byId('k-ref').focus(); return; }
@@ -569,17 +610,61 @@
     if (!S.pendingOrder || S.pendingOrder.fingerprint !== fingerprint) {
       S.pendingOrder = Object.assign({ id: cloud.newId(), fingerprint: fingerprint }, orderSnapshot);
     }
+    if (!offline || !offline.savePendingTransaction) {
+      err.textContent = 'Local transaction storage is unavailable. Your cart is safe; please reconnect before completing the sale.';
+      return;
+    }
     S.savingSale = true;
     $('complete').disabled = true;
-    err.textContent = 'Saving sale…';
-    cloud.createOrder(S.pendingOrder).then(function (order) {
+    err.textContent = 'Saving sale on this device…';
+    var payload = Object.assign({}, S.pendingOrder, { deviceId: cloud.getDeviceId() });
+    var queuedAt = new Date().toISOString();
+    offline.savePendingTransaction({
+      id: payload.id,
+      payload: payload,
+      createdAt: queuedAt,
+      queuedAt: queuedAt,
+      syncStatus: 'pending'
+    }).then(function () {
+      if (!navigator.onLine) throw new TypeError('Network unavailable');
+      return cloud.createOrder(payload);
+    }).then(function (order) {
+      return offline.updateTransaction(payload.id, {
+        syncStatus: 'synced',
+        syncedAt: new Date().toISOString(),
+        serverOrder: order,
+        lastError: ''
+      }).then(function () { return { order: order, pending: false }; });
+    }).catch(function (error) {
+      if (cloud.isNetworkError && cloud.isNetworkError(error)) {
+        var localOrder = {
+          id: payload.id,
+          no: 'PENDING SYNC',
+          ts: Date.now(),
+          type: payload.type,
+          table: payload.table,
+          lines: clone(payload.lines),
+          totals: payload.totals,
+          method: payload.method,
+          tendered: payload.tendered,
+          change: payload.tendered - payload.totals.total,
+          ref: payload.ref,
+          status: 'paid',
+          localPending: true
+        };
+        return { order: localOrder, pending: true };
+      }
+      return offline.remove('transactions', payload.id).then(function () { throw error; });
+    }).then(function (result) {
+      var order = result.order;
       S.orders.push(order);
-      S.nextNo = 'K-' + pad((parseInt(String(order.no).replace('K-', ''), 10) || 0) + 1);
+      if (!result.pending) S.nextNo = 'K-' + pad((parseInt(String(order.no).replace('K-', ''), 10) || 0) + 1);
       S.pendingOrder = null;
       S.cart = blankCart(); saveCart();
       openPay(false); S.method = 'cash';
       renderAll(); showSlip(order);
-      refreshSharedData();
+      if (result.pending) toast('Sale saved on this device · waiting to sync');
+      else refreshSharedData();
     }).catch(function (error) {
       err.textContent = 'Sale was not saved. Your cart is safe. ' + error.message;
     }).finally(function () {
