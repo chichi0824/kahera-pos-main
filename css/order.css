@@ -30,3 +30,22 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
 @media(max-width:1000px){#menu-grid>.category-section .category-grid{grid-template-columns:repeat(auto-fill,minmax(165px,1fr))}}
 @media(max-width:760px){#menu-grid>.category-section .category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:420px){#menu-grid>.category-section .category-grid{gap:8px}}
+
+
+/* Compact customer-ordering portion and variant buttons to match the POS. */
+.price-actions {
+  gap: 4px;
+}
+.price-actions button {
+  flex: 1 1 calc(50% - 2px);
+  min-width: 0;
+  padding: 5px 7px;
+  font-size: .70rem;
+  line-height: 1.15;
+}
+.price-actions button:only-child {
+  flex-basis: 100%;
+}
+.price-actions button:nth-child(3):last-child {
+  flex-basis: 100%;
+}
