@@ -2746,3 +2746,71 @@ tr.is-unpaid { background: var(--gold-soft); }
     padding-right: 2px;
   }
 }
+
+
+/* ---------- Single-row POS header and staff-reference footer ---------- */
+.topbar {
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 12px clamp(10px, 1.2vw, 22px);
+  min-width: 0;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+  padding-bottom: 2px;
+}
+.topbar::-webkit-scrollbar { display: none; }
+.topbar > .brand,
+.topbar > .tabs,
+.topbar > .top-tools { flex: 0 0 auto; }
+.topbar > .brand { margin-right: auto; }
+.topbar > .tabs { flex-shrink: 0; white-space: nowrap; }
+.top-tools { flex: 0 0 auto; flex-wrap: nowrap; white-space: nowrap; }
+.top-tools > * { flex: 0 0 auto; }
+.clock, .customer-order-link { white-space: nowrap; }
+
+.app-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin: 28px 0 18px;
+  padding: 12px 2px 0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.app-footer-link {
+  border: 0;
+  padding: 2px 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.app-footer-link:hover { color: var(--accent); }
+
+@media (max-width: 900px) {
+  .topbar { flex-wrap: nowrap; gap: 10px 14px; }
+  .topbar > .brand { margin-right: 0; }
+  .brand-biz { max-width: 190px; }
+  .tabs { flex-wrap: nowrap; }
+  .tabs button { white-space: nowrap; }
+  .top-tools { gap: 7px; }
+}
+@media (max-width: 560px) {
+  .topbar { gap: 8px 12px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-name { font-size: 1.12rem; }
+  .brand-biz { max-width: 140px; font-size: 0.7rem; }
+  .tabs { gap: 2px; padding: 3px; }
+  .tabs button { padding: 6px 9px; font-size: 0.78rem; }
+  .top-tools { gap: 6px; }
+  .clock { font-size: 0.72rem; }
+  .top-tools .btn.small { padding: 5px 8px; font-size: 0.75rem; }
+  .top-tools .icon-btn { width: 34px; height: 34px; }
+}
