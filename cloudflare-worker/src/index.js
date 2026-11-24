@@ -356,12 +356,12 @@ export default {
      if(!body||!text(body.password,200))return json({error:'Enter your owner password.'},400,h);
      const credential=await db.prepare('SELECT id FROM admin_credentials WHERE id=1').first();
      if(!credential&&!text(env.ADMIN_PASSWORD,200))return json({error:'Owner login is not configured. Set ADMIN_PASSWORD in Worker secrets.'},503,h);
-     if(!text(env.SESSION_SECRET,32))return json({error:'Owner sessions are not configured. Set SESSION_SECRET (at least 32 characters) in Worker secrets.'},503,h);
+     if(typeof env.SESSION_SECRET!=='string'||env.SESSION_SECRET.trim().length<32)return json({error:'Owner sessions are not configured. Set SESSION_SECRET (at least 32 characters) in Worker secrets.'},503,h);
      if(!await storedOwnerPassword(db,body.password,env))return json({error:'Incorrect password.'},401,h);
      return json({token:await makeToken(env.SESSION_SECRET)},200,h);
    }
    if(u.pathname==='/api/auth/session'&&request.method==='GET'){
-     return isAdmin(bearer(request),env.SESSION_SECRET)?json({authenticated:true},200,h):json({authenticated:false},401,h);
+     return await isAdmin(bearer(request),env.SESSION_SECRET)?json({authenticated:true},200,h):json({authenticated:false},401,h);
    }
    // Public menu reads are needed by the future customer ordering page.
    // All operational and administrative API routes require the owner session.
