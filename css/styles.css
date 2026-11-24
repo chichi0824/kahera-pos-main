@@ -2710,3 +2710,39 @@ tr.is-unpaid { background: var(--gold-soft); }
     font-size: 0.72rem;
   }
 }
+
+
+/* Secondary technical reference, intentionally separated from daily POS tabs. */
+.technical-tools {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: -6px;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+.technical-tools-label {
+  letter-spacing: 0.02em;
+}
+.technical-tools-link {
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  padding: 4px 0;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-decoration-color: var(--line);
+  text-underline-offset: 3px;
+}
+.technical-tools-link:hover {
+  color: var(--accent);
+  text-decoration-color: currentColor;
+}
+@media (max-width: 900px) {
+  .technical-tools {
+    margin-top: -4px;
+    padding-right: 2px;
+  }
+}
