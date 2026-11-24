@@ -757,19 +757,26 @@ SQL</code></pre>
               <p class="settings-feedback" data-k="systemStatusFeedback" role="status"></p>
             </section>
 
-            <section class="panel card-pad settings-card">
+            <section class="panel card-pad settings-card" aria-disabled="true" style="opacity: 0.58;">
               <div class="settings-card-head">
                 <div class="settings-icon">🔐</div>
                 <div><p class="eyebrow">OWNER ACCOUNT</p><h3>Account Security</h3></div>
+                <span class="settings-status">Coming soon</span>
               </div>
-              <p class="hint">Change the password used to sign in to Kahera POS.</p>
-              <form class="settings-password-form" data-k="changePasswordForm">
-                <label>Current password<input type="password" data-k="currentPassword" autocomplete="current-password" required maxlength="200" /></label>
-                <label>New password<input type="password" data-k="newPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
-                <label>Confirm new password<input type="password" data-k="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
-                <p class="err" data-k="changePasswordError" role="alert"></p>
-                <button type="submit" class="btn primary">Change password</button>
-              </form>
+              <p class="hint">Password management is temporarily unavailable.</p>
+              <div class="settings-feedback" role="status" style="margin: 12px 0; padding: 12px; border: 1px dashed var(--line, #cbd5e1); border-radius: 10px;">
+                <strong>Currently disabled</strong>
+                <p class="hint" style="margin: 4px 0 0;">This feature is being prepared and will be enabled in a future update. You can continue using the other Settings options.</p>
+              </div>
+              <fieldset disabled style="border: 0; padding: 0; margin: 0; min-width: 0;">
+                <form class="settings-password-form" data-k="changePasswordForm">
+                  <label>Current password<input type="password" data-k="currentPassword" autocomplete="current-password" required maxlength="200" /></label>
+                  <label>New password<input type="password" data-k="newPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
+                  <label>Confirm new password<input type="password" data-k="confirmPassword" autocomplete="new-password" required minlength="8" maxlength="200" /></label>
+                  <p class="err" data-k="changePasswordError" role="alert"></p>
+                  <button type="submit" class="btn primary">Change password</button>
+                </form>
+              </fieldset>
               <p class="hint">Use at least 8 characters. Keep your new password private.</p>
             </section>
           </div>
