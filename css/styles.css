@@ -904,22 +904,6 @@ tr.is-void td.num {
   color: var(--muted);
   font-size: 0.8rem;
 }
-.shift-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr);
-  gap: 14px;
-  align-items: stretch;
-}
-/* Keep the Best-selling panel aligned with Sales by Hour and scroll only its list. */
-.shift-grid > .panel:last-child {
-  min-height: 430px;
-  grid-template-rows: auto minmax(0, 1fr);
-}
-.shift-grid > .panel:last-child .table-wrap {
-  min-height: 0;
-  max-height: 360px;
-  overflow: auto;
-}
 .card-pad {
   padding: 16px;
   display: grid;
@@ -3560,17 +3544,7 @@ table[data-k="topItems"] .top-category-count {
 }
 table[data-k="topItems"] .portion-breakdown { display: block; margin-top: 4px; color: var(--muted); font-size: .78rem; }
 
-/* Keep the report panels aligned while allowing the long best-selling list to scroll. */
-.shift-grid { align-items: stretch; }
-.shift-grid > .panel { min-height: 430px; }
-.shift-grid > .panel:last-child { height: 430px; min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
-.shift-grid > .panel:last-child .table-wrap { min-height: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
 table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
-@media (max-width: 760px) {
-  .shift-grid > .panel:last-child { height: 430px; }
-}
-
-
 /* Interactive report chart */
 .report-hourly-panel{min-width:0}
 .report-chart-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
@@ -3590,13 +3564,6 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
 .chart-detail small{color:var(--muted);font-variant-numeric:tabular-nums}
 @media(max-width:560px){.report-chart-head{align-items:flex-start;flex-direction:column}.report-chart-toggle{align-self:flex-start}.report-interactive-bars{gap:4px}.report-interactive-bars .bar span{font-size:.58rem}.chart-detail{gap:8px;padding:10px}}
 
-
-/* On narrow screens, let the report panels stack naturally. */
-@media (max-width: 760px) {
-  .shift-grid > .panel:last-child .table-wrap {
-    max-height: 360px;
-  }
-}
 
 .menu-duplicate-note{display:block;color:var(--danger,#b42318);font-size:.75rem;font-weight:650;margin-top:4px}.menu-item-fields input[aria-invalid="true"]{border-color:var(--danger,#b42318)}
 
