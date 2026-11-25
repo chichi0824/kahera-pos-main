@@ -5214,3 +5214,47 @@ body::before {
   #view-menu .menu-new-variants .variant-edit-row .variant-status { grid-column:1/-1; }
   #view-menu .menu-item-editor .menu-thumb { width:56px; height:56px; flex-basis:56px; }
 }
+
+
+/* Keep Menu's item creator in a dedicated side rail, styled like Register's Order panel. */
+#view-menu .menu-admin {
+  display:grid;
+  grid-template-columns:minmax(0,1fr) clamp(320px,32vw,410px);
+  align-items:start;
+  gap:16px;
+}
+#view-menu .menu-list-panel { grid-column:1; grid-row:1; min-width:0; }
+#view-menu .menu-add-panel.order {
+  grid-column:2;
+  grid-row:1;
+  position:sticky;
+  top:max(12px,env(safe-area-inset-top,0px));
+  display:grid;
+  align-self:start;
+  gap:12px;
+  padding:16px;
+  min-width:0;
+  max-height:calc(100vh - 24px);
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  border-radius:var(--r);
+}
+#view-menu .menu-add-panel .menu-section-heading h3 { font-size:1.3rem; }
+#view-menu .menu-add-panel .menu-add-fields { grid-template-columns:minmax(0,1fr); gap:12px; }
+#view-menu .menu-add-panel .menu-photo-field { display:grid; gap:10px; }
+#view-menu .menu-add-panel .menu-photo-field > label { min-width:0; }
+#view-menu .menu-add-panel .menu-add-actions { display:grid; }
+#view-menu .menu-add-panel .menu-add-actions .btn { width:100%; min-height:52px; border-radius:13px; }
+#view-menu .menu-add-panel .menu-new-variants .variant-edit-row { grid-template-columns:minmax(0,1fr) minmax(90px,.8fr) 32px; }
+#view-menu .menu-add-panel .menu-new-variants .variant-edit-row .variant-status { grid-column:1/-1; }
+@media(max-width:899px) {
+  #view-menu .menu-admin { grid-template-columns:minmax(0,1fr); }
+  #view-menu .menu-list-panel { grid-column:1; grid-row:1; }
+  #view-menu .menu-add-panel.order {
+    grid-column:1;
+    grid-row:2;
+    position:static;
+    max-height:none;
+    overflow:visible;
+  }
+}
