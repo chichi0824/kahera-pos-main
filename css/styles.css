@@ -5105,3 +5105,21 @@ body::before {
 #view-shift .report-calendar .calendar-weekdays,
 #view-shift .report-calendar .calendar-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
 #view-shift .report-calendar .calendar-day { position:relative; z-index:0; pointer-events:auto; cursor:pointer; }
+
+
+/* Keep long Daily Reports tables within a fixed-height, independently scrollable area. */
+#view-shift .report-best-items .table-wrap,
+#view-shift .report-recent-transactions .table-wrap {
+  height: 360px;
+  max-height: 360px;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+#view-shift .report-best-items .data thead th,
+#view-shift .report-recent-transactions .data thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fffdf8;
+}
