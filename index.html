@@ -823,22 +823,49 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
         </div>
       </dialog>
 
-      <dialog class="proof-dlg" data-k="onlinePayDlg" aria-label="Confirm online order payment">
-        <div class="panel card-pad online-pay-dialog">
-          <div class="report-calendar-head"><div><p class="eyebrow">PAYMENT CONFIRMATION</p><h3>Mark online order as paid</h3><p data-k="onlinePayOrderLabel" class="hint"></p></div><button type="button" class="btn ghost" data-k="onlinePayClose">Cancel</button></div>
+      <dialog class="proof-dlg online-pay-modal" data-k="onlinePayDlg" aria-label="Confirm online order payment">
+        <div class="online-pay-dialog">
+          <header class="online-pay-header">
+            <div class="online-pay-heading-icon" aria-hidden="true">₱</div>
+            <div class="online-pay-heading-copy">
+              <p class="eyebrow">ORDER PAYMENT</p>
+              <h3>Confirm payment</h3>
+              <p class="hint">Record the payment received for this customer order.</p>
+            </div>
+          </header>
+          <section class="online-pay-summary" aria-label="Order payment summary">
+            <div><span>Order details</span><strong data-k="onlinePayOrderLabel"></strong></div>
+            <span class="online-pay-summary-status">Awaiting payment</span>
+          </section>
           <fieldset class="online-pay-method">
-            <legend>Payment method</legend>
-            <label class="choice"><input type="radio" name="online-payment-method" value="cash" checked><span><strong>Cash</strong><small>Cash received on pickup or delivery</small></span></label>
-            <label class="choice"><input type="radio" name="online-payment-method" value="ewallet"><span><strong>E-wallet</strong><small>GCash, Maya, or another e-wallet</small></span></label>
+            <legend>How did the customer pay?</legend>
+            <div class="online-pay-method-options">
+              <label class="online-pay-method-option">
+                <input type="radio" name="online-payment-method" value="cash" checked>
+                <span class="online-pay-method-icon" aria-hidden="true">₱</span>
+                <span class="online-pay-method-copy"><strong>Cash</strong><small>Paid in cash on pickup or delivery</small></span>
+                <span class="online-pay-radio" aria-hidden="true"></span>
+              </label>
+              <label class="online-pay-method-option">
+                <input type="radio" name="online-payment-method" value="ewallet">
+                <span class="online-pay-method-icon online-pay-ewallet-icon" aria-hidden="true">▦</span>
+                <span class="online-pay-method-copy"><strong>E-wallet</strong><small>GCash, Maya, or another e-wallet</small></span>
+                <span class="online-pay-radio" aria-hidden="true"></span>
+              </label>
+            </div>
           </fieldset>
-          <div data-k="onlineEwalletFields" hidden>
-            <label class="online-pay-field">Reference number <span class="hint">(optional)</span><input data-k="onlinePayRef" maxlength="40" autocomplete="off" placeholder="Enter e-wallet reference number"></label>
-            <label class="online-pay-field">Upload receipt / proof <span class="hint">(optional)</span><input data-k="onlinePayProofFile" type="file" accept="image/*" capture="environment"></label>
+          <div class="online-pay-ewallet-fields" data-k="onlineEwalletFields" hidden>
+            <div class="online-pay-section-title"><strong>E-wallet details</strong><span>Optional</span></div>
+            <label class="online-pay-field">Reference number <span class="hint">Optional</span><input data-k="onlinePayRef" maxlength="40" autocomplete="off" placeholder="Enter transaction reference number"></label>
+            <label class="online-pay-field">Receipt or payment proof <span class="hint">Optional</span><input data-k="onlinePayProofFile" type="file" accept="image/*" capture="environment"></label>
             <div class="payment-proof-preview" data-k="onlinePayProofPreview" hidden><img data-k="onlinePayProofImage" alt="E-wallet payment proof preview"><button type="button" class="btn small ghost" data-k="onlinePayRemoveProof">Remove photo</button></div>
-            <p class="hint">Reference number and receipt photo are both optional. Please verify the payment was received before marking the order as paid.</p>
           </div>
-          <p class="err" data-k="onlinePayError" role="alert"></p>
-          <div class="dlg-actions"><button type="button" class="btn primary" data-k="onlinePayConfirm">Confirm payment received</button></div>
+          <p class="online-pay-reminder"><strong>Before confirming:</strong> Make sure the full payment has been received. This action will update the order as paid.</p>
+          <p class="err online-pay-error" data-k="onlinePayError" role="alert" aria-live="polite"></p>
+          <footer class="online-pay-footer">
+            <button type="button" class="btn ghost" data-k="onlinePayClose">Cancel</button>
+            <button type="button" class="btn primary" data-k="onlinePayConfirm">Confirm payment received</button>
+          </footer>
         </div>
       </dialog>
       <dialog class="proof-dlg" data-k="proofDlg" aria-label="Payment proof"><div class="panel card-pad"><div class="report-calendar-head"><h3 data-k="proofTitle">Payment proof</h3><button type="button" class="btn ghost" data-k="proofClose">Close</button></div><img data-k="proofFullImage" alt="Customer payment confirmation" /></div></dialog>
