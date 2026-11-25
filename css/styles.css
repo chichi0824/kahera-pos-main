@@ -3638,3 +3638,61 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
     max-height: min(72vh, 680px);
   }
 }
+
+
+/* POS register: center option buttons and keep each option name beside its price. */
+.tile.tile-choice .tile-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+.tile.tile-choice .tile-option {
+  box-sizing: border-box;
+  flex: 1 1 calc(50% - 3px);
+  min-width: 0;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 6px;
+  row-gap: 2px;
+  padding: 7px 6px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.tile.tile-choice .tile-option .tile-option-name {
+  min-width: 0;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+}
+.tile.tile-choice .tile-option strong {
+  display: inline-block;
+  width: auto;
+  flex: 0 1 auto;
+  color: inherit;
+  font: 800 .76rem var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+.tile.tile-choice .tile-option small {
+  flex: 0 0 100%;
+  width: 100%;
+  text-align: center;
+}
+.tile.tile-choice .tile-option:only-child,
+.tile.tile-choice .tile-option:nth-child(3):last-child {
+  flex-basis: 100%;
+}
+@media (max-width: 560px) {
+  .tile.tile-choice .tile-options { gap: 4px; }
+  .tile.tile-choice .tile-option { padding: 6px 5px; column-gap: 4px; }
+  .tile.tile-choice .tile-option strong { font-size: .70rem; }
+}
