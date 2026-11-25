@@ -1,7 +1,7 @@
 /* Kahera POS — sw.js
  * Offline support: cache the app shell on install, serve cache-first,
  * refresh the cache in the background. Bump CACHE when files change. */
-const CACHE = 'kahera-v2.9.39-report-calendar-full-width';
+const CACHE = 'kahera-v2.9.40-report-calendar-controls-fix';
 const SHELL = [
   './', 'index.html', 'assets/victorias-empty-order-cloche.svg', 'assets/victorias-leafy-corner.svg', 'order.html', 'css/styles.css', 'css/order.css', 'js/order.js', 'js/money.js', 'js/store.js',
   'js/menu-sample.js', 'js/cloud.js', 'js/app.js', 'manifest.webmanifest', 'icons/kahera-icon.png'
