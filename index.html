@@ -647,7 +647,7 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
             <div>
               <p class="eyebrow">OWNER CONTROL CENTER</p>
               <h2>Settings</h2>
-              <p class="hint">Manage online ordering, alerts, system health and account access.</p>
+              <p class="hint">Manage your business information, ordering preferences, notifications, and system settings.</p>
             </div>
           </div>
 
@@ -678,14 +678,14 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
             </form>
           </section>
 
-          <div class="settings-grid">
+          
             <section class="panel card-pad settings-card">
               <div class="settings-card-head">
                 <div class="settings-icon">🛍️</div>
                 <div><p class="eyebrow">CUSTOMER EXPERIENCE</p><h3>Customer Ordering</h3></div>
                 <span class="settings-status" data-k="customerOrderingStatus">Checking…</span>
               </div>
-              <p class="hint">Control whether customers can submit new orders through the customer ordering page. The page remains available when ordering is closed.</p>
+              <p class="hint">Control whether customers can submit new orders through the customer ordering page.</p>
               <label class="settings-toggle">
                 <span><strong>Accept online orders</strong><small>Allow customers to submit new orders.</small></span>
                 <input type="checkbox" data-k="customerOrderingEnabled" disabled />
@@ -699,7 +699,7 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
                 <div class="settings-icon">🔔</div>
                 <div><p class="eyebrow">OWNER ALERTS</p><h3>Notifications &amp; Alerts</h3></div>
               </div>
-              <p class="hint">Choose how this device alerts you when a customer order arrives. Browser permissions are managed by your browser.</p>
+              <p class="hint">Choose how this device alerts you when a customer order arrives.</p>
               <label class="settings-toggle">
                 <span><strong>Voice notifications</strong><small>Speak when a new order arrives and when a reminder is due.</small></span>
                 <input type="checkbox" data-k="voiceAlertsEnabled" />
@@ -745,7 +745,7 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
               <div class="settings-actions">
                 <button type="button" class="btn small" data-k="refreshSystemStatus">Refresh status</button>
               </div>
-              <p class="hint">This page reports connection health. It does not expose database credentials or technical configuration.</p>
+              <p class="hint">Monitor the connection health of your restaurant ordering system.</p>
               <p class="settings-feedback" data-k="systemStatusFeedback" role="status"></p>
             </section>
 
@@ -755,7 +755,7 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
                 <div><p class="eyebrow">OWNER ACCOUNT</p><h3>Account Security</h3></div>
                 <span class="settings-status">Coming soon</span>
               </div>
-              <p class="hint">Password management is temporarily unavailable.</p>
+              <p class="hint">Manage the password used to access the owner account.</p>
               <div class="settings-feedback" role="status" style="margin: 12px 0; padding: 12px; border: 1px dashed var(--line, #cbd5e1); border-radius: 10px;">
                 <strong>Currently disabled</strong>
                 <p class="hint" style="margin: 4px 0 0;">This feature is being prepared and will be enabled in a future update. You can continue using the other Settings options.</p>
@@ -771,7 +771,8 @@ npx wrangler d1 execute kahera-db --remote --command="SELECT value AS last_recei
               </fieldset>
               <p class="hint">Use at least 8 characters. Keep your new password private.</p>
             </section>
-          </div>
+          </section>
+
         </section>
 
       </main>
