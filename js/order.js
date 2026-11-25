@@ -51,7 +51,7 @@
     var availableVariants=hasOptions?item.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     var statusLabel=unavailable?'Sold Out':(hasOptions&&!availableVariants.length?'No options available':'');
     var qty=qtyInCart(item.id);
-    return '<article class="tile tile-choice'+(item.image?' has-photo':'')+(unavailable?' is-sold-out':'')+'" style="--c:var(--accent)">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(item.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+itemButtons(item)+'</div>'+(qty?'<span class="t-qty" aria-label="'+qty+' in order">'+qty+'</span>':'')+'</article>';
+    return '<article class="tile tile-choice'+(item.image?' has-photo':'')+(unavailable?' is-sold-out':'')+'" style="--c:'+catColor(item.cat)+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(item.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+itemButtons(item)+'</div>'+(qty?'<span class="t-qty" aria-label="'+qty+' in order">'+qty+'</span>':'')+'</article>';
   }
   function renderMenu(){
     var q=$('menu-search').value.trim().toLowerCase();
