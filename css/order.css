@@ -355,7 +355,7 @@ main{min-width:0;max-width:none;margin:0;padding:0}
 .tile-option:only-child,.tile-option:nth-child(3):last-child{flex-basis:100%}
 .tile.is-sold-out{opacity:.62}
 .sold-out-tag{display:inline-flex;align-self:flex-start;padding:3px 8px;border-radius:999px;background:var(--gold-soft);color:var(--gold);font-size:.72rem;font-weight:800;letter-spacing:.02em}
-.order{position:sticky;top:max(12px,env(safe-area-inset-top,0px));display:grid;gap:12px;padding:16px;min-width:0}
+.order{position:sticky;top:max(12px,env(safe-area-inset-top,0px));display:grid;gap:12px;padding:16px;min-width:0;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--shadow)}
 .order-head{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
 .order-head h2{font-size:1.3rem}
 .cart-count{display:inline-grid;place-items:center;min-width:26px;height:26px;padding:0 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font:700 .8rem var(--f-mono)}
