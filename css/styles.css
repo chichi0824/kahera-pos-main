@@ -4399,8 +4399,8 @@ body {
 }
 
 
-/* Soft botanical corner artwork inspired by the supplied reference.
-   Decorative only: fixed behind the interface and never intercepts taps. */
+/* Replace the former hand-drawn page decoration with the supplied leafy SVG.
+   Keep the artwork behind the app and away from interactive controls. */
 body {
   position: relative;
   isolation: isolate;
@@ -4411,16 +4411,17 @@ body::before {
   inset: 0;
   z-index: -1;
   pointer-events: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 1000' preserveAspectRatio='xMidYMid slice'%3E%3Cg fill='%2398b77e' opacity='.20'%3E%3Cpath d='M0 820C55 770 122 790 156 876C91 874 37 859 0 820Z'/%3E%3Cpath d='M9 887C43 809 111 792 171 824C129 881 72 903 9 887Z'/%3E%3Cpath d='M80 1000C69 913 112 858 188 853C182 920 143 972 80 1000Z'/%3E%3Cpath d='M1430 90C1347 103 1298 65 1287 0C1357 8 1409 38 1430 90Z'/%3E%3Cpath d='M1440 175C1351 154 1315 91 1332 22C1403 53 1441 106 1440 175Z'/%3E%3Cpath d='M1440 260C1372 205 1360 135 1403 81C1452 143 1466 204 1440 260Z'/%3E%3Cpath d='M1180 1000C1214 918 1285 897 1341 931C1302 985 1244 1007 1180 1000Z'/%3E%3Cpath d='M1270 1000C1283 907 1345 862 1417 883C1395 952 1346 995 1270 1000Z'/%3E%3Cpath d='M1365 1000C1370 922 1414 876 1440 868L1440 1000Z'/%3E%3C/g%3E%3Cg fill='%23b7cda2' opacity='.25'%3E%3Cpath d='M0 930C57 875 113 885 150 947C91 966 39 960 0 930Z'/%3E%3Cpath d='M1310 208C1240 177 1219 119 1249 64C1305 103 1330 154 1310 208Z'/%3E%3Cpath d='M1440 360C1378 315 1360 255 1395 204C1444 258 1455 310 1440 360Z'/%3E%3C/g%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: 100% 100%;
+  background-image:
+    url("assets/victorias-leafy-corner.svg"),
+    url("assets/victorias-leafy-corner.svg");
+  background-repeat: no-repeat, no-repeat;
+  background-position: left bottom, right top;
+  background-size: 210px auto, 210px auto;
 }
 .app {
   position: relative;
   z-index: 1;
 }
-
 
 /* Register: three item cards per category row on tablet/desktop.
    Keep category sections stacked vertically and preserve mobile usability. */
@@ -4599,21 +4600,6 @@ body::before {
   }
 }
 
-/* Use the supplied botanical SVG in the Register view corners. */
-.view-register {
-  background-image:
-    url("../assets/victorias-leafy-corner.svg"),
-    url("../assets/victorias-leafy-corner.svg");
-  background-repeat: no-repeat, no-repeat;
-  background-position: left bottom, right top;
-  background-size: 190px auto, 190px auto;
-}
-@media (max-width: 700px) {
-  .view-register {
-    background-size: 125px auto, 125px auto;
-  }
-}
-
 /* Empty order illustration and message share a centered empty-state area. */
 .lines .empty-order-state {
   display: flex;
@@ -4634,4 +4620,42 @@ body::before {
   height: auto;
   object-fit: contain;
   opacity: .9;
+}
+
+
+/* Tablet portrait Register cards (701–844px):
+   keep two cards per row and give both choice buttons enough width. */
+@media (min-width: 701px) and (max-width: 844px) {
+  .view-register .catalog > .grid > .category-section > .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+  .view-register .tile.tile-choice {
+    min-width: 0;
+    padding: 10px;
+    gap: 8px;
+  }
+  .view-register .tile.tile-choice .tile-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 7px;
+  }
+  .view-register .tile.tile-choice .tile-option {
+    min-width: 0;
+    width: 100%;
+    min-height: 48px;
+    padding: 7px 6px;
+    align-items: center;
+    text-align: center;
+    overflow-wrap: anywhere;
+    word-break: normal;
+    white-space: normal;
+    line-height: 1.2;
+  }
+  .view-register .tile.tile-choice .tile-option strong,
+  .view-register .tile.tile-choice .tile-option small {
+    max-width: 100%;
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
 }
