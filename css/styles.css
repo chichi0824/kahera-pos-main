@@ -4313,7 +4313,7 @@ body {
 /* Keep a side-by-side menu and order rail on tablet landscape and desktop. */
 @media (min-width: 900px) {
   .view-register {
-    grid-template-columns: minmax(0, 1fr) clamp(280px, 29vw, 350px);
+    grid-template-columns: minmax(0, 1fr) clamp(320px, 32vw, 410px);
     align-items: start;
   }
 }
