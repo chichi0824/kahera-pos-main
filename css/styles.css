@@ -4550,3 +4550,88 @@ body::before {
     display: none;
   }
 }
+
+
+/* Register catalog cards at medium desktop/tablet widths (900–1300px):
+   use two wider cards per row so photos and pricing choices have room. */
+@media (min-width: 900px) and (max-width: 1300px) {
+  .view-register .catalog > .grid > .category-section > .category-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .view-register .tile.tile-choice {
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-rows: 6px auto minmax(44px, auto);
+    min-height: 126px;
+    padding: 10px;
+    column-gap: 10px;
+    row-gap: 6px;
+  }
+  .view-register .tile.tile-choice .tile-photo {
+    width: 88px;
+    height: 88px;
+    min-height: 88px;
+  }
+  .view-register .tile.tile-choice .tile-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+  }
+  .view-register .tile.tile-choice .tile-option {
+    min-width: 0;
+    min-height: 46px;
+    padding: 6px 5px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 3px;
+    text-align: center;
+    font-size: .72rem;
+    line-height: 1.1;
+    overflow-wrap: anywhere;
+  }
+  .view-register .tile.tile-choice .tile-option strong {
+    font-size: .74rem;
+    white-space: normal;
+  }
+  .view-register .tile.tile-choice .tile-option small {
+    flex-basis: auto;
+    font-size: .62rem;
+  }
+}
+
+/* Use the supplied botanical SVG in the Register view corners. */
+.view-register {
+  background-image:
+    url("../assets/victorias-leafy-corner.svg"),
+    url("../assets/victorias-leafy-corner.svg");
+  background-repeat: no-repeat, no-repeat;
+  background-position: left bottom, right top;
+  background-size: 190px auto, 190px auto;
+}
+@media (max-width: 700px) {
+  .view-register {
+    background-size: 125px auto, 125px auto;
+  }
+}
+
+/* Empty order illustration and message share a centered empty-state area. */
+.lines .empty-order-state {
+  display: flex;
+  min-height: 250px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  padding: 24px 14px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.5;
+}
+.lines .empty-order-illustration {
+  display: block;
+  width: 112px;
+  max-width: 40%;
+  height: auto;
+  object-fit: contain;
+  opacity: .9;
+}
