@@ -5123,3 +5123,95 @@ body::before {
   z-index: 2;
   background: #fffdf8;
 }
+
+
+/* Menu management redesign — full-width, single-column owner workflow. */
+#view-menu.menu-page { display:block; }
+#view-menu .menu-page-heading { align-items:flex-start; gap:18px; margin-bottom:18px; }
+#view-menu .menu-page-description { margin:6px 0 0; color:var(--muted); font-size:.96rem; }
+#view-menu .menu-sync-note { max-width:360px; margin:8px 0 0; text-align:right; }
+#view-menu .menu-admin { display:flex; flex-direction:column; gap:18px; width:100%; min-width:0; }
+#view-menu .menu-add-panel { width:100%; display:grid; gap:16px; }
+#view-menu .menu-section-heading h3,
+#view-menu .menu-list-heading h3 { margin:0; font-size:1.18rem; }
+#view-menu .menu-section-heading .eyebrow,
+#view-menu .menu-list-heading .eyebrow { margin:0 0 4px; }
+#view-menu .menu-section-heading .hint,
+#view-menu .menu-list-heading .hint { margin:5px 0 0; }
+#view-menu .menu-add-fields { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:14px; }
+#view-menu .menu-add-fields > label { display:grid; align-content:start; gap:7px; min-width:0; color:var(--ink); font-size:.88rem; font-weight:700; }
+#view-menu .menu-add-fields input,
+#view-menu .menu-add-fields select,
+#view-menu .menu-photo-field input { box-sizing:border-box; width:100%; min-width:0; min-height:46px; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--ink); font:inherit; }
+#view-menu .required-mark { color:var(--accent); font-size:.7rem; font-weight:800; text-transform:uppercase; letter-spacing:.04em; }
+#view-menu .field-optional { color:var(--muted); font-size:.75rem; font-weight:500; }
+#view-menu .menu-new-options { display:flex; align-items:center; gap:10px; margin:0; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--surface-2); }
+#view-menu .menu-new-options input { width:20px!important; height:20px; }
+#view-menu .menu-new-variants { padding:14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-2); }
+#view-menu .menu-new-variants .variant-edit-row { grid-template-columns:minmax(150px,1.2fr) minmax(110px,.7fr) auto auto; gap:10px; }
+#view-menu .menu-new-variants .variant-edit-row input:not([type=checkbox]) { min-height:42px; }
+#view-menu .menu-photo-field { display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+#view-menu .menu-photo-field > label { display:grid; gap:7px; min-width:min(100%,320px); font-size:.88rem; font-weight:700; }
+#view-menu .menu-new-photo-preview { display:flex; align-items:center; gap:10px; color:var(--muted); font-size:.78rem; }
+#view-menu .menu-new-photo-preview img { width:64px; height:64px; object-fit:cover; border-radius:10px; border:1px solid var(--line); }
+#view-menu .menu-add-actions { display:flex; justify-content:flex-start; }
+#view-menu .menu-add-actions .btn { min-height:46px; padding-inline:22px; }
+#view-menu .menu-list-panel { width:100%; overflow:hidden; }
+#view-menu .menu-list-heading { padding:20px 18px 4px; }
+#view-menu .menu-admin-toolbar { padding:14px 18px 16px; }
+#view-menu .menu-admin-search input { box-sizing:border-box; width:100%; min-height:48px; padding:12px 15px; border:1px solid var(--line); border-radius:11px; background:var(--surface); color:var(--ink); font-size:1rem; }
+#view-menu .menu-admin-filter-groups { gap:10px; }
+#view-menu .menu-admin-filter-groups .menu-admin-filters { display:flex; flex-wrap:wrap; gap:8px; padding:0; border:0; }
+#view-menu .menu-admin-filters .chip { min-height:40px; padding:8px 16px; border-radius:999px; font-size:.88rem; }
+#view-menu .menu-admin-filters .chip[aria-pressed=true] { background:var(--accent); border-color:var(--accent); color:var(--accent-ink); }
+#view-menu .menu-admin-filters.menu-availability-filters { padding-top:12px; border-top:1px solid var(--line); }
+#view-menu .menu-items-table-wrap { width:100%; overflow-x:auto; }
+#view-menu .menu-admin table.data { width:100%; min-width:860px; table-layout:fixed; border-collapse:separate; border-spacing:0; }
+#view-menu .menu-admin table.data col.menu-col-item { width:25%; }
+#view-menu .menu-admin table.data col.menu-col-category { width:13%; }
+#view-menu .menu-admin table.data col.menu-col-pricing { width:30%; }
+#view-menu .menu-admin table.data col.menu-col-status { width:25%; }
+#view-menu .menu-admin table.data col.menu-col-delete { width:7%; }
+#view-menu .menu-admin table.data thead th { padding:12px 14px; background:var(--surface-2); color:var(--muted); font-size:.74rem; letter-spacing:.06em; text-transform:uppercase; }
+#view-menu .menu-admin table.data tbody tr:not(.menu-category-row) > td { padding:18px 14px; border-bottom:1px solid var(--line); background:var(--panel); vertical-align:middle; }
+#view-menu .menu-admin table.data tbody tr:not(.menu-category-row):hover > td { background:var(--surface-2); }
+#view-menu .menu-category-row th { padding:14px 16px!important; background:var(--accent-soft); color:var(--ink)!important; border-top:1px solid var(--line); border-bottom:1px solid var(--line); font-size:.95rem!important; }
+#view-menu .menu-category-row th small { color:var(--muted); font-size:.78rem; }
+#view-menu .menu-item-editor { align-items:center; gap:12px; }
+#view-menu .menu-item-editor .menu-thumb { width:68px; height:68px; flex-basis:68px; border-radius:11px; }
+#view-menu .menu-item-fields { gap:8px; }
+#view-menu .menu-item-fields input[data-f=name],
+#view-menu .menu-admin table.data td select[data-f=cat],
+#view-menu .menu-pricing-cell input,
+#view-menu .menu-admin .drink-variants-cell .variant-edit-row input:not([type=checkbox]) { min-height:42px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; font-size:.9rem; }
+#view-menu .menu-item-fields .menu-image-input { min-height:32px; font-size:.78rem; }
+#view-menu .menu-pricing-cell { gap:9px; }
+#view-menu .menu-pricing-cell label { min-width:88px; gap:5px; font-size:.75rem; font-weight:700; }
+#view-menu .menu-pricing-cell input { text-align:left; }
+#view-menu .menu-status-cell { display:grid; gap:12px; }
+#view-menu .menu-status-cell .check { min-height:30px; gap:9px; font-size:.86rem; }
+#view-menu .menu-status-cell .check input,
+#view-menu .menu-new-options input { width:20px; height:20px; accent-color:var(--accent); }
+#view-menu .menu-admin .drink-variants-cell { padding:14px!important; }
+#view-menu .menu-admin table.data td.drink-variants-cell .variant-edit-row { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr) 34px; gap:9px; margin:5px 0; }
+#view-menu .menu-admin table.data td.drink-variants-cell .variant-fields { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:8px; }
+#view-menu .menu-admin table.data td.drink-variants-cell .variant-edit-row .variant-status { grid-column:1/-1; grid-row:2; flex-wrap:wrap; gap:8px 14px; }
+#view-menu .menu-admin table.data td.drink-variants-cell .variant-status .check { min-height:28px; font-size:.8rem; }
+#view-menu .menu-admin table.data td.drink-variants-cell [data-variant-add] { min-height:38px; margin-top:8px; }
+#view-menu .menu-admin table.data td:last-child { text-align:center; }
+#view-menu .menu-admin table.data td [data-del] { min-width:40px; min-height:40px; border-radius:9px; }
+@media(max-width:1000px) {
+  #view-menu .menu-add-fields { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  #view-menu .menu-sync-note { max-width:280px; }
+}
+@media(max-width:680px) {
+  #view-menu .menu-page-heading { flex-direction:column; }
+  #view-menu .menu-sync-note { max-width:none; text-align:left; }
+  #view-menu .menu-add-fields { grid-template-columns:minmax(0,1fr); }
+  #view-menu .menu-list-heading { padding:16px 14px 4px; }
+  #view-menu .menu-admin-toolbar { padding:12px 14px; }
+  #view-menu .menu-admin-filters .chip { min-height:42px; padding:9px 13px; }
+  #view-menu .menu-new-variants .variant-edit-row { grid-template-columns:minmax(0,1fr) minmax(100px,.7fr) auto; }
+  #view-menu .menu-new-variants .variant-edit-row .variant-status { grid-column:1/-1; }
+  #view-menu .menu-item-editor .menu-thumb { width:56px; height:56px; flex-basis:56px; }
+}
