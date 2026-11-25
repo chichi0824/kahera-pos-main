@@ -433,7 +433,7 @@
     c.table = '';
 
     if (!c.lines.length) {
-      $('lines').innerHTML = '<li class="empty">Tap a menu item to start an order.</li>';
+      $('lines').innerHTML = '<li class="empty empty-order-state"><img class="empty-order-illustration" src="assets/victorias-empty-order-cloche.svg" alt=""><span>Tap a menu item to start an order.</span></li>';
     } else {
       $('lines').innerHTML = c.lines.map(function (l, i) {
         var portionControl = '<span class="portion-label">' + esc(l.variantName || (l.portion === 'half' ? 'Half' : 'Full')) + '</span>';
