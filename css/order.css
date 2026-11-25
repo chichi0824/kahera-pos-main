@@ -404,3 +404,11 @@ footer{padding:18px 0 0;text-align:center;color:var(--muted);font-size:.78rem}
 @media(max-width:760px){.customer-app{padding:12px 14px 36px;gap:12px}.layout{grid-template-columns:1fr}.order{position:static;order:2}.cart-lines{max-height:280px}.topbar{gap:10px 14px}}
 @media(max-width:560px){.topbar{align-items:center}.brand-mark{width:40px;height:40px}.brand-name{font-size:1.12rem}.brand-biz{font-size:.7rem;max-width:48vw}.top-tools{gap:7px}.customer-page-label{display:none}.category-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.tile{min-height:92px;padding:10px}.tile.tile-choice{padding:9px;gap:6px}.tile-options{gap:4px}.tile-option{min-height:39px;padding:6px 5px;column-gap:4px}.tile-option strong{font-size:.70rem}.order{padding:14px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+
+/* Keep every customer menu option the same height, whether the item has one or two choices. */
+.tile-options{align-items:stretch}
+.tile-option{box-sizing:border-box;height:42px;min-height:42px;max-height:42px;flex-shrink:0;align-content:center}
+@media(max-width:560px){
+  .tile-option{height:39px;min-height:39px;max-height:39px}
+}
