@@ -291,3 +291,34 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
   .menu-area .tile.tile-choice .tile-option { min-height: 42px; padding: 6px 5px; column-gap: 4px; }
   .menu-area .tile.tile-choice .tile-option strong { font-size: .70rem; }
 }
+
+
+/* DARK MODE AUDIT — customer ordering page; shares the POS saved theme. */
+:root[data-theme="dark"]{--bg:#1d241f;--surface:#27312a;--surface-2:#303c33;--ink:#f1f3e9;--muted:#bdc8bb;--line:#465448;--accent:#a9c58e;--accent-soft:#354832;--accent-ink:#172116;--gold:#edc477;--gold-soft:#493b25;--danger:#f08e84;color-scheme:dark}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1d241f;--surface:#27312a;--surface-2:#303c33;--ink:#f1f3e9;--muted:#bdc8bb;--line:#465448;--accent:#a9c58e;--accent-soft:#354832;--accent-ink:#172116;--gold:#edc477;--gold-soft:#493b25;--danger:#f08e84;color-scheme:dark}}
+:root[data-theme="dark"] .order-header,:root[data-theme="dark"] .order-panel,:root[data-theme="dark"] .menu-card,:root[data-theme="dark"] .success-panel,:root[data-theme="dark"] .ordering-closed{background:var(--surface);border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .hero h1,:root[data-theme="dark"] .section-head h2,:root[data-theme="dark"] .panel-heading h2,:root[data-theme="dark"] .menu-card h3,:root[data-theme="dark"] .success-panel strong,:root[data-theme="dark"] .success-panel h2,:root[data-theme="dark"] .ordering-closed h1{color:var(--ink)}
+:root[data-theme="dark"] .hero>p:last-child,:root[data-theme="dark"] .menu-card p,:root[data-theme="dark"] .empty,:root[data-theme="dark"] .loading,:root[data-theme="dark"] .brand-biz,:root[data-theme="dark"] footer{color:var(--muted)}
+:root[data-theme="dark"] .section-head input,:root[data-theme="dark"] .order-panel input:not([type=radio]):not([type=checkbox]),:root[data-theme="dark"] .order-panel textarea{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] input::placeholder,:root[data-theme="dark"] textarea::placeholder{color:#9eaa9e;opacity:1}
+:root[data-theme="dark"] .category-list button{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .category-list button.active{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+:root[data-theme="dark"] .menu-area .tile.tile-choice .tile-option{background:#354832;color:#e4efd9;border-color:#526b49}
+:root[data-theme="dark"] .menu-area .tile.tile-choice .tile-option:hover:not(:disabled){background:#40583b}
+:root[data-theme="dark"] .menu-area .tile.tile-choice .tile-option small{color:#c4d3bc}
+:root[data-theme="dark"] .menu-area .tile .sold-out-tag{background:var(--gold-soft);color:#ffd58c}
+:root[data-theme="dark"] .line-controls button{background:var(--surface-2);color:var(--ink);border-color:var(--line)}
+:root[data-theme="dark"] .total-row{border-color:var(--line)}
+:root[data-theme="dark"] .choice{border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] .choice:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+:root[data-theme="dark"] .choice small,:root[data-theme="dark"] .check,:root[data-theme="dark"] legend,:root[data-theme="dark"] .order-panel form>label{color:var(--muted)}
+:root[data-theme="dark"] input[type=checkbox],:root[data-theme="dark"] input[type=radio]{accent-color:var(--accent)}
+:root[data-theme="dark"] .payment-note{background:var(--gold-soft);color:#ffd58c}
+:root[data-theme="dark"] .submit-order{background:var(--accent);color:var(--accent-ink)}
+:root[data-theme="dark"] .submit-order:disabled{opacity:.48}
+:root[data-theme="dark"] .success-icon{background:var(--accent-soft);color:var(--accent)}
+:root[data-theme="dark"] .success-unpaid{background:var(--gold-soft);color:#ffd58c!important}
+:root[data-theme="dark"] footer{border-color:var(--line)}
+:root[data-theme="dark"] .theme-toggle{background:var(--surface-2);border-color:var(--line);color:var(--ink)}
+:root[data-theme="dark"] :focus-visible{outline-color:#c3dfa8}
+:root[data-theme="dark"] ::selection{background:#526b48;color:#fff}
