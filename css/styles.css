@@ -5039,3 +5039,60 @@ body::before {
   }
   #view-orders .online-order-actions .btn { min-height: 58px; }
 }
+
+
+/* Daily Reports — Victoria's warm cream and forest-green dashboard */
+#view-shift { display:block; }
+#view-shift[hidden] { display:none; }
+#view-shift .report-page-heading { margin-bottom:18px; }
+#view-shift .report-page-heading h2 { margin-bottom:5px; }
+#view-shift .report-page-description { margin:0; color:#786c60; font-size:1rem; }
+#view-shift .report-section { display:block; width:100%; margin-top:22px; }
+#view-shift .report-section-heading { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+#view-shift .report-section-heading h3, #view-shift .report-calendar-head h3 { margin:0; color:#382b23; font-size:1.25rem; }
+#view-shift .report-section .eyebrow { margin:0 0 4px; }
+#view-shift .report-filter-panel, #view-shift .report-trend-section, #view-shift .report-best-items, #view-shift .report-recent-transactions, #view-shift .report-payment-mix { background:#fffdf8; border:1px solid #e9e1d5; border-radius:18px; box-shadow:0 5px 18px rgba(65,48,31,.055); }
+#view-shift .report-filter-panel { margin-top:0; padding:18px 20px; }
+#view-shift .report-filter-top { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:14px; }
+#view-shift .report-date-control { display:flex; align-items:center; gap:10px; color:#51453a; font-weight:700; }
+#view-shift .report-date-control input { min-height:44px; padding:8px 12px; border:1px solid #ddd3c5; border-radius:10px; background:#fff; color:#382b23; font:inherit; }
+#view-shift .report-period-nav { display:flex; align-items:center; gap:8px; }
+#view-shift .report-period-nav strong { min-width:160px; text-align:center; color:#403329; }
+#view-shift .report-export-actions { display:flex; gap:8px; }
+#view-shift .report-export-actions .btn.primary { background:#527344; border-color:#527344; color:#fff; }
+#view-shift .report-periods { display:flex; flex-wrap:wrap; gap:7px; margin-top:14px; }
+#view-shift .report-periods .chip { min-height:38px; padding:8px 15px; border-radius:999px; }
+#view-shift .report-calendar-details { margin-top:12px; padding-top:10px; border-top:1px solid #eee6db; }
+#view-shift .report-calendar-details summary { color:#587448; cursor:pointer; font-size:.9rem; font-weight:700; }
+#view-shift .report-calendar-panel { margin-top:12px; max-width:560px; }
+#view-shift .report-loading { margin:12px 0 0; }
+#view-shift .report-kpis { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+#view-shift .report-kpis .kpi { min-width:0; padding:18px; border:1px solid #e8e1d6; border-radius:16px; background:#fffdf8; box-shadow:0 4px 14px rgba(65,48,31,.045); }
+#view-shift .report-kpis .kpi b { display:block; margin:8px 0 5px; color:#3e342b; font-size:clamp(1.35rem,2vw,1.9rem); font-weight:800; overflow-wrap:anywhere; }
+#view-shift .report-kpis .kpi small { color:#82766a; }
+#view-shift .report-metric-0 { border-top:3px solid #668653 !important; }
+#view-shift .report-secondary-metrics { grid-column:1/-1; display:flex; flex-wrap:wrap; gap:10px 24px; padding:12px 4px 0; color:#7b7064; font-size:.88rem; }
+#view-shift .report-secondary-metrics span { display:flex; gap:7px; }
+#view-shift .report-secondary-metrics strong { color:#493d32; }
+#view-shift .report-payment-mix { margin-top:12px; padding:16px 18px; }
+#view-shift .report-payment-mix h3 { margin:0 0 12px; }
+#view-shift .report-trend-section { margin-top:22px; }
+#view-shift .report-chart-head { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+#view-shift .report-chart-head h3 { margin:0; font-size:1.25rem; }
+#view-shift .report-line-chart { width:100%; min-height:220px; margin-top:12px; }
+#view-shift .report-chart-svg { display:block; width:100%; height:auto; overflow:visible; }
+#view-shift .report-chart-gridline { stroke:#e9e5dc; stroke-width:1; }
+#view-shift .report-chart-y-label { fill:#877b6e; font-size:12px; }
+#view-shift .report-chart-area { fill:#668653; opacity:.13; }
+#view-shift .report-chart-line { fill:none; stroke:#587848; stroke-width:4; stroke-linecap:round; stroke-linejoin:round; }
+#view-shift .report-chart-point { fill:#fffdf8; stroke:#587848; stroke-width:3; cursor:pointer; outline:none; }
+#view-shift .report-chart-point.is-selected { fill:#587848; stroke:#dce7d2; stroke-width:5; }
+#view-shift .report-chart-point:focus { stroke:#bd842d; stroke-width:5; }
+#view-shift .bar-labels { display:flex; justify-content:space-between; gap:4px; padding-left:7.5%; color:#81766b; font-size:.78rem; }
+#view-shift .chart-detail { display:flex; flex-wrap:wrap; gap:24px; margin-top:14px; padding:12px 14px; border-radius:12px; background:#f5f4eb; }
+#view-shift .report-best-items, #view-shift .report-recent-transactions { margin-top:22px; }
+#view-shift .report-best-items .data th, #view-shift .report-recent-transactions .data th { color:#75685c; font-size:.82rem; letter-spacing:.035em; }
+#view-shift .report-best-items .data td, #view-shift .report-recent-transactions .data td { padding-top:14px; padding-bottom:14px; }
+#view-shift .report-recent-transactions .is-void { background:#fff2ef; }
+@media(max-width:900px){#view-shift .report-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}#view-shift .report-filter-top{align-items:flex-start;}#view-shift .report-period-nav{order:3;width:100%;justify-content:flex-start;}}
+@media(max-width:600px){#view-shift .report-filter-panel{padding:14px;}#view-shift .report-filter-top{display:grid;grid-template-columns:1fr;}#view-shift .report-date-control{flex-wrap:wrap;}#view-shift .report-date-control input{flex:1;min-width:0;}#view-shift .report-period-nav{order:initial;flex-wrap:wrap;}#view-shift .report-period-nav strong{flex:1;min-width:120px;}#view-shift .report-export-actions{width:100%;}#view-shift .report-export-actions .btn{flex:1;}#view-shift .report-kpis{grid-template-columns:1fr 1fr;gap:8px;}#view-shift .report-kpis .kpi{padding:12px;}#view-shift .report-kpis .kpi b{font-size:1.2rem;}#view-shift .report-secondary-metrics{gap:8px 14px;}#view-shift .report-chart-head{align-items:flex-start;flex-direction:column;}#view-shift .report-line-chart{min-height:160px;}#view-shift .report-best-items .table-wrap,#view-shift .report-recent-transactions .table-wrap{overflow-x:auto;}#view-shift .report-best-items table,#view-shift .report-recent-transactions table{min-width:620px;}}
