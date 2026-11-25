@@ -4437,3 +4437,16 @@ body::before {
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Give the category accent bar clear breathing room before the title. */
+.view-register .category-heading {
+  padding-left: 20px;
+}
+.view-register .category-heading::before {
+  left: 0;
+  width: 5px;
+}
+.view-register .category-heading h3 {
+  margin: 0;
+}
