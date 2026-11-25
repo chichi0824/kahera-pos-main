@@ -4659,3 +4659,199 @@ body::before {
     overflow-wrap: anywhere;
   }
 }
+
+
+/* ---------- Victoria's Orders page refinement ---------- */
+#view-orders {
+  display: grid;
+  gap: 16px;
+}
+#view-orders .orders-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 18px;
+}
+#view-orders .view-head { margin: 0; }
+#view-orders .view-head h2 {
+  color: #39291f;
+  font-family: var(--f-display);
+  font-size: clamp(2rem, 4vw, 2.65rem);
+  font-weight: 800;
+  letter-spacing: -.035em;
+}
+#view-orders .orders-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(100px, 138px));
+  gap: 9px;
+}
+#view-orders .orders-stat {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 68px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 15px;
+  background: var(--surface);
+}
+#view-orders .orders-stat span { font-size: .82rem; font-weight: 700; }
+#view-orders .orders-stat strong {
+  font: 800 1.5rem var(--f-display);
+  font-variant-numeric: tabular-nums;
+}
+#view-orders .orders-stat.unpaid { background: #fff4df; border-color: #f1dfbd; color: #89500c; }
+#view-orders .orders-stat.paid { background: #eef4e6; border-color: #dce6d1; color: #35552b; }
+#view-orders .orders-stat.void { background: #fae9e7; border-color: #efd7d4; color: #8b332c; }
+#view-orders .online-orders { gap: 14px; margin-top: 0; }
+#view-orders .online-orders-head { align-items: center; padding: 0 2px; }
+#view-orders .online-orders-head h3 {
+  color: #39291f;
+  font: 800 1.35rem var(--f-display);
+}
+#view-orders .online-orders-head .eyebrow { margin-bottom: 3px; }
+#view-orders .online-order-card {
+  gap: 16px;
+  padding: 18px 20px;
+  border: 1px solid #e8d3ae;
+  border-left: 6px solid #d99a32;
+  border-radius: 18px;
+  background: rgba(255,253,247,.96);
+  box-shadow: 0 8px 24px rgba(70,52,29,.07);
+}
+#view-orders .online-order-top {
+  padding-bottom: 12px;
+  border-bottom: 1px solid #eee5d8;
+}
+#view-orders .online-order-ident {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 9px;
+}
+#view-orders .online-order-ident > strong { font-size: 1.28rem; }
+#view-orders .online-order-total {
+  color: #38271f;
+  font: 800 1.55rem var(--f-display);
+}
+#view-orders .online-order-detail-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, .8fr) minmax(0, 1.5fr);
+  gap: 20px;
+}
+#view-orders .online-order-customer {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  gap: 6px;
+  padding: 4px 18px 4px 2px;
+  border-right: 1px solid #e8dfd2;
+}
+#view-orders .online-order-customer > strong { font-size: 1.08rem; }
+#view-orders .online-order-customer a { font-size: .96rem; }
+#view-orders .online-order-address { margin: 0; line-height: 1.4; }
+#view-orders .online-order-items h4 { margin: 0 0 7px; color: var(--muted); font-size: .9rem; }
+#view-orders .online-order-lines {
+  gap: 8px;
+  padding: 0;
+  border: 0;
+}
+#view-orders .online-order-lines li {
+  align-items: baseline;
+  gap: 16px;
+  font-size: .94rem;
+}
+#view-orders .online-order-lines li span { min-width: 0; }
+#view-orders .online-order-lines li strong {
+  flex: 0 0 auto;
+  color: #39291f;
+  font-variant-numeric: tabular-nums;
+}
+#view-orders .online-order-actions {
+  padding-top: 12px;
+  border-top: 1px solid #eee5d8;
+}
+#view-orders .online-order-actions .btn {
+  min-width: 190px;
+  min-height: 52px;
+  padding: 12px 20px;
+  border-radius: 13px;
+  font-size: .96rem;
+  font-weight: 800;
+}
+#view-orders .panel.table-wrap {
+  margin-top: 0 !important;
+  padding: 6px;
+  border: 1px solid #e8e0d3;
+  border-radius: 18px;
+  background: rgba(255,253,248,.96);
+  box-shadow: 0 5px 18px rgba(70,52,29,.05);
+}
+#view-orders .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+#view-orders table.data {
+  min-width: 980px;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .91rem;
+}
+#view-orders table.data th {
+  padding: 15px 13px;
+  color: #75675b;
+  font: 800 .76rem var(--f-display);
+  letter-spacing: .045em;
+  white-space: nowrap;
+  border-bottom: 1px solid #e8e0d3;
+}
+#view-orders table.data td {
+  padding: 15px 13px;
+  color: #39291f;
+  border-bottom: 1px solid #eee8de;
+  line-height: 1.4;
+}
+#view-orders table.data tbody tr:nth-child(odd) td { background: #fbf5e9; }
+#view-orders table.data tbody tr:hover td { background: #f4efdf; }
+#view-orders table.data tbody tr:last-child td { border-bottom: 0; }
+#view-orders table.data .order-items-cell { min-width: 220px; }
+#view-orders .pill {
+  padding: 6px 12px;
+  font-size: .78rem;
+  font-weight: 800;
+}
+#view-orders .pill.unpaid { background: #ffe7b8; color: #87450b; }
+#view-orders .pill.paid, #view-orders .pill.online { background: #e7efd9; color: #365727; }
+#view-orders .pill.void { background: #f8e2df; color: #982e28; }
+#view-orders .btn.danger {
+  min-height: 42px;
+  padding: 8px 16px;
+  border: 1px solid #d95b51;
+  border-radius: 11px;
+  background: #fff8f6;
+  color: #a52e27;
+  font-weight: 800;
+}
+#view-orders .online-orders-empty {
+  padding: 22px;
+  border-color: #d8dfca;
+  background: rgba(249,251,244,.9);
+}
+@media (max-width: 900px) {
+  #view-orders .orders-heading { grid-template-columns: 1fr; }
+  #view-orders .orders-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  #view-orders .online-order-detail-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1.5fr); }
+}
+@media (max-width: 620px) {
+  #view-orders { gap: 13px; }
+  #view-orders .orders-stats { gap: 6px; }
+  #view-orders .orders-stat { min-height: 58px; padding: 9px; flex-direction: column-reverse; align-items: flex-start; gap: 1px; }
+  #view-orders .orders-stat strong { font-size: 1.3rem; }
+  #view-orders .online-orders-head { flex-direction: row; align-items: center; }
+  #view-orders .online-order-card { padding: 14px; }
+  #view-orders .online-order-detail-grid { grid-template-columns: 1fr; gap: 12px; }
+  #view-orders .online-order-customer { border-right: 0; border-bottom: 1px solid #e8dfd2; padding: 0 0 12px; }
+  #view-orders .online-order-actions { align-items: stretch; flex-direction: column; }
+  #view-orders .online-order-actions .btn { width: 100%; }
+  #view-orders .online-order-top { align-items: flex-start; }
+  #view-orders .online-order-total { font-size: 1.25rem; }
+}
