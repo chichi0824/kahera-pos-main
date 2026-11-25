@@ -4450,3 +4450,56 @@ body::before {
 .view-register .category-heading h3 {
   margin: 0;
 }
+
+
+/* Small-screen Register cards: stack the photo above the details so
+   pricing buttons have the full card width and never overflow. */
+@media (max-width: 700px) {
+  .view-register .tile.tile-choice {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: 116px 6px auto auto;
+    min-height: 0;
+    row-gap: 7px;
+  }
+  .view-register .tile.tile-choice .tile-photo {
+    grid-column: 1;
+    grid-row: 1;
+    width: 100%;
+    height: 116px;
+    min-height: 116px;
+    max-width: none;
+    border-radius: 10px;
+  }
+  .view-register .tile.tile-choice .t-cat {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: end;
+  }
+  .view-register .tile.tile-choice .t-name {
+    grid-column: 1;
+    grid-row: 3;
+    padding: 0;
+    overflow-wrap: anywhere;
+  }
+  .view-register .tile.tile-choice .tile-options {
+    grid-column: 1;
+    grid-row: 4;
+    align-self: stretch;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .view-register .tile.tile-choice .tile-option {
+    min-width: 0;
+    min-height: 46px;
+    padding: 7px 8px;
+    justify-content: center;
+    text-align: center;
+    overflow-wrap: anywhere;
+  }
+  .view-register .tile.tile-choice .tile-option strong {
+    white-space: normal;
+  }
+  .view-register .tile.tile-choice .sold-out-tag {
+    grid-column: 1;
+    grid-row: 3;
+  }
+}
