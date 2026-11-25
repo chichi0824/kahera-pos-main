@@ -1553,7 +1553,16 @@
   function startApp() {
     load();
     var savedTheme = store.get('theme', null);
-    if (savedTheme === 'dark' || savedTheme === 'light') document.documentElement.setAttribute('data-theme', savedTheme);
+    var themePreference = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+    var hasSavedTheme = savedTheme === 'dark' || savedTheme === 'light';
+    document.documentElement.setAttribute('data-theme', hasSavedTheme ? savedTheme : (themePreference && themePreference.matches ? 'dark' : 'light'));
+    if (!hasSavedTheme && themePreference) {
+      var syncSystemTheme = function (event) {
+        if (store.get('theme', null) == null) document.documentElement.setAttribute('data-theme', event.matches ? 'dark' : 'light');
+      };
+      if (themePreference.addEventListener) themePreference.addEventListener('change', syncSystemTheme);
+      else if (themePreference.addListener) themePreference.addListener(syncSystemTheme);
+    }
     bind();
     renderAll();
     setView(S.view);
