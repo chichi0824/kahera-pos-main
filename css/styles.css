@@ -5099,3 +5099,34 @@ body::before {
 
 #view-shift .report-rank{display:inline-grid;place-items:center;min-width:30px;height:30px;padding:0 7px;border-radius:10px;background:#e9efdf;color:#456538;font-weight:800;}
 #view-shift .report-recent-transactions table{min-width:980px;}
+
+
+/* Let the report calendar use the full width of its filter panel. */
+#view-shift .report-calendar-details,
+#view-shift .report-calendar-panel,
+#view-shift .report-calendar {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+#view-shift .report-calendar-panel {
+  display: block;
+}
+#view-shift .report-calendar {
+  grid-template-columns: minmax(0, 1fr);
+}
+#view-shift .report-calendar .calendar-weekdays,
+#view-shift .report-calendar .calendar-days {
+  width: 100%;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+#view-shift .report-calendar .calendar-day,
+#view-shift .report-calendar .calendar-blank {
+  width: 100%;
+  min-width: 0;
+}
+@media (min-width: 761px) {
+  #view-shift .report-calendar .calendar-day {
+    min-height: 64px;
+  }
+}
