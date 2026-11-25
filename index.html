@@ -315,137 +315,22 @@
           aria-labelledby="tab-shift"
           hidden
         >
-          <div class="view-head">
-            <div>
-              <p class="eyebrow">Sales analytics · Historical reports</p>
-              <h2>Daily Reports</h2>
+          <div class="view-head report-page-heading"><div><p class="eyebrow">Sales analytics · Historical reports</p><h2>Daily Reports</h2><p class="report-page-description">Track your restaurant's daily sales and performance.</p></div></div>
+          <section class="panel card-pad report-filter-panel" aria-label="Date filters and export">
+            <div class="report-filter-top">
+              <div class="report-date-control"><label for="reportDatePicker">▦ Report date</label><input type="date" id="reportDatePicker" data-k="reportDatePicker" /></div>
+              <div class="report-period-nav"><button type="button" class="btn small ghost" data-k="reportPrev" aria-label="Previous reporting period">‹</button><strong data-k="reportRangeLabel">Today</strong><button type="button" class="btn small ghost" data-k="reportNext" aria-label="Next reporting period">›</button><button type="button" class="btn small" data-k="reportToday">Today</button></div>
+              <div class="report-export-actions"><button type="button" class="btn small ghost" data-k="copyCsv">Copy CSV</button><button type="button" class="btn small primary" data-k="dlCsv">↓ Export CSV</button></div>
             </div>
-            <div class="actions-row">
-              <button type="button" class="btn small" data-k="copyCsv">
-                Copy CSV
-              </button>
-              <button type="button" class="btn small" data-k="dlCsv">
-                Download CSV
-              </button>
-            </div>
-          </div>
-
-          <div class="report-period-toolbar panel" style="margin-top: 12px">
-            <div
-              class="report-periods"
-              data-k="reportPeriodModes"
-              role="group"
-              aria-label="Reporting period"
-            >
-              <button
-                type="button"
-                class="chip"
-                data-report-mode="day"
-                aria-pressed="true"
-              >
-                Day
-              </button>
-              <button
-                type="button"
-                class="chip"
-                data-report-mode="week"
-                aria-pressed="false"
-              >
-                Week
-              </button>
-              <button
-                type="button"
-                class="chip"
-                data-report-mode="month"
-                aria-pressed="false"
-              >
-                Month
-              </button>
-              <button
-                type="button"
-                class="chip"
-                data-report-mode="year"
-                aria-pressed="false"
-              >
-                Year
-              </button>
-              <button
-                type="button"
-                class="chip"
-                data-report-mode="custom"
-                aria-pressed="false"
-              >
-                Custom
-              </button>
-            </div>
-            <div class="report-period-nav">
-              <button
-                type="button"
-                class="btn small ghost"
-                data-k="reportPrev"
-                aria-label="Previous reporting period"
-              >
-                ‹
-              </button>
-              <strong data-k="reportRangeLabel">Today</strong>
-              <button
-                type="button"
-                class="btn small ghost"
-                data-k="reportNext"
-                aria-label="Next reporting period"
-              >
-                ›
-              </button>
-              <button type="button" class="btn small" data-k="reportToday">
-                Today
-              </button>
-            </div>
-          </div>
-
-          <div class="report-layout" style="margin-top: 14px">
-            <section class="panel card-pad report-calendar-panel">
-              <div class="report-calendar-head">
-                <h3 data-k="reportCalendarTitle">Calendar</h3>
-                <div class="actions-row">
-                  <button
-                    type="button"
-                    class="btn small ghost"
-                    data-k="calendarPrev"
-                    aria-label="Previous month"
-                  >
-                    ‹
-                  </button>
-                  <button
-                    type="button"
-                    class="btn small ghost"
-                    data-k="calendarNext"
-                    aria-label="Next month"
-                  >
-                    ›
-                  </button>
-                </div>
-              </div>
-              <div data-k="reportCalendar" class="report-calendar"></div>
-              <div class="calendar-legend">
-                <span><i></i> Sales recorded</span
-                ><span>Choose a date to view its report</span>
-              </div>
-              <div data-k="customRange" class="custom-report-range" hidden>
-                <label for="reportFrom"
-                  >From<input type="date" id="reportFrom"
-                /></label>
-                <label for="reportTo"
-                  >To<input type="date" id="reportTo"
-                /></label>
-                <button
-                  type="button"
-                  class="btn primary"
-                  data-k="applyCustomRange"
-                >
-                  Apply date range
-                </button>
-              </div>
-            </section>
+            <div class="report-periods" data-k="reportPeriodModes" role="group" aria-label="Reporting period"><button type="button" class="chip" data-report-mode="day" aria-pressed="true">Day</button><button type="button" class="chip" data-report-mode="week" aria-pressed="false">Week</button><button type="button" class="chip" data-report-mode="month" aria-pressed="false">Month</button><button type="button" class="chip" data-report-mode="year" aria-pressed="false">Year</button><button type="button" class="chip" data-report-mode="custom" aria-pressed="false">Custom</button></div>
+            <details class="report-calendar-details"><summary>Open report calendar and custom date range</summary><div class="report-calendar-panel"><div class="report-calendar-head"><h3 data-k="reportCalendarTitle">Calendar</h3><div class="actions-row"><button type="button" class="btn small ghost" data-k="calendarPrev" aria-label="Previous month">‹</button><button type="button" class="btn small ghost" data-k="calendarNext" aria-label="Next month">›</button></div></div><div data-k="reportCalendar" class="report-calendar"></div><div class="calendar-legend"><span><i></i> Sales recorded</span><span>Choose a date to view its report</span></div><div data-k="customRange" class="custom-report-range" hidden><label for="reportFrom">From<input type="date" id="reportFrom" /></label><label for="reportTo">To<input type="date" id="reportTo" /></label><button type="button" class="btn primary" data-k="applyCustomRange">Apply date range</button></div></div></details>
+            <p class="hint report-loading" data-k="reportLoading" hidden>Loading report…</p>
+          </section>
+          <section class="report-section report-overview-section"><div class="report-section-heading"><div><p class="eyebrow">At a glance</p><h3>Sales Overview</h3></div></div><div class="kpis report-kpis" data-k="reportKpis"></div><div class="panel card-pad report-payment-mix"><h3>Payment mix</h3><div class="split" data-k="split"></div></div></section>
+          <section class="panel card-pad report-section report-trend-section"><div class="report-chart-head"><div><p class="eyebrow">Performance over time</p><h3 data-k="reportChartTitle">Sales Trend</h3></div><div class="report-chart-toggle" role="group" aria-label="Chart metric"><button type="button" class="btn small" data-k="chartMetricSales" aria-pressed="true">Sales</button><button type="button" class="btn small" data-k="chartMetricOrders" aria-pressed="false">Orders</button></div></div><div class="report-line-chart" data-k="bars" role="group" aria-label="Interactive sales trend chart. Select a point to inspect its value."></div><div class="bar-labels" data-k="barLabels" aria-hidden="true"></div><div class="chart-detail" data-k="chartDetail" aria-live="polite"></div></section>
+          <section class="panel card-pad report-section report-best-items"><div class="report-section-heading"><div><p class="eyebrow">Product performance</p><h3>Best-Selling Items</h3></div></div><div class="table-wrap"><table class="data" data-k="topItems"></table></div></section>
+          <section class="panel card-pad report-section report-recent-transactions"><div class="report-calendar-head"><div><p class="eyebrow">Daily activity</p><h3>Recent Transactions</h3></div><span class="hint" data-k="reportTransactionCount">0 transactions</span></div><div class="table-wrap"><table class="data" data-k="reportOrdersTable"></table></div></section>
+        </section>
             <section class="report-summary">
               <div class="report-summary-head">
                 <div>
