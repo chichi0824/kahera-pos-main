@@ -335,90 +335,93 @@
         <!-- MENU -->
         <section
           id="view-menu"
-          class="view"
+          class="view menu-page"
           role="tabpanel"
           aria-labelledby="tab-menu"
           hidden
         >
-          <div class="view-head">
+          <div class="view-head menu-page-heading">
             <div>
               <p class="eyebrow">Central menu · Cloud database</p>
               <h2>Menu</h2>
+              <p class="menu-page-description">Manage your restaurant's menu, pricing, and availability.</p>
             </div>
-            <p class="hint">
-              Changes are saved to the shared database. Cashier devices receive
-              updates automatically.
+            <p class="hint menu-sync-note">
+              Changes are saved to the shared database. Cashier devices receive updates automatically.
             </p>
           </div>
-          <div class="menu-admin" style="margin-top: 12px">
-            <div class="panel menu-list-panel">
+
+          <div class="menu-admin">
+            <form class="panel card-pad menu-add-panel" data-k="addForm">
+              <div class="menu-section-heading">
+                <div>
+                  <p class="eyebrow">Menu setup</p>
+                  <h3>Add New Menu Item</h3>
+                  <p class="hint">Create an item and set its pricing, portions, and photo.</p>
+                </div>
+              </div>
+              <div class="menu-add-fields">
+                <label for="k-newname">Item name <span class="required-mark">Required</span>
+                  <input id="k-newname" maxlength="40" required placeholder="e.g. Ginataang Bilo-bilo" />
+                </label>
+                <label for="k-newcat">Category
+                  <select id="k-newcat" data-k="newCat"></select>
+                </label>
+                <label for="k-newprice">Default price (₱)
+                  <input id="k-newprice" inputmode="decimal" placeholder="150.00" />
+                </label>
+                <label for="k-newhalfprice">Half-order price (₱) <span class="field-optional">Optional</span>
+                  <input id="k-newhalfprice" inputmode="decimal" placeholder="75.00" />
+                </label>
+              </div>
+              <label class="check new-options-toggle menu-new-options" for="k-newusevariants">
+                <input id="k-newusevariants" type="checkbox" />
+                <span>Use multiple price options</span>
+              </label>
+              <div id="k-newvariants" class="drink-variant-manager menu-new-variants" hidden>
+                <strong>Price options</strong>
+                <p class="hint">Add each size or portion with its own price and availability.</p>
+                <div class="variant-editor-list"></div>
+                <button type="button" class="btn small" data-variant-add>Add price option</button>
+              </div>
+              <div class="menu-photo-field">
+                <label for="k-newimage">Item photo <span class="field-optional">Optional</span>
+                  <input id="k-newimage" type="file" accept="image/*" />
+                </label>
+                <div class="menu-new-photo-preview" data-k="newPhotoPreview" hidden>
+                  <img data-k="newPhotoPreviewImage" alt="New menu item photo preview" />
+                  <span>Photo preview</span>
+                </div>
+              </div>
+              <p class="hint">Photos are resized and compressed before saving.</p>
+              <p class="err" data-k="addErr" role="alert" aria-live="polite"></p>
+              <div class="menu-add-actions">
+                <button class="btn primary big" type="submit">Add to Menu</button>
+              </div>
+            </form>
+
+            <section class="panel menu-list-panel" aria-labelledby="menu-items-heading">
+              <div class="menu-list-heading">
+                <div>
+                  <p class="eyebrow">Catalog management</p>
+                  <h3 id="menu-items-heading">Menu Items</h3>
+                  <p class="hint">Update item details, pricing, photos, and availability.</p>
+                </div>
+              </div>
               <div class="menu-admin-toolbar">
                 <label class="menu-admin-search" for="menu-admin-search">
                   <span class="sr-only">Search menu items</span>
-                  <input id="menu-admin-search" type="search" data-k="menuAdminSearch" placeholder="Search items by name…" autocomplete="off" />
+                  <input id="menu-admin-search" type="search" data-k="menuAdminSearch" placeholder="Search menu items..." autocomplete="off" />
                 </label>
                 <div class="menu-admin-filter-groups">
                   <div class="menu-admin-filters" data-k="menuAdminFilters" role="group" aria-label="Filter menu by category"></div>
                   <div class="menu-admin-filters menu-availability-filters" data-k="menuAvailabilityFilters" role="group" aria-label="Filter menu by availability"></div>
                 </div>
               </div>
-              <div class="table-wrap">
+              <div class="table-wrap menu-items-table-wrap">
                 <table class="data" data-k="menuTable"></table>
               </div>
-            </div>
-            <div class="form-grid">
-              <form class="panel card-pad" data-k="addForm">
-                <h3>Add item</h3>
-                <label for="k-newname"
-                  >Name<input
-                    id="k-newname"
-                    maxlength="40"
-                    required
-                    placeholder="e.g. Ginataang Bilo-bilo"
-                /></label>
-                <label for="k-newcat"
-                  >Category<select id="k-newcat" data-k="newCat"></select
-                ></label>
-                <label for="k-newprice"
-                  >Default price (non-drinks only)<input
-                    id="k-newprice"
-                    inputmode="decimal"
-                    placeholder="150.00"
-                /></label>
-                <label for="k-newhalfprice"
-                  >Half-order price (optional)<input
-                    id="k-newhalfprice"
-                    inputmode="decimal"
-                    placeholder="75.00"
-                /></label>
-                <label class="check new-options-toggle" for="k-newusevariants">
-                  <input id="k-newusevariants" type="checkbox" />
-                  <span>Use multiple price options</span>
-                </label>
-                <div id="k-newvariants" class="drink-variant-manager" hidden>
-                  <strong>Price options</strong>
-                  <p class="hint">
-                    Add each selling option separately, set its price, and choose whether
-                    it is available today.
-                  </p>
-                  <div class="variant-editor-list"></div>
-                  <button type="button" class="btn small" data-variant-add>
-                    Add variant
-                  </button>
-                </div>
-                <label for="k-newimage"
-                  >Item photo (optional)<input
-                    id="k-newimage"
-                    type="file"
-                    accept="image/*"
-                /></label>
-                <p class="hint">
-                  Photos are resized and compressed before saving.
-                </p>
-                <p class="err" data-k="addErr" role="alert"></p>
-                <button class="btn primary" type="submit">Add to menu</button>
-              </form>
-            </div>
+            </section>
           </div>
         </section>
 
