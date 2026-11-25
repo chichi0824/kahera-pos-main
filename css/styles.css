@@ -1023,6 +1023,11 @@ tr.is-void td.num {
 .menu-admin table.data { table-layout: fixed; }
 .menu-admin table.data th, .menu-admin table.data td { box-sizing: border-box; }
 .menu-category-row th {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  width: 100%;
   padding: 12px 10px !important;
   background: var(--surface-2);
   color: var(--ink) !important;
@@ -1031,11 +1036,19 @@ tr.is-void td.num {
   letter-spacing: .02em !important;
   text-transform: none !important;
   font: 800 .92rem var(--f-display) !important;
+  text-align: left;
+}
+.menu-category-row th > span {
+  min-width: 0;
+  text-align: left;
 }
 .menu-category-row th small {
-  float: right;
+  flex: 0 0 auto;
+  margin-left: auto;
   color: var(--muted);
   font: 500 .75rem var(--f-mono);
+  text-align: right;
+  white-space: nowrap;
 }
 .menu-admin table.data .drink-variants-cell { padding: 10px 8px; }
 .menu-admin .drink-variants-cell .variant-editor-list { width: 100%; }
