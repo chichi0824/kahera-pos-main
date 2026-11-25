@@ -1023,11 +1023,10 @@ tr.is-void td.num {
 .menu-admin table.data { table-layout: fixed; }
 .menu-admin table.data th, .menu-admin table.data td { box-sizing: border-box; }
 .menu-category-row th {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  width: 100%;
+  /* Keep this as a real table cell so colspan spans the full Menu Items table. */
+  display: table-cell;
+  box-sizing: border-box;
+  width: auto;
   padding: 12px 10px !important;
   background: var(--surface-2);
   color: var(--ink) !important;
@@ -1043,8 +1042,8 @@ tr.is-void td.num {
   text-align: left;
 }
 .menu-category-row th small {
-  flex: 0 0 auto;
-  margin-left: auto;
+  float: right;
+  margin-left: 16px;
   color: var(--muted);
   font: 500 .75rem var(--f-mono);
   text-align: right;
