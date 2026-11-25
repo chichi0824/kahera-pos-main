@@ -1354,6 +1354,14 @@
       if (f === 'cat') saveMenu().then(renderMenuAdmin).catch(function () {});
       else saveMenu().catch(function () {});
     });
+    byId('k-newimage').addEventListener('change', function () {
+      var file = this.files && this.files[0], preview = $('newPhotoPreview'), image = $('newPhotoPreviewImage');
+      if (!file) { preview.hidden = true; image.removeAttribute('src'); return; }
+      if (!/^image\\//i.test(file.type)) { preview.hidden = true; image.removeAttribute('src'); return; }
+      var reader = new FileReader();
+      reader.onload = function () { image.src = reader.result; preview.hidden = false; };
+      reader.readAsDataURL(file);
+    });
     $('addForm').addEventListener('click', function (e) {
       var add = e.target.closest('[data-variant-add]'), remove = e.target.closest('[data-variant-remove]');
       if (!add && !remove) return;
@@ -1392,7 +1400,7 @@
       }).then(function () {
         renderMenuAdmin(); byId('k-newname').value = ''; byId('k-newprice').value = ''; byId('k-newhalfprice').value = '';
         byId('k-newusevariants').checked = false; byId('k-newvariants').querySelector('.variant-editor-list').innerHTML = '';
-        byId('k-newimage').value = ''; updateNewVariantControl();
+        byId('k-newimage').value = ''; $('newPhotoPreview').hidden = true; $('newPhotoPreviewImage').removeAttribute('src'); updateNewVariantControl();
       }).catch(function (error) { $('addErr').textContent = error.message; }).finally(function () { submit.disabled = false; });
     });
 
