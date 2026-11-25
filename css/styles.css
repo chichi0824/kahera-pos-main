@@ -5508,6 +5508,7 @@ body::before {
 
 
 /* Settings owner control center — full-width, single-column layout. */
+#view-settings[hidden] { display: none !important; }
 #view-settings.settings-view {
   display: flex;
   flex-direction: column;
