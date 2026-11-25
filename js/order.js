@@ -25,7 +25,7 @@
   function categoryLabel(category){return /^extras$/i.test(String(category.name||''))?'Extra':category.name;}
   function catColor(categoryId){var colors=['#c2410c','#136a48','#7c3aed','#0369a1','#a16207','#be185d'];var index=categories.map(function(category){return category.id;}).indexOf(categoryId);return colors[(index<0?0:index)%colors.length];}
   function renderCategories(){
-    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="chip" data-category="'+esc(c.id)+'" aria-pressed="'+(activeCategory===c.id?'true':'false')+'">'+esc(categoryLabel(c))+'</button>';}).join('');
+    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="'+(activeCategory===c.id?'active':'')+'" data-category="'+esc(c.id)+'">'+esc(categoryLabel(c))+'</button>';}).join('');
   }
   function itemButtons(item){
     var disabled=item.available===false||item.soldOut===true;
@@ -51,7 +51,7 @@
     var availableVariants=hasOptions?item.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
     var statusLabel=unavailable?'Sold Out':(hasOptions&&!availableVariants.length?'No options available':'');
     var qty=qtyInCart(item.id);
-    return '<article class="tile tile-choice'+(item.image?' has-photo':'')+(unavailable?' is-sold-out':'')+'" style="--c:'+catColor(item.cat)+'"><div class="tile-card-media">'+photo+'</div><div class="tile-card-content"><span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(item.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+itemButtons(item)+'</div></div>'+(qty?'<span class="t-qty" aria-label="'+qty+' in order">'+qty+'</span>':'')+'</article>';
+    return '<article class="tile tile-choice'+(item.image?' has-photo':'')+(unavailable?' is-sold-out':'')+'" style="--c:'+catColor(item.cat)+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(item.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+itemButtons(item)+'</div>'+(qty?'<span class="t-qty" aria-label="'+qty+' in order">'+qty+'</span>':'')+'</article>';
   }
   function renderMenu(){
     var q=$('menu-search').value.trim().toLowerCase();
