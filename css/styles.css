@@ -3848,3 +3848,47 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
   .view-register .tile.tile-choice .tile-option:nth-child(3):last-child { min-height: 44px; height: 44px; padding: 5px 6px; font-size: .74rem; }
 }
 @media (max-width: 380px) { .view-register .catalog .grid { grid-template-columns: 1fr; } }
+
+
+/* Register category dividers and refined category-tinted option buttons. */
+.view-register .category-heading {
+  display: flex;
+  align-items: center;
+  padding: 0 2px 10px;
+  margin: 0 0 12px;
+  border-bottom: 2px solid var(--line);
+}
+.view-register .category-section + .category-section {
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.view-register .category-heading h3 {
+  font-size: 1.24rem;
+  font-weight: 850;
+}
+.view-register .tile.tile-choice .t-name {
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.25;
+}
+.view-register .tile.tile-choice .tile-option,
+.view-register .tile.tile-choice .tile-option:only-child,
+.view-register .tile.tile-choice .tile-option:nth-child(3):last-child {
+  background: color-mix(in srgb, var(--c, var(--accent)) 13%, var(--surface));
+  border: 1px solid color-mix(in srgb, var(--c, var(--accent)) 38%, var(--line));
+  color: color-mix(in srgb, var(--c, var(--accent)) 72%, #173b2c);
+  font-weight: 800;
+}
+.view-register .tile.tile-choice .tile-option strong {
+  color: inherit;
+  font-size: .86rem;
+  font-weight: 850;
+}
+.view-register .tile.tile-choice .tile-option:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--c, var(--accent)) 22%, var(--surface));
+  border-color: var(--c, var(--accent));
+}
+.view-register .tile.tile-choice .tile-option:focus-visible {
+  outline: 2px solid var(--c, var(--accent));
+  outline-offset: 2px;
+}
