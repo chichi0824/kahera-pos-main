@@ -1260,7 +1260,6 @@ tr.is-void td.num {
 /* ---------- Responsive ---------- */
 @media (max-width: 960px) {
   .view-register,
-  .shift-grid,
   .menu-admin,
   .about {
     grid-template-columns: minmax(0, 1fr);
