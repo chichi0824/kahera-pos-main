@@ -27,36 +27,43 @@
     $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="'+(activeCategory===c.id?'active':'')+'" data-category="'+esc(c.id)+'">'+esc(categoryLabel(c))+'</button>';}).join('');
   }
   function itemButtons(item){
+    var disabled=item.available===false||item.soldOut===true;
     if(item.variants&&item.variants.length){
-      return item.variants.map(function(v){var off=!item.available||item.soldOut||v.available===false||v.soldOut===true;return '<button type="button" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'" '+(off?'disabled':'')+'>'+esc(v.name)+' · '+money(v.price)+'</button>';}).join('');
+      return item.variants.map(function(v){
+        var off=disabled||v.available===false||v.soldOut===true;
+        return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'>'+esc(v.name)+'<strong>'+money(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
+      }).join('');
     }
-    var out='';
-    if(item.halfPrice){out+='<button type="button" data-add="'+esc(item.id)+'" data-portion="full" '+(item.soldOut?'disabled':'')+'>Full · '+money(item.price)+'</button><button type="button" data-add="'+esc(item.id)+'" data-portion="half" '+(item.soldOut?'disabled':'')+'>Half · '+money(item.halfPrice)+'</button>';}
-    else out+='<button type="button" data-add="'+esc(item.id)+'" data-portion="full" '+(item.soldOut?'disabled':'')+'>Add · '+money(item.price)+'</button>';
-    return out;
+    if(item.halfPrice){
+      return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Full<strong>'+money(item.price)+'</strong></button>'+
+        '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="half"'+(disabled?' disabled':'')+'>Half<strong>'+money(item.halfPrice)+'</strong></button>';
+    }
+    return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Add<strong>'+money(item.price)+'</strong></button>';
   }
   function qtyInCart(itemId){
     return cart.filter(function(line){return line.id===itemId;}).reduce(function(sum,line){return sum+(Number(line.qty)||0);},0);
   }
   function renderMenuCard(item){
-    var photo=item.image?'<img src="'+esc(item.image)+'" alt="'+esc(item.name)+'" loading="lazy">':'<div class="menu-card-placeholder"></div>';
+    var photo=item.image?'<img class="tile-photo" src="'+esc(item.image)+'" alt="" loading="lazy">':'<span class="tile-photo placeholder" aria-hidden="true">🍽️</span>';
     var unavailable=item.available===false||item.soldOut===true;
+    var hasOptions=!!(item.variants&&item.variants.length);
+    var availableVariants=hasOptions?item.variants.filter(function(v){return v.available!==false&&!v.soldOut;}):[];
+    var statusLabel=unavailable?'Sold Out':(hasOptions&&!availableVariants.length?'No options available':'');
     var qty=qtyInCart(item.id);
-    var quantityBadge=qty>0?'<span class="menu-card-qty" aria-label="'+qty+' '+(qty===1?'item':'items')+' selected">'+qty+'</span>':'';
-    return '<article class="menu-card">'+photo+quantityBadge+'<div class="menu-card-content"><div><h3>'+esc(item.name)+'</h3><p>'+(unavailable?'Currently unavailable':item.variants&&item.variants.length?'Choose a price option':item.halfPrice?'Full or half portion':'Freshly prepared')+'</p></div><div class="price-actions">'+(unavailable?'<p>Sold out today</p>':itemButtons(item))+'</div></div></article>';
+    return '<article class="tile tile-choice'+(item.image?' has-photo':'')+(unavailable?' is-sold-out':'')+'" style="--c:var(--accent)">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(item.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+itemButtons(item)+'</div>'+(qty?'<span class="t-qty" aria-label="'+qty+' in order">'+qty+'</span>':'')+'</article>';
   }
   function renderMenu(){
     var q=$('menu-search').value.trim().toLowerCase();
     var visible=menu.filter(function(m){return (activeCategory==='all'||m.cat===activeCategory)&&(!q||m.name.toLowerCase().includes(q));});
     if(!visible.length){$('menu-grid').innerHTML='<p class="empty">No menu items found.</p>';return;}
     if(activeCategory!=='all'){
-      $('menu-grid').innerHTML=visible.map(renderMenuCard).join('');
+      $('menu-grid').innerHTML='<div class="grid category-grid">'+visible.map(renderMenuCard).join('')+'</div>';
       return;
     }
     $('menu-grid').innerHTML=orderedCategories().map(function(category){
       var items=visible.filter(function(item){return item.cat===category.id;});
       if(!items.length)return '';
-      return '<section class="category-section"><header class="category-heading"><h3>'+esc(categoryLabel(category))+'</h3><span>'+items.length+(items.length===1?' item':' items')+'</span></header><div class="category-grid">'+items.map(renderMenuCard).join('')+'</div></section>';
+      return '<section class="category-section"><header class="category-heading"><h3>'+esc(categoryLabel(category))+'</h3><span>'+items.length+(items.length===1?' item':' items')+'</span></header><div class="grid category-grid">'+items.map(renderMenuCard).join('')+'</div></section>';
     }).join('')||'<p class="empty">No menu items found.</p>';
   }
   function addItem(itemId,variantId,portion){
@@ -111,7 +118,7 @@
   var orderingIsClosed=false;
   function loadCustomerMenu(){
     return cloud.getMenu().then(function(data){
-      categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return m.available&&!m.soldOut;});
+      categories=data.categories||[];menu=(data.menu||[]).filter(function(m){return (m.variants&&m.variants.length)|| (m.available!==false&&!m.soldOut);});
       var businessName=data.settings&&data.settings.bizName||"Victoria's";
       $('store-name').textContent=businessName;
       var storeSubtitle=data.settings&&data.settings.bizNote||'';
