@@ -5505,3 +5505,228 @@ body::before {
   line-height: 1.35;
   text-transform: uppercase;
 }
+
+
+/* Settings owner control center — full-width, single-column layout. */
+#view-settings.settings-view {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+  width: 100%;
+  max-width: 1240px;
+  min-width: 0;
+}
+#view-settings .settings-page-head {
+  width: 100%;
+  margin: 0 0 2px;
+}
+#view-settings .settings-page-head h2 {
+  margin-bottom: 4px;
+}
+#view-settings > .settings-card {
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 14px;
+  width: 100%;
+  min-width: 0;
+  height: auto;
+  margin: 0;
+  padding: clamp(18px, 2.4vw, 26px);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--panel);
+  box-shadow: 0 5px 18px rgba(48, 39, 25, .045);
+}
+#view-settings .settings-card-head {
+  align-items: center;
+  gap: 13px;
+}
+#view-settings .settings-card-head h3 {
+  color: var(--ink);
+  font-size: 1.12rem;
+  line-height: 1.25;
+}
+#view-settings .settings-card > .hint {
+  margin: -4px 0 0;
+  max-width: 850px;
+  line-height: 1.5;
+}
+#view-settings .settings-store-form {
+  gap: 16px;
+}
+#view-settings .settings-store-form > label {
+  gap: 7px;
+  color: var(--ink);
+  font-size: .9rem;
+}
+#view-settings .settings-store-form input:not([type="file"]) {
+  min-height: 48px;
+  border-radius: 10px;
+  font-size: 1rem;
+}
+#view-settings .store-icon-editor {
+  align-items: center;
+  gap: 18px;
+  padding: 16px;
+  background: var(--surface-2);
+}
+#view-settings .store-icon-editor > img {
+  width: 104px;
+  height: 104px;
+  flex-basis: 104px;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+}
+#view-settings .store-icon-editor > div {
+  gap: 9px;
+}
+#view-settings .store-icon-editor label {
+  color: var(--ink);
+  font-size: .9rem;
+}
+#view-settings .store-icon-editor input[type="file"] {
+  max-width: 100%;
+  min-height: 42px;
+  color: var(--ink);
+}
+#view-settings .settings-store-form > button[type="submit"] {
+  min-height: 48px;
+  width: 100%;
+  font-size: .95rem;
+}
+#view-settings .settings-toggle,
+#view-settings .settings-field {
+  min-height: 66px;
+  padding: 14px 2px;
+  gap: 18px;
+  border-top: 1px solid var(--line);
+}
+#view-settings .settings-toggle > span,
+#view-settings .settings-field > span {
+  gap: 5px;
+}
+#view-settings .settings-toggle strong,
+#view-settings .settings-field strong {
+  color: var(--ink);
+  font-size: .94rem;
+}
+#view-settings .settings-toggle small,
+#view-settings .settings-field small {
+  max-width: 760px;
+  font-size: .82rem;
+  line-height: 1.45;
+}
+#view-settings .settings-toggle input {
+  width: 24px;
+  height: 24px;
+  margin: 0 4px;
+  cursor: pointer;
+}
+#view-settings .settings-field select {
+  min-width: 190px;
+  min-height: 46px;
+  max-width: 230px;
+  border-radius: 10px;
+  font-size: .9rem;
+}
+#view-settings .settings-actions {
+  gap: 10px;
+  padding-top: 2px;
+}
+#view-settings .settings-actions .btn {
+  min-height: 44px;
+  padding-inline: 16px;
+}
+#view-settings .settings-feedback {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface-2);
+  font-size: .84rem;
+}
+#view-settings .settings-health-list > div {
+  min-height: 54px;
+  align-items: center;
+  padding: 13px 2px;
+  font-size: .9rem;
+}
+#view-settings .settings-health-list strong {
+  max-width: 60%;
+  padding: 5px 9px;
+  border-radius: 8px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: .82rem;
+  font-weight: 800;
+}
+#view-settings .settings-status {
+  padding: 7px 11px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: .72rem;
+}
+#view-settings .settings-status.is-open {
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+#view-settings .settings-status.is-closed {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+#view-settings .settings-security-card {
+  opacity: 1;
+  background: var(--surface-2);
+  border-style: dashed;
+}
+#view-settings .settings-security-card fieldset {
+  opacity: .58;
+}
+#view-settings .settings-security-card input:disabled,
+#view-settings .settings-security-card button:disabled {
+  cursor: not-allowed;
+}
+#view-settings .settings-security-card .settings-feedback {
+  background: var(--gold-soft);
+}
+@media (max-width: 760px) {
+  #view-settings.settings-view { gap: 13px; }
+  #view-settings > .settings-card { padding: 18px; }
+}
+@media (max-width: 560px) {
+  #view-settings .settings-toggle,
+  #view-settings .settings-field {
+    align-items: flex-start;
+    flex-direction: row;
+    gap: 12px;
+  }
+  #view-settings .settings-field select {
+    min-width: 132px;
+    max-width: 45%;
+  }
+  #view-settings .settings-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  #view-settings .settings-actions .btn { width: 100%; }
+  #view-settings .store-icon-editor {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  #view-settings .store-icon-editor > img {
+    width: 92px;
+    height: 92px;
+    flex-basis: 92px;
+  }
+  #view-settings .settings-health-list > div {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 7px;
+  }
+  #view-settings .settings-health-list strong {
+    max-width: 100%;
+    text-align: left;
+  }
+}
