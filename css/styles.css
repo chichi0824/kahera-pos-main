@@ -5386,3 +5386,110 @@ body::before {
 :root[data-theme="dark"] .settings-status.is-open { color:#d1e7bd; }
 :root[data-theme="dark"] .settings-status.is-closed { color:#ffaaa0; }
 :root[data-theme="dark"] .settings-icon { background:var(--surface-2); color:var(--ink); }
+
+
+/* Menu price-option editor: keep name and price inputs on one horizontal line,
+   with availability controls and the per-option remove action aligned beside them. */
+.menu-admin table.data td.drink-variants-cell .variant-editor-list {
+  display: grid;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(142px, auto) 30px;
+  grid-template-rows: minmax(38px, auto);
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-fields input {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row .variant-status {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  min-width: 0;
+  white-space: nowrap;
+}
+.menu-admin table.data td.drink-variants-cell .variant-edit-row > button[data-variant-remove] {
+  grid-column: 3;
+  grid-row: 1;
+  justify-self: end;
+  align-self: center;
+  width: 30px;
+  min-width: 30px;
+  min-height: 32px;
+  padding: 0;
+}
+.menu-admin table.data td.drink-variants-cell .variant-status .check {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin: 0;
+  white-space: nowrap;
+  font-size: .74rem;
+}
+@media (max-width: 760px) {
+  .menu-admin table.data td.drink-variants-cell .variant-edit-row {
+    grid-template-columns: minmax(0, 1fr) 30px;
+    grid-template-rows: auto auto;
+    gap: 7px;
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-fields {
+    grid-column: 1;
+    grid-row: 1;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-status {
+    grid-column: 1;
+    grid-row: 2;
+  }
+  .menu-admin table.data td.drink-variants-cell .variant-edit-row > button[data-variant-remove] {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+  }
+}
+/* Keep the three management pages on the same heading typography.
+   Orders previously had a page-specific oversized brown h2 override. */
+#view-orders .view-head h2,
+#view-shift .view-head h2,
+#view-menu .view-head h2 {
+  color: var(--ink);
+  font-family: var(--f-display);
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: normal;
+  line-height: 1.2;
+  margin: 0;
+}
+#view-orders .view-head .eyebrow,
+#view-shift .view-head .eyebrow,
+#view-menu .view-head .eyebrow {
+  margin: 0 0 4px;
+  color: var(--muted);
+  font-family: var(--f-mono);
+  font-size: .72rem;
+  font-weight: 500;
+  letter-spacing: .08em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
