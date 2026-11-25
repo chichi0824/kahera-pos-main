@@ -291,12 +291,15 @@
           aria-labelledby="tab-orders"
           hidden
         >
-          <div class="view-head">
-            <div>
-              <p class="eyebrow">Current daily report</p>
-              <h2>Orders</h2>
+          <div class="orders-heading">
+            <div class="view-head">
+              <div>
+                <p class="eyebrow">Current daily report</p>
+                <h2>Orders</h2>
+              </div>
+              <p data-k="ordersNote"></p>
             </div>
-            <p data-k="ordersNote"></p>
+            <div class="orders-stats" data-k="ordersStats" aria-label="Order status summary"></div>
           </div>
           <div class="online-orders" data-k="onlineOrders" aria-live="polite"></div>
           <div class="panel table-wrap" style="margin-top: 12px">
