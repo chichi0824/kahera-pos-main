@@ -5126,7 +5126,6 @@ body::before {
 
 
 /* Menu management redesign — full-width, single-column owner workflow. */
-#view-menu.menu-page { display:block; }
 #view-menu .menu-page-heading { align-items:flex-start; gap:18px; margin-bottom:18px; }
 #view-menu .menu-page-description { margin:6px 0 0; color:var(--muted); font-size:.96rem; }
 #view-menu .menu-sync-note { max-width:360px; margin:8px 0 0; text-align:right; }
