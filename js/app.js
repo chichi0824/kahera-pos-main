@@ -400,13 +400,13 @@
     if(hasOptions){
       actions=m.variants.map(function(v){
         var off=disabled||v.available===false||v.soldOut===true;
-        return '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'>'+esc(v.name)+'<strong>'+M.peso(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
+        return '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'><span class="tile-option-name">'+esc(v.name)+'</span><strong>'+M.peso(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
       }).join('');
     }else if(m.halfPrice){
-      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Full<strong>'+M.peso(m.price)+'</strong></button>'+
-        '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="half"'+(disabled?' disabled':'')+'>Half<strong>'+M.peso(m.halfPrice)+'</strong></button>';
+      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'><span class="tile-option-name">Full</span><strong>'+M.peso(m.price)+'</strong></button>'+
+        '<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="half"'+(disabled?' disabled':'')+'><span class="tile-option-name">Half</span><strong>'+M.peso(m.halfPrice)+'</strong></button>';
     }else{
-      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Add<strong>'+M.peso(m.price)+'</strong></button>';
+      actions='<button type="button" class="tile-option" data-add="'+esc(m.id)+'" data-portion="full"'+(disabled?' disabled':'')+'><span class="tile-option-name">Add</span><strong>'+M.peso(m.price)+'</strong></button>';
     }
     var statusLabel=disabled?'Sold Out':(hasOptions&&!availableVariants.length?'No options available':'');
     return '<article class="tile tile-choice'+(m.id===bumpId?' bump':'')+(m.image?' has-photo':'')+(disabled?' is-sold-out':'')+'" style="--c:'+catColor(m.cat)+'">'+photo+'<span class="t-cat" aria-hidden="true"></span><span class="t-name">'+esc(m.name)+'</span>'+(statusLabel?'<span class="sold-out-tag">'+statusLabel+'</span>':'')+'<div class="tile-options">'+actions+'</div>'+(n?'<span class="t-qty" aria-label="'+n+' in order">'+n+'</span>':'')+'</article>';
