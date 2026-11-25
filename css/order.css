@@ -231,3 +231,63 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
   .menu-area .tile.tile-choice .tile-option { min-height: 44px; padding: 7px 5px; }
   .menu-area .tile.tile-choice .tile-option strong { font-size: .72rem; }
 }
+
+
+/* Customer ordering: mirror the POS inline, centered option name and price. */
+.menu-area .tile.tile-choice .tile-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: stretch;
+  justify-content: center;
+  gap: 5px;
+  width: 100%;
+}
+.menu-area .tile.tile-choice .tile-option {
+  box-sizing: border-box;
+  flex: 1 1 calc(50% - 3px);
+  min-width: 0;
+  width: auto;
+  min-height: 44px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  column-gap: 6px;
+  row-gap: 2px;
+  padding: 7px 6px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.menu-area .tile.tile-choice .tile-option .tile-option-name {
+  min-width: 0;
+  font-size: inherit;
+  font-weight: 600;
+  line-height: inherit;
+}
+.menu-area .tile.tile-choice .tile-option strong {
+  display: inline-block;
+  width: auto;
+  flex: 0 1 auto;
+  color: inherit;
+  font: 800 .76rem var(--f-mono);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  line-height: 1.15;
+}
+.menu-area .tile.tile-choice .tile-option small {
+  flex: 0 0 100%;
+  width: 100%;
+  text-align: center;
+}
+.menu-area .tile.tile-choice .tile-option:only-child,
+.menu-area .tile.tile-choice .tile-option:nth-child(3):last-child {
+  flex-basis: 100%;
+}
+@media (max-width: 560px) {
+  .menu-area .tile.tile-choice .tile-options { gap: 4px; }
+  .menu-area .tile.tile-choice .tile-option { min-height: 42px; padding: 6px 5px; column-gap: 4px; }
+  .menu-area .tile.tile-choice .tile-option strong { font-size: .70rem; }
+}
