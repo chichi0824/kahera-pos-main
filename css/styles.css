@@ -3892,3 +3892,31 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
   outline: 2px solid var(--c, var(--accent));
   outline-offset: 2px;
 }
+
+
+/* Restore the small category-color line inside each Register item card. */
+.view-register .tile.tile-choice {
+  grid-template-rows: 6px auto 1fr;
+}
+.view-register .tile.tile-choice .tile-photo {
+  grid-row: 1 / span 3;
+}
+.view-register .tile.tile-choice .t-cat {
+  display: block;
+  grid-column: 2;
+  grid-row: 1;
+  align-self: start;
+  width: 30px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--c, var(--accent));
+}
+.view-register .tile.tile-choice .t-name {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: center;
+}
+.view-register .tile.tile-choice .tile-options {
+  grid-column: 2;
+  grid-row: 3;
+}
