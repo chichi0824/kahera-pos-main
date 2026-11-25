@@ -6,22 +6,22 @@
   <title>Order Online · Victoria's</title>
   <meta name="description" content="Order your favorites from Victoria's for pickup or delivery.">
   <meta name="theme-color" content="#b2c48a">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link id="order-favicon" rel="icon" href="icons/kahera-icon.png" type="image/png"><link rel="apple-touch-icon" href="icons/kahera-icon.png"><link rel="stylesheet" href="css/order.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"><link rel="stylesheet" href="css/order.css">
 </head>
 <body>
-  <header class="order-header">
-    <a class="brand" href="order.html"><img id="order-brand-icon" class="brand-mark" src="icons/kahera-icon.png" alt="Store icon"><span><h1 class="brand-name" id="store-name">Victoria's</h1><p class="brand-biz" id="store-note">Order Online</p></span></a>
-    <div class="header-actions"><button id="theme-toggle" class="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button><a class="header-cart" href="#your-order">Your order <span data-cart-count>0</span></a></div>
-  </header>
-  <main>
-    <section class="hero">
-      <p class="eyebrow">MADE FRESH · ORDER ONLINE</p>
-      <h1>Good food, <em>made easy.</em></h1>
-      <p>Choose your favorites, then pick them up or have them delivered.</p>
-    </section>
+  <div class="customer-app">
+    <header class="topbar">
+      <a class="brand" href="order.html">
+        <img id="order-brand-icon" class="brand-mark" src="icons/kahera-icon.png" alt="Store icon">
+        <span><h1 class="brand-name" id="store-name">Victoria's</h1><p class="brand-biz" id="store-note">Order Online</p></span>
+      </a>
+      <div class="top-tools">
+        <span class="customer-page-label">Customer ordering</span>
+        <a class="header-cart" href="#your-order">Your order <span data-cart-count>0</span></a>
+        <button id="theme-toggle" class="icon-btn theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">◐</button>
+      </div>
+    </header>
+    <main>
     <section id="ordering-closed" class="ordering-closed" hidden aria-live="polite">
       <div class="closed-mark" aria-hidden="true">↗</div>
       <p class="eyebrow">ONLINE ORDERING</p>
@@ -30,12 +30,14 @@
     </section>
     <div class="layout">
       <section class="menu-area">
-        <div class="section-head"><div><p class="eyebrow">THE MENU</p><h2>What are you craving?</h2></div><input id="menu-search" type="search" placeholder="Search menu" aria-label="Search menu"></div>
-        <nav id="category-list" class="category-list" aria-label="Menu categories"></nav>
+        <div class="catalog-tools">
+          <label class="search" for="menu-search"><span class="sr-only">Search the menu</span><input id="menu-search" type="search" placeholder="Search menu   ( press / )" autocomplete="off"></label>
+          <nav id="category-list" class="chips" aria-label="Menu categories"></nav>
+        </div>
         <div id="menu-grid" class="menu-grid"><p class="loading">Loading today's menu…</p></div>
       </section>
-      <aside id="your-order" class="order-panel">
-        <div class="panel-heading"><div><p class="eyebrow">YOUR SELECTION</p><h2>Your order</h2></div><span class="cart-count" data-cart-count>0</span></div>
+      <aside id="your-order" class="order panel">
+        <div class="order-head"><h2>Your order</h2><span class="cart-count" data-cart-count>0</span></div>
         <div id="cart-lines" class="cart-lines"><p class="empty">Your order is empty. Add something delicious.</p></div>
         <div class="total-row"><span>Total</span><strong id="cart-total">₱0.00</strong></div>
         <form id="customer-form">
@@ -65,7 +67,9 @@
       <button id="order-again" class="submit-order" type="button">Place another order</button>
     </section>
   </main>
-  <footer>Victoria's · Thank you for supporting our kitchen.</footer>
+  </main>
+    <footer>Victoria's · Thank you for supporting our kitchen.</footer>
+  </div>
   <script src="js/cloud.js"></script>
   <script src="js/order.js"></script>
 </body>
