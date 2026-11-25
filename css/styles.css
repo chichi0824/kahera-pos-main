@@ -5735,3 +5735,137 @@ body::before {
     text-align: left;
   }
 }
+
+
+/* Mark-as-paid modal — clear payment summary, method selection and confirmation. */
+.online-pay-modal {
+  box-sizing: border-box;
+  width: min(94vw, 560px);
+  max-width: 560px;
+  max-height: min(90vh, 820px);
+  padding: 0;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  background: var(--panel);
+  color: var(--ink);
+  box-shadow: 0 24px 80px rgba(25, 31, 23, .28);
+}
+.online-pay-modal::backdrop { background: rgba(20, 28, 21, .62); backdrop-filter: blur(3px); }
+.online-pay-dialog { display: grid; gap: 20px; padding: clamp(20px, 4vw, 30px); }
+.online-pay-header { display: flex; align-items: center; gap: 14px; }
+.online-pay-heading-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 48px;
+  width: 48px;
+  height: 48px;
+  border-radius: 15px;
+  background: var(--accent-soft);
+  color: var(--accent);
+  font-size: 1.35rem;
+  font-weight: 900;
+}
+.online-pay-heading-copy { display: grid; gap: 3px; min-width: 0; }
+.online-pay-heading-copy .eyebrow { margin: 0; }
+.online-pay-heading-copy h3 { margin: 0; color: var(--ink); font-size: 1.35rem; line-height: 1.2; }
+.online-pay-heading-copy .hint { margin: 0; font-size: .84rem; }
+.online-pay-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 15px 16px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface-2);
+}
+.online-pay-summary > div { display: grid; gap: 4px; min-width: 0; }
+.online-pay-summary > div > span { color: var(--muted); font-size: .75rem; font-weight: 750; text-transform: uppercase; letter-spacing: .045em; }
+.online-pay-summary > div > strong { color: var(--ink); font-size: 1rem; overflow-wrap: anywhere; }
+.online-pay-summary-status {
+  flex: 0 0 auto;
+  padding: 6px 9px;
+  border-radius: 999px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: .7rem;
+  font-weight: 850;
+}
+.online-pay-method { display: grid; gap: 10px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.online-pay-method legend { margin-bottom: 2px; color: var(--ink); font-size: .92rem; font-weight: 850; }
+.online-pay-method-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.online-pay-method-option {
+  position: relative;
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 13px;
+  background: var(--surface);
+  cursor: pointer;
+  transition: border-color .16s ease, background .16s ease, box-shadow .16s ease;
+}
+.online-pay-method-option:has(input:checked) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.online-pay-method-option > input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.online-pay-method-icon {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 11px;
+  background: var(--gold-soft);
+  color: var(--ink);
+  font-size: 1.05rem;
+  font-weight: 900;
+}
+.online-pay-ewallet-icon { background: var(--accent-soft); color: var(--accent); }
+.online-pay-method-copy { display: grid; gap: 3px; min-width: 0; }
+.online-pay-method-copy strong { color: var(--ink); font-size: .88rem; }
+.online-pay-method-copy small { color: var(--muted); font-size: .7rem; line-height: 1.35; }
+.online-pay-radio { width: 16px; height: 16px; border: 1.5px solid var(--muted); border-radius: 50%; }
+.online-pay-method-option:has(input:checked) .online-pay-radio { border: 5px solid var(--accent); }
+.online-pay-method-option:focus-within { outline: 3px solid color-mix(in srgb, var(--accent) 28%, transparent); outline-offset: 2px; }
+.online-pay-ewallet-fields { display: grid; gap: 12px; padding: 15px; border: 1px solid var(--line); border-radius: 13px; background: var(--surface-2); }
+.online-pay-ewallet-fields[hidden] { display: none !important; }
+.online-pay-section-title { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.online-pay-section-title strong { color: var(--ink); font-size: .88rem; }
+.online-pay-section-title span { color: var(--muted); font-size: .72rem; font-weight: 750; }
+.online-pay-field { display: grid; gap: 6px; margin: 0; color: var(--ink); font-size: .82rem; font-weight: 750; }
+.online-pay-field .hint { display: inline; margin-left: 4px; font-size: .72rem; font-weight: 500; }
+.online-pay-field input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); color: var(--ink); font: inherit; font-weight: 500; }
+.online-pay-field input[type="file"] { padding: 8px; font-size: .78rem; }
+.online-pay-field input:focus { outline: 3px solid color-mix(in srgb, var(--accent) 22%, transparent); border-color: var(--accent); }
+.online-pay-reminder { margin: 0; padding: 11px 13px; border-left: 3px solid var(--gold); border-radius: 8px; background: var(--gold-soft); color: var(--ink); font-size: .77rem; line-height: 1.5; }
+.online-pay-reminder strong { font-weight: 850; }
+.online-pay-error { min-height: 0; margin: 0; font-size: .8rem; }
+.online-pay-error:empty { display: none; }
+.online-pay-footer { display: flex; justify-content: flex-end; gap: 9px; padding-top: 4px; border-top: 1px solid var(--line); }
+.online-pay-footer .btn { min-height: 44px; padding-inline: 16px; }
+.online-pay-footer .btn.primary { min-width: 190px; }
+.online-pay-footer .btn:disabled { opacity: .65; cursor: wait; }
+.online-pay-dialog .payment-proof-preview { align-items: center; }
+.online-pay-dialog .payment-proof-preview img { width: 88px; height: 88px; }
+@media (max-width: 560px) {
+  .online-pay-modal { width: calc(100vw - 20px); max-height: calc(100dvh - 24px); border-radius: 16px; }
+  .online-pay-dialog { gap: 16px; padding: 18px; }
+  .online-pay-method-options { grid-template-columns: minmax(0, 1fr); }
+  .online-pay-method-option { min-height: 68px; }
+  .online-pay-footer { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.4fr); }
+  .online-pay-footer .btn { width: 100%; padding-inline: 9px; font-size: .82rem; }
+  .online-pay-footer .btn.primary { min-width: 0; }
+}
