@@ -5336,7 +5336,7 @@ body::before {
 :root[data-theme="dark"] dialog,:root[data-theme="dark"] dialog.slip-dlg,:root[data-theme="dark"] dialog.admin-dlg,:root[data-theme="dark"] dialog.variant-dlg,:root[data-theme="dark"] dialog.csv-export-dlg,:root[data-theme="dark"] dialog.order-share-dlg{background:var(--surface);color:var(--ink);border-color:var(--line)}
 :root[data-theme="dark"] dialog::backdrop{background:rgba(5,10,7,.76)}
 :root[data-theme="dark"] .order-share-qr{background:#f8f8f4;color:#202820;border-color:var(--line)}
-:root[data-theme="dark"] .proof-dlg,:root[data-theme="dark"] .csv-export-card,:root[data-theme="dark"] .online-pay-dialog{color:var(--ink)}
+:root[data-theme="dark"] .proof-dlg,:root[data-theme="dark"] .csv-export-card,:root[data-theme="dark"] .online-pay-dialog{background:var(--surface);color:var(--ink)}
 :root[data-theme="dark"] #view-orders .orders-stat{background:var(--surface);border-color:var(--line);color:var(--ink)}
 :root[data-theme="dark"] #view-orders .orders-stat.unpaid{background:#493b25;border-color:#745a31;color:#ffd58c}
 :root[data-theme="dark"] #view-orders .orders-stat.paid{background:#354832;border-color:#506a45;color:#c6e2ad}
@@ -5752,7 +5752,13 @@ body::before {
   box-shadow: 0 24px 80px rgba(25, 31, 23, .28);
 }
 .online-pay-modal::backdrop { background: rgba(20, 28, 21, .62); backdrop-filter: blur(3px); }
-.online-pay-dialog { display: grid; gap: 20px; padding: clamp(20px, 4vw, 30px); }
+.online-pay-dialog {
+  display: grid;
+  gap: 20px;
+  padding: clamp(20px, 4vw, 30px);
+  background: #fff;
+  color: #292d27;
+}
 .online-pay-header { display: flex; align-items: center; gap: 14px; }
 .online-pay-heading-icon {
   display: grid;
