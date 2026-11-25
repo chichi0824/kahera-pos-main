@@ -32,14 +32,14 @@
     if(item.variants&&item.variants.length){
       return item.variants.map(function(v){
         var off=disabled||v.available===false||v.soldOut===true;
-        return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'>'+esc(v.name)+'<strong>'+money(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
+        return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-variant="'+esc(v.id)+'"'+(off?' disabled':'')+'><span class="tile-option-name">'+esc(v.name)+'</span><strong>'+money(v.price)+'</strong>'+(v.soldOut?'<small>Sold out</small>':'')+'</button>';
       }).join('');
     }
     if(item.halfPrice){
-      return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Full<strong>'+money(item.price)+'</strong></button>'+
-        '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="half"'+(disabled?' disabled':'')+'>Half<strong>'+money(item.halfPrice)+'</strong></button>';
+      return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'><span class="tile-option-name">Full</span><strong>'+money(item.price)+'</strong></button>'+
+        '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="half"'+(disabled?' disabled':'')+'><span class="tile-option-name">Half</span><strong>'+money(item.halfPrice)+'</strong></button>';
     }
-    return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'>Add<strong>'+money(item.price)+'</strong></button>';
+    return '<button type="button" class="tile-option" data-add="'+esc(item.id)+'" data-portion="full"'+(disabled?' disabled':'')+'><span class="tile-option-name">Add</span><strong>'+money(item.price)+'</strong></button>';
   }
   function qtyInCart(itemId){
     return cart.filter(function(line){return line.id===itemId;}).reduce(function(sum,line){return sum+(Number(line.qty)||0);},0);
