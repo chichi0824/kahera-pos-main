@@ -634,7 +634,7 @@
     lastReportRefresh=Date.now();
     var sequence=++reportLoadSequence,period=reportRange(),month=monthBounds(S.calendarMonth);
     var from=period.from<month.from?period.from:month.from,to=period.to>month.to?period.to:month.to;
-    $('reportRangeLabel').textContent=formatDate(period.from)+(period.from===period.to?'':' – '+formatDate(period.to));
+    $('reportRangeLabel').textContent=formatDate(period.from)+(period.from===period.to?'':' – '+formatDate(period.to));byId('reportDatePicker').value=S.reportDate;
     $('reportCalendarTitle').textContent=new Date(S.calendarMonth+'-01T00:00:00Z').toLocaleDateString('en-PH',{timeZone:'UTC',month:'long',year:'numeric'});
     $('customRange').hidden=S.reportMode!=='custom';
     byId('reportFrom').value=S.customFrom;byId('reportTo').value=S.customTo;
@@ -660,15 +660,9 @@
     var s=M.summarize(S.reportOrders),itemsSold=s.topItems.reduce(function(n,item){return n+item.qty;},0),range=reportRange();
     renderReportCalendar();
     $('reportKpis').innerHTML=[
-      ['Net sales',M.peso(s.net),s.count+' paid orders'],
-      ['Gross sales',M.peso(s.gross),'before discounts'],
-      ['Paid orders',String(s.count),'completed transactions'],
-      ['Average order',M.peso(s.avgTicket),'per paid order'],
-      ['Items sold',String(itemsSold),'total quantity'],
-      ['Voided orders',String(s.voided),'excluded from sales'],
-      ['Discounts',M.peso(s.discounts),'Senior / PWD'],
-      ['VAT removed',M.peso(s.vatRemoved),'discounted sales']
-    ].map(function(k){return'<div class="panel kpi"><span class="eyebrow">'+k[0]+'</span><b>'+k[1]+'</b><small>'+k[2]+'</small></div>';}).join('');
+      ['Total Sales',M.peso(s.net),'Total revenue'],['Transactions',String(s.count),'Completed orders'],['Average Order Value',M.peso(s.avgTicket),'Per transaction'],['Items Sold',String(itemsSold),'Total items']
+    ].map(function(k,i){return'<div class="panel kpi report-metric-card report-metric-'+i+'"><span class="eyebrow">'+k[0]+'</span><b>'+k[1]+'</b><small>'+k[2]+'</small></div>';}).join('')+
+    '<div class="report-secondary-metrics"><span>Gross sales <strong>'+M.peso(s.gross)+'</strong></span><span>Voided orders <strong>'+s.voided+'</strong></span><span>Discounts <strong>'+M.peso(s.discounts)+'</strong></span><span>VAT removed <strong>'+M.peso(s.vatRemoved)+'</strong></span></div>';
     var bars='',labels='',salesValues=[],orderValues=[],chartValues=[],chartLabels=[],chartTitle='Sales by hour';
     if(S.reportMode==='day'){
       var hours=Object.keys(s.byHour).map(Number),lo=hours.length?Math.min.apply(null,hours):7,hi=hours.length?Math.max.apply(null,hours):12,hourCounts={};
@@ -685,9 +679,12 @@
     var chartMetric=S.chartMetric==='orders'?'orders':'sales';chartValues=chartMetric==='orders'?orderValues:salesValues;
     var max=chartValues.reduce(function(m,v){return Math.max(m,v);},0),peakIndex=chartValues.reduce(function(best,v,i){return best<0||v>chartValues[best]?i:best;},-1);
     if(S.chartSelectedIndex==null||S.chartSelectedIndex<0||S.chartSelectedIndex>=chartValues.length)S.chartSelectedIndex=peakIndex;
-    chartValues.forEach(function(v,i){var pct=max?Math.round(v/max*100):0,lab=chartLabels[i],selected=i===S.chartSelectedIndex;bars+='<button type="button" class="bar'+(v?'':' zero')+(selected?' is-selected':'')+'" style="height:'+Math.max(pct,2)+'%" data-chart-index="'+i+'" aria-pressed="'+selected+'" aria-label="'+lab+', '+(chartMetric==='sales'?M.peso(v):v+' orders')+'">'+(v?'<span>'+(chartMetric==='sales'?(v>=100000?'₱'+(v/100000).toFixed(1)+'k':'₱'+Math.round(v/100)):v)+'</span>':'')+'</button>';labels+='<span>'+lab+'</span>';});
+    var chartWidth=1000,chartHeight=280,padL=78,padR=24,padT=24,padB=30,plotW=chartWidth-padL-padR,plotH=chartHeight-padT-padB,denom=Math.max(1,chartValues.length-1),scaleMax=max||1,points=chartValues.map(function(v,i){return{x:padL+(plotW*i/denom),y:padT+plotH-(v/scaleMax)*plotH};}),linePath=points.map(function(p,i){return(i?'L':'M')+p.x.toFixed(1)+','+p.y.toFixed(1);}).join(' '),areaPath=linePath+' L'+points[points.length-1].x+','+(padT+plotH)+' L'+points[0].x+','+(padT+plotH)+' Z',grid='';
+    for(var tick=0;tick<=4;tick++){var gy=padT+plotH-(plotH*tick/4),gv=scaleMax*tick/4;grid+='<line x1="'+padL+'" y1="'+gy+'" x2="'+(chartWidth-padR)+'" y2="'+gy+'" class="report-chart-gridline"/><text x="'+(padL-12)+'" y="'+(gy+4)+'" text-anchor="end" class="report-chart-y-label">'+(chartMetric==='sales'?(gv>=100000?'₱'+(gv/100000).toFixed(1)+'k':'₱'+Math.round(gv/100).toLocaleString('en-PH')):Math.round(gv))+'</text>';}
+    bars='<svg class="report-chart-svg" viewBox="0 0 '+chartWidth+' '+chartHeight+'" role="img" aria-label="'+chartTitle+'">'+grid+'<path d="'+areaPath+'" class="report-chart-area"/><path d="'+linePath+'" class="report-chart-line"/>'+points.map(function(p,i){var lab=chartLabels[i],v=chartValues[i],selected=i===S.chartSelectedIndex;return'<circle cx="'+p.x+'" cy="'+p.y+'" r="'+(selected?8:5)+'" class="report-chart-point'+(selected?' is-selected':'')+'" data-chart-index="'+i+'" tabindex="0" role="button" aria-pressed="'+selected+'" aria-label="'+lab+', '+(chartMetric==='sales'?M.peso(v):v+' orders')+'"/>';}).join('')+'</svg>';
+    labels=chartLabels.map(function(lab){return'<span>'+lab+'</span>';}).join('');
     var selectedValue=S.chartSelectedIndex>=0?chartValues[S.chartSelectedIndex]:0,selectedLabel=S.chartSelectedIndex>=0?chartLabels[S.chartSelectedIndex]:'—',peakLabel=peakIndex>=0?chartLabels[peakIndex]:'—',peakValue=peakIndex>=0?chartValues[peakIndex]:0;
-    $('reportChartTitle').textContent=chartTitle;$('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
+    $('reportChartTitle').textContent=S.reportMode==='day'?'Sales Trend · By hour':chartTitle;$('bars').innerHTML=bars;$('barLabels').innerHTML=labels;
     $('chartMetricSales').setAttribute('aria-pressed',String(chartMetric==='sales'));$('chartMetricOrders').setAttribute('aria-pressed',String(chartMetric==='orders'));
     $('chartDetail').innerHTML='<div><span class="eyebrow">Selected '+(S.reportMode==='day'?'hour':'period')+'</span><strong>'+selectedLabel+'</strong><small>'+(chartMetric==='sales'?M.peso(selectedValue):selectedValue+' orders')+'</small></div><div><span class="eyebrow">Peak '+(S.reportMode==='day'?'hour':'period')+'</span><strong>'+peakLabel+'</strong><small>'+(chartMetric==='sales'?M.peso(peakValue):peakValue+' orders')+'</small></div>';
     $('split').innerHTML=['cash','ewallet','card'].map(function(m){var v=s.byMethod[m]||0,pct=s.net?Math.round(v/s.net*100):0;return'<div class="split-row"><span>'+METHOD_LABEL[m]+'</span><span class="split-track"><span class="split-fill" style="width:'+pct+'%;display:block"></span></span><b>'+M.peso(v)+' · '+pct+'%</b></div>';}).join('');
@@ -1200,6 +1197,7 @@
     $('reportCalendar').addEventListener('click',function(e){var b=e.target.closest('[data-calendar-date]');if(!b)return;S.reportDate=b.getAttribute('data-calendar-date');S.reportMode='day';S.calendarMonth=dateMonth(S.reportDate);loadReportData();});
     $('calendarPrev').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1]-2,1));S.calendarMonth=d.toISOString().slice(0,7);if(S.reportMode==='month'){var day=dateParts(S.reportDate)[2],last=Number(monthBounds(S.calendarMonth).to.slice(8));S.reportDate=S.calendarMonth+'-'+String(Math.min(day,last)).padStart(2,'0');}loadReportData();});
     $('calendarNext').addEventListener('click',function(){var p=S.calendarMonth.split('-').map(Number),d=new Date(Date.UTC(p[0],p[1],1));S.calendarMonth=d.toISOString().slice(0,7);if(S.reportMode==='month'){var day=dateParts(S.reportDate)[2],last=Number(monthBounds(S.calendarMonth).to.slice(8));S.reportDate=S.calendarMonth+'-'+String(Math.min(day,last)).padStart(2,'0');}loadReportData();});
+    $('reportDatePicker').addEventListener('change',function(){if(!this.value)return;S.reportDate=this.value;S.calendarMonth=dateMonth(S.reportDate);S.reportMode='day';loadReportData();});
     $('reportPrev').addEventListener('click',function(){changeReportPeriod(-1);});
     $('reportNext').addEventListener('click',function(){changeReportPeriod(1);});
     $('reportToday').addEventListener('click',function(){S.reportDate=manilaToday();S.calendarMonth=dateMonth(S.reportDate);S.reportMode='day';loadReportData();});
