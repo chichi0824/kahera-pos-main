@@ -3827,3 +3827,24 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
     grid-template-columns: 1fr;
   }
 }
+
+
+/* Register iPad catalog: two columns with a compact left-side thumbnail. */
+.view-register .catalog .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.view-register .tile.tile-choice { grid-template-columns: 76px minmax(0, 1fr); min-height: 108px; padding: 8px; column-gap: 9px; row-gap: 5px; }
+.view-register .tile.tile-choice .tile-photo { width: 76px; height: 76px; min-height: 76px; }
+.view-register .tile.tile-choice .tile-photo.placeholder { font-size: 2rem; }
+.view-register .tile.tile-choice .t-name { font-size: .94rem; }
+.view-register .tile.tile-choice .tile-option,
+.view-register .tile.tile-choice .tile-option:only-child,
+.view-register .tile.tile-choice .tile-option:nth-child(3):last-child { min-height: 46px; height: 46px; padding: 6px 8px; font-size: .8rem; }
+.view-register .tile.tile-choice .tile-option strong { font-size: .82rem; }
+@media (max-width: 700px) {
+  .view-register .catalog .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .view-register .tile.tile-choice { grid-template-columns: 64px minmax(0, 1fr); min-height: 100px; padding: 7px; column-gap: 7px; }
+  .view-register .tile.tile-choice .tile-photo { width: 64px; height: 64px; min-height: 64px; }
+  .view-register .tile.tile-choice .tile-option,
+  .view-register .tile.tile-choice .tile-option:only-child,
+  .view-register .tile.tile-choice .tile-option:nth-child(3):last-child { min-height: 44px; height: 44px; padding: 5px 6px; font-size: .74rem; }
+}
+@media (max-width: 380px) { .view-register .catalog .grid { grid-template-columns: 1fr; } }
