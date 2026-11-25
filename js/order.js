@@ -5,8 +5,11 @@
   var themeButton=$('theme-toggle');
   function applyTheme(theme){document.documentElement.setAttribute('data-theme',theme);if(themeButton){themeButton.textContent=theme==='dark'?'☀':'◐';themeButton.setAttribute('aria-label',theme==='dark'?'Switch to light mode':'Switch to dark mode');}}
   var savedTheme=null;try{savedTheme=localStorage.getItem('kahera:v1:theme');savedTheme=savedTheme?JSON.parse(savedTheme):null;}catch(e){}
-  applyTheme(savedTheme==='dark'||savedTheme==='light'?savedTheme:(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'));
-  if(themeButton)themeButton.addEventListener('click',function(){var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';applyTheme(next);try{localStorage.setItem('kahera:v1:theme',JSON.stringify(next));}catch(e){}});
+  var hasSavedTheme=savedTheme==='dark'||savedTheme==='light';
+  var systemTheme=window.matchMedia?window.matchMedia('(prefers-color-scheme: dark)'):null;
+  applyTheme(hasSavedTheme?savedTheme:(systemTheme&&systemTheme.matches?'dark':'light'));
+  if(!hasSavedTheme&&systemTheme){var syncSystemTheme=function(event){if(!hasSavedTheme)applyTheme(event.matches?'dark':'light');};if(systemTheme.addEventListener)systemTheme.addEventListener('change',syncSystemTheme);else if(systemTheme.addListener)systemTheme.addListener(syncSystemTheme);}
+  if(themeButton)themeButton.addEventListener('click',function(){var next=document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark';hasSavedTheme=true;applyTheme(next);try{localStorage.setItem('kahera:v1:theme',JSON.stringify(next));}catch(e){}});
   var money=function(cents){return new Intl.NumberFormat('en-PH',{style:'currency',currency:'PHP'}).format((cents||0)/100);};
   var esc=function(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});};
   var total=function(){return cart.reduce(function(sum,line){return sum+line.price*line.qty;},0);};
