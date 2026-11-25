@@ -3696,3 +3696,134 @@ table[data-k="topItems"] .portion-breakdown { line-height: 1.45; }
   .tile.tile-choice .tile-option { padding: 6px 5px; column-gap: 4px; }
   .tile.tile-choice .tile-option strong { font-size: .70rem; }
 }
+
+
+/* iPad-friendly Register catalog cards: image left, item details and large choices right. */
+.view-register .catalog .grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 270px), 1fr));
+  gap: 12px;
+}
+.view-register .tile.tile-choice {
+  box-sizing: border-box;
+  min-height: 132px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: 104px minmax(0, 1fr);
+  grid-template-rows: auto 1fr;
+  align-items: stretch;
+  column-gap: 12px;
+  row-gap: 6px;
+  overflow: hidden;
+}
+.view-register .tile.tile-choice .tile-photo {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 104px;
+  height: 104px;
+  min-height: 104px;
+  margin: 0;
+  border-radius: 10px;
+  object-fit: cover;
+  align-self: center;
+}
+.view-register .tile.tile-choice .tile-photo.placeholder {
+  display: grid;
+  place-items: center;
+  font-size: 2.5rem;
+}
+.view-register .tile.tile-choice .t-cat {
+  display: none;
+}
+.view-register .tile.tile-choice .t-name {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  padding: 0 26px 0 0;
+  font-size: 1rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+.view-register .tile.tile-choice .tile-options {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: end;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 7px;
+  width: 100%;
+  margin: 0;
+}
+.view-register .tile.tile-choice .tile-option,
+.view-register .tile.tile-choice .tile-option:only-child,
+.view-register .tile.tile-choice .tile-option:nth-child(3):last-child {
+  box-sizing: border-box;
+  flex: initial;
+  min-width: 0;
+  min-height: 52px;
+  height: 52px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 3px;
+  font-size: .86rem;
+  line-height: 1.15;
+  touch-action: manipulation;
+}
+.view-register .tile.tile-choice .tile-option:only-child {
+  grid-column: 1 / -1;
+}
+.view-register .tile.tile-choice .tile-option strong {
+  font-size: .88rem;
+}
+.view-register .tile.tile-choice .tile-option small {
+  font-size: .68rem;
+}
+.view-register .tile.tile-choice .t-qty {
+  top: 7px;
+  right: 7px;
+  min-width: 27px;
+  height: 27px;
+  line-height: 27px;
+  z-index: 2;
+}
+.view-register .tile.tile-choice .sold-out-tag {
+  grid-column: 2;
+  grid-row: 2;
+  align-self: start;
+  z-index: 1;
+  margin-bottom: 3px;
+}
+@media (max-width: 700px) {
+  .view-register .catalog .grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 245px), 1fr));
+    gap: 9px;
+  }
+  .view-register .tile.tile-choice {
+    grid-template-columns: 88px minmax(0, 1fr);
+    min-height: 120px;
+    padding: 8px;
+    column-gap: 9px;
+  }
+  .view-register .tile.tile-choice .tile-photo {
+    width: 88px;
+    height: 88px;
+    min-height: 88px;
+  }
+  .view-register .tile.tile-choice .tile-option,
+  .view-register .tile.tile-choice .tile-option:only-child,
+  .view-register .tile.tile-choice .tile-option:nth-child(3):last-child {
+    min-height: 48px;
+    height: 48px;
+    padding: 7px;
+    font-size: .8rem;
+  }
+}
+@media (max-width: 420px) {
+  .view-register .catalog .grid {
+    grid-template-columns: 1fr;
+  }
+}
