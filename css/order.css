@@ -182,3 +182,52 @@ main{max-width:1320px;margin:0 auto;padding:0 22px 64px}.hero{padding:42px 0 30p
   .menu-area .tile.tile-choice .tile-option { padding: 5px 6px; font-size: .7rem; }
   .menu-area .tile.tile-choice .tile-option strong { font-size: .7rem; }
 }
+
+
+/* Center and normalize customer ordering price/portion option buttons. */
+.menu-area .tile.tile-choice .tile-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+  justify-items: stretch;
+  gap: 6px;
+  width: 100%;
+}
+.menu-area .tile.tile-choice .tile-option {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  min-height: 48px;
+  padding: 8px 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+.menu-area .tile.tile-choice .tile-option strong {
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: .76rem;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.menu-area .tile.tile-choice .tile-option small {
+  display: block;
+  width: 100%;
+  text-align: center;
+}
+.menu-area .tile.tile-choice .tile-option:only-child,
+.menu-area .tile.tile-choice .tile-option:nth-child(3):last-child {
+  grid-column: 1 / -1;
+}
+@media (max-width: 560px) {
+  .menu-area .tile.tile-choice .tile-options { gap: 5px; }
+  .menu-area .tile.tile-choice .tile-option { min-height: 44px; padding: 7px 5px; }
+  .menu-area .tile.tile-choice .tile-option strong { font-size: .72rem; }
+}
