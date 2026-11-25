@@ -25,7 +25,7 @@
   function categoryLabel(category){return /^extras$/i.test(String(category.name||''))?'Extra':category.name;}
   function catColor(categoryId){var colors=['#c2410c','#136a48','#7c3aed','#0369a1','#a16207','#be185d'];var index=categories.map(function(category){return category.id;}).indexOf(categoryId);return colors[(index<0?0:index)%colors.length];}
   function renderCategories(){
-    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="'+(activeCategory===c.id?'active':'')+'" data-category="'+esc(c.id)+'">'+esc(categoryLabel(c))+'</button>';}).join('');
+    $('category-list').innerHTML=[{id:'all',name:'All'}].concat(orderedCategories()).map(function(c){return '<button type="button" class="chip" data-category="'+esc(c.id)+'" aria-pressed="'+(activeCategory===c.id?'true':'false')+'">'+esc(categoryLabel(c))+'</button>';}).join('');
   }
   function itemButtons(item){
     var disabled=item.available===false||item.soldOut===true;
