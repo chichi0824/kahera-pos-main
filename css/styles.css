@@ -4503,3 +4503,50 @@ body::before {
     grid-row: 3;
   }
 }
+
+
+/* Tablet-width header: give navigation its own full-width row so the
+   four tabs remain readable between 641px and 1000px. */
+@media (min-width: 641px) and (max-width: 1000px) {
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 12px;
+    width: 100%;
+    min-width: 0;
+  }
+  .topbar > .brand {
+    order: 1;
+    flex: 1 1 240px;
+    min-width: 0;
+    margin-right: 0;
+  }
+  .topbar > .top-tools {
+    order: 2;
+    flex: 0 1 auto;
+    min-width: 0;
+    max-width: 100%;
+    gap: 7px;
+  }
+  .topbar > .tabs {
+    order: 3;
+    flex: 0 0 100%;
+    width: 100%;
+    min-width: 0;
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 5px;
+  }
+  .topbar > .tabs button {
+    min-width: 0;
+    min-height: 46px;
+    padding: 8px 10px;
+    justify-content: center;
+    white-space: nowrap;
+    font-size: .84rem;
+  }
+  .topbar > .tabs .count {
+    display: none;
+  }
+}
