@@ -5113,7 +5113,7 @@ body::before {
   display: block;
 }
 #view-shift .report-calendar {
-  grid-template-columns: minmax(0, 1fr);
+  display: block;
 }
 #view-shift .report-calendar .calendar-weekdays,
 #view-shift .report-calendar .calendar-days {
@@ -5130,3 +5130,12 @@ body::before {
     min-height: 64px;
   }
 }
+
+
+/* Keep the calendar's month controls and date cells interactive and full-width. */
+#view-shift .report-calendar-details summary { display:list-item; }
+#view-shift .report-calendar-head .actions-row { display:flex; gap:8px; position:relative; z-index:1; }
+#view-shift .report-calendar-head .actions-row .btn { min-width:44px; min-height:44px; pointer-events:auto; }
+#view-shift .report-calendar .calendar-weekdays,
+#view-shift .report-calendar .calendar-days { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); }
+#view-shift .report-calendar .calendar-day { position:relative; z-index:0; pointer-events:auto; cursor:pointer; }
