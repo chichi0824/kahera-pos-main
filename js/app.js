@@ -852,29 +852,24 @@
       var availabilityMatch = (S.menuAdminAvailability || 'all') === 'all' || ((S.menuAdminAvailability === 'available') === available);
       return categoryMatch && searchMatch && availabilityMatch;
     });
-    var h = '';
+    var h = '<colgroup><col class="menu-col-item"><col class="menu-col-category hide-sm"><col class="menu-col-pricing"><col class="menu-col-status"><col class="menu-col-delete"></colgroup><thead><tr><th>Item</th><th class="hide-sm">Category</th><th>Pricing / Options</th><th>Status</th><th class="num"><span class="sr-only">Delete</span></th></tr></thead><tbody>';
     var adminCategories = orderedCategories().filter(function (c) { return S.menuAdminCat === 'all' || c.id === S.menuAdminCat; });
     adminCategories.forEach(function (cat) {
       var categoryItems = visibleMenu.filter(function (m) { return m.cat === cat.id; });
       if (!categoryItems.length) return;
-      h += '<section class="menu-card-group" aria-label="' + esc(categoryLabel(cat)) + '"><div class="menu-card-group-heading"><h4>' + esc(categoryLabel(cat)) + '</h4><span>' + categoryItems.length + (categoryItems.length === 1 ? ' item' : ' items') + '</span></div><div class="menu-item-card-grid">';
+      h += '<tr class="menu-category-row"><th colspan="5"><span>' + esc(categoryLabel(cat)) + '</span><small>' + categoryItems.length + (categoryItems.length === 1 ? ' item' : ' items') + '</small></th></tr>';
       categoryItems.forEach(function (m) {
         var drink = isDrinksCategory(m.cat), usesOptions = drink || hasPriceOptions(m);
-        var image = m.image ? '<img class="menu-card-photo" src="' + esc(m.image) + '" alt="" loading="lazy">' : '<div class="menu-card-photo menu-card-photo-placeholder" aria-hidden="true">🍽️</div>';
-        var priceEditor = usesOptions
-          ? '<div class="menu-card-variants" data-variant-container>' + (drink ? '<strong class="menu-card-subheading">Drink sizes / price options</strong>' : '<label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants" checked><span>Use price options</span></label>') + renderVariantEditor(m.variants) + '</div>'
-          : '<div class="menu-card-pricing"><label><span>Full price (₱)</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half price (₱)</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="Not set" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label><label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants"><span>Use price options</span></label></div>';
-        h += '<article class="menu-item-card" data-item="' + esc(m.id) + '">' +
-          '<div class="menu-card-top">' + image + '<div class="menu-card-identity"><span class="menu-card-category">' + esc(categoryLabel(S.categories.filter(function(c){return c.id===m.cat;})[0] || {name:'Uncategorized'})) + '</span><input class="menu-card-name" aria-label="Item name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><small class="menu-duplicate-note" data-name-error hidden>There is already an item with the same name.</small><label class="menu-card-photo-upload">Change photo<input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></label></div></div>' +
-          '<label class="menu-card-category-select"><span>Category</span><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></label>' +
-          priceEditor +
-          '<div class="menu-card-status"><label class="check"><input type="checkbox" data-f="available"' + (m.available !== false ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div>' +
-          '<div class="menu-card-footer"><span class="menu-card-status-label ' + (menuItemIsAvailable(m) ? 'is-available' : 'is-unavailable') + '">' + (menuItemIsAvailable(m) ? 'Active on menu' : 'Unavailable') + '</span><button type="button" class="btn small ghost menu-card-delete" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">Delete item</button></div>' +
-          '</article>';
+        h += '<tr class="' + (usesOptions ? 'drink-menu-row' : '') + '" data-item="' + esc(m.id) + '">' +
+          '<td class="menu-item-cell"><div class="menu-item-editor">' + (m.image ? '<img class="menu-thumb" src="' + esc(m.image) + '" alt="">' : '<span class="menu-thumb placeholder">🍽️</span>') + '<div class="menu-item-fields"><input aria-label="Name" data-f="name" value="' + esc(m.name) + '" maxlength="40"><small class="menu-duplicate-note" data-name-error hidden>There is already an item with the same name.</small><input class="menu-image-input" type="file" accept="image/*" data-f="image" aria-label="Photo for ' + esc(m.name) + '"></div></div></td>' +
+          '<td class="hide-sm"><select aria-label="Category" data-f="cat">' + catOpts(m.cat) + '</select></td>' +
+          (usesOptions ? '<td colspan="2" class="drink-variants-cell" data-variant-container>' + (drink ? '<strong>Drink sizes</strong>' : '<label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants" checked><span>Use price options</span></label>') + renderVariantEditor(m.variants) + '</td>' :
+            '<td class="menu-pricing-cell"><label><span>Full ₱</span><input aria-label="Full order price in pesos" data-f="price" inputmode="decimal" value="' + (m.price / 100).toFixed(2) + '"></label><label><span>Half ₱</span><input aria-label="Half order price in pesos" data-f="halfPrice" inputmode="decimal" placeholder="—" value="' + (m.halfPrice ? (m.halfPrice / 100).toFixed(2) : '') + '"></label><label class="check menu-options-toggle"><input type="checkbox" data-f="useVariants"><span>Use price options</span></label></td><td><div class="menu-status-cell"><label class="check"><input type="checkbox" data-f="available"' + (m.available ? ' checked' : '') + '><span>Available</span></label><label class="check"><input type="checkbox" data-f="soldOut"' + (m.soldOut ? ' checked' : '') + '><span>Sold out</span></label></div></td>') +
+          '<td class="num"><button type="button" class="btn small ghost" data-del="' + esc(m.id) + '" aria-label="Delete ' + esc(m.name) + '">✕</button></td>' +
+          '</tr>';
       });
-      h += '</div></section>';
     });
-    $('menuTable').innerHTML = h || '<div class="menu-card-empty">No menu items match these filters.</div>';
+    $('menuTable').innerHTML = visibleMenu.length ? h + '</tbody>' : '<tbody><tr><td colspan="5" class="empty">No items in this category yet.</td></tr></tbody>';
   }
   function normalizeSharedMenu(remote){
     if(!remote||!Array.isArray(remote.menu)||!Array.isArray(remote.categories)||!remote.settings)throw new Error('The shared menu response is incomplete.');
