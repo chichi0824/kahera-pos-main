@@ -29,7 +29,7 @@
   }
   root.KaheraCloud={
     login:function(password){return request("/api/auth/login",{method:"POST",body:JSON.stringify({password:password})}).then(function(b){setToken(b.token);return true;});},
-    checkSession:function(){return request("/api/auth/session",{method:"GET",cache:"no-store"}).then(function(){return true;}).catch(function(){setToken(null);return false;});},
+    checkSession:function(){return request("/api/auth/session",{method:"GET",cache:"no-store"}).then(function(){return true;}).catch(function(){return false;});},
     getPublicSettings:function(){return request("/api/public/settings",{method:"GET",cache:"no-store"});},
     getSettings:function(){return request("/api/settings",{method:"GET",cache:"no-store"});},
     saveSettings:function(payload){return request("/api/settings",{method:"PUT",body:JSON.stringify(payload)});},
