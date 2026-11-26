@@ -43,6 +43,28 @@
       reminderMinutes: [0,1,2,3,5,10].indexOf(reminder) >= 0 ? reminder : 3
     };
   }
+  // Persistent notification center; separate from existing order alert controls.
+  var notificationCenterItems = store.get('notificationCenterItems', []);
+  if (!Array.isArray(notificationCenterItems)) notificationCenterItems = [];
+  function notificationTime(ts) { return new Date(ts).toLocaleString('en-PH',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}); }
+  function saveNotificationCenter() { store.set('notificationCenterItems', notificationCenterItems); renderNotificationCenter(); }
+  function addCenterNotification(item) {
+    if (notificationCenterItems.some(function(n){return n.id===String(item.id);})) return;
+    notificationCenterItems.unshift({id:String(item.id||Date.now()),type:item.type||'info',title:item.title||'Notification',message:item.message||'',time:item.time||Date.now(),read:false,view:item.view||''});
+    notificationCenterItems=notificationCenterItems.slice(0,50);
+    saveNotificationCenter();
+  }
+  function renderNotificationCenter() {
+    var list=$('notificationList'),count=$('notificationCount'),summary=$('notificationSummary');
+    if(!list||!count||!summary)return;
+    var unread=notificationCenterItems.filter(function(n){return !n.read;}).length;
+    count.textContent=unread>99?'99+':String(unread);count.hidden=!unread;
+    summary.textContent=unread?unread+' unread notification'+(unread===1?'':'s'):'You\u2019re all caught up';
+    if(!notificationCenterItems.length){list.innerHTML='<div class="notification-empty">No notifications yet.</div>';return;}
+    list.innerHTML=notificationCenterItems.map(function(n){var icon=n.type==='order'?'🛍️':n.type==='sync'?'☁️':n.type==='warning'?'⚠️':'ℹ️';return '<article class="notification-item '+(n.read?'':'unread')+'" data-notification-id="'+esc(n.id)+'" data-notification-view="'+esc(n.view)+'"><span class="notification-item-icon">'+icon+'</span><div class="notification-item-content"><strong>'+esc(n.title)+'</strong><p>'+esc(n.message)+'</p><time>'+esc(notificationTime(n.time))+'</time></div>'+(n.read?'':'<span class="notification-unread-dot"></span>')+'</article>';}).join('');
+  }
+  function markCenterNotificationsRead() { notificationCenterItems.forEach(function(n){n.read=true;});saveNotificationCenter(); }
+  function clearCenterNotifications() { notificationCenterItems=[];saveNotificationCenter(); }
   var notificationSettings = normalizeNotificationSettings(store.get('notificationSettings', null));
   var orderAlertAudio = null, orderAlertsEnabled = notificationSettings.voiceEnabled, onlineOrdersInitialized = false;
   var lastSuccessfulSyncAt = null;
@@ -205,6 +227,7 @@
   }
   function announceIncomingOrders(incoming) {
     if (!incoming.length) return;
+    incoming.forEach(function(order){addCenterNotification({id:'online-order-'+order.id,type:'order',title:'New online order received',message:'Order '+order.no+' · awaiting processing',view:'orders'});});
     var message = incoming.length===1 ? 'New online order '+incoming[0].no+' received' : incoming.length+' new online orders received';
     var stamp = incoming.map(function(o){return o.id;}).join(',');
     try {
@@ -1457,6 +1480,11 @@
       }).catch(function(error){$('changePasswordError').textContent=error.message||'Could not change password.';}).finally(function(){submit.disabled=false;submit.textContent='Change password';});
     });
 
+    $('notificationBell').addEventListener('click',function(event){event.stopPropagation();var panel=$('notificationPanel'),open=!panel.hidden;panel.hidden=open;$('notificationBell').setAttribute('aria-expanded',String(!open));if(!open)markCenterNotificationsRead();});
+    $('notificationList').addEventListener('click',function(event){var item=event.target.closest('[data-notification-id]');if(!item)return;var id=item.getAttribute('data-notification-id'),n=notificationCenterItems.find(function(x){return x.id===id;});if(n){n.read=true;saveNotificationCenter();}var view=item.getAttribute('data-notification-view');if(view){$('notificationPanel').hidden=true;$('notificationBell').setAttribute('aria-expanded','false');setView(view);}});
+    $('notificationMarkRead').addEventListener('click',markCenterNotificationsRead);
+    $('notificationClear').addEventListener('click',clearCenterNotifications);
+    document.addEventListener('click',function(event){if(!$('notificationCenter').contains(event.target)){$('notificationPanel').hidden=true;$('notificationBell').setAttribute('aria-expanded','false');}});
     $('logout').addEventListener('click', function () {
       cloud.logout();
       if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
