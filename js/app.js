@@ -549,8 +549,54 @@
     $('complete').textContent = 'Complete sale · ' + M.peso(t.total);
   }
 
+  var pendingSyncInFlight = null;
+  function syncPendingTransactions() {
+    var offline = window.KaheraOfflineDB;
+    if (pendingSyncInFlight) return pendingSyncInFlight;
+    if (!offline || !navigator.onLine || !cloud.checkSession) return Promise.resolve([]);
+    pendingSyncInFlight = cloud.checkSession().then(function (authenticated) {
+      if (!authenticated) return [];
+      return offline.getPendingTransactions().then(function (records) {
+        return records.reduce(function (chain, record) {
+          return chain.then(function (synced) {
+            return cloud.createOrder(record.payload).then(function (order) {
+              return offline.updateTransaction(record.id, {
+                syncStatus: 'synced',
+                syncedAt: new Date().toISOString(),
+                serverOrder: order,
+                lastError: ''
+              }).then(function () {
+                var index = S.orders.findIndex(function (item) { return item.id === order.id; });
+                if (index >= 0) S.orders[index] = order;
+                else S.orders.push(order);
+                return synced.concat([order]);
+              });
+            }).catch(function (error) {
+              if (cloud.isNetworkError && cloud.isNetworkError(error)) {
+                return offline.updateTransaction(record.id, {
+                  attempts: (Number(record.attempts) || 0) + 1,
+                  lastError: error.message || 'Network unavailable'
+                }).then(function () { return synced; });
+              }
+              return offline.updateTransaction(record.id, {
+                syncStatus: 'needs-review',
+                lastError: error.message || 'The server rejected this transaction.'
+              }).then(function () { return synced; });
+            });
+          });
+        }, Promise.resolve([]));
+      });
+    }).catch(function (error) {
+      console.warn('Pending transaction sync could not run:', error);
+      return [];
+    }).finally(function () {
+      pendingSyncInFlight = null;
+    });
+    return pendingSyncInFlight;
+  }
+
   function completeSale() {
-    var t = totals(), err = $('payErr');
+    var t = totals(), err = $('payErr'), offline = window.KaheraOfflineDB;
     if (!S.cart.lines.length || S.savingSale) return;
     var tendered = t.total, ref = '';
     if (S.method === 'cash') {
@@ -569,17 +615,61 @@
     if (!S.pendingOrder || S.pendingOrder.fingerprint !== fingerprint) {
       S.pendingOrder = Object.assign({ id: cloud.newId(), fingerprint: fingerprint }, orderSnapshot);
     }
+    if (!offline || !offline.savePendingTransaction) {
+      err.textContent = 'Local transaction storage is unavailable. Your cart is safe; please reconnect before completing the sale.';
+      return;
+    }
     S.savingSale = true;
     $('complete').disabled = true;
-    err.textContent = 'Saving sale…';
-    cloud.createOrder(S.pendingOrder).then(function (order) {
+    err.textContent = 'Saving sale on this device…';
+    var payload = Object.assign({}, S.pendingOrder, { deviceId: cloud.getDeviceId() });
+    var queuedAt = new Date().toISOString();
+    offline.savePendingTransaction({
+      id: payload.id,
+      payload: payload,
+      createdAt: queuedAt,
+      queuedAt: queuedAt,
+      syncStatus: 'pending'
+    }).then(function () {
+      if (!navigator.onLine) throw new TypeError('Network unavailable');
+      return cloud.createOrder(payload);
+    }).then(function (order) {
+      return offline.updateTransaction(payload.id, {
+        syncStatus: 'synced',
+        syncedAt: new Date().toISOString(),
+        serverOrder: order,
+        lastError: ''
+      }).then(function () { return { order: order, pending: false }; });
+    }).catch(function (error) {
+      if (cloud.isNetworkError && cloud.isNetworkError(error)) {
+        var localOrder = {
+          id: payload.id,
+          no: 'PENDING SYNC',
+          ts: Date.now(),
+          type: payload.type,
+          table: payload.table,
+          lines: clone(payload.lines),
+          totals: payload.totals,
+          method: payload.method,
+          tendered: payload.tendered,
+          change: payload.tendered - payload.totals.total,
+          ref: payload.ref,
+          status: 'paid',
+          localPending: true
+        };
+        return { order: localOrder, pending: true };
+      }
+      return offline.remove('transactions', payload.id).then(function () { throw error; });
+    }).then(function (result) {
+      var order = result.order;
       S.orders.push(order);
-      S.nextNo = 'K-' + pad((parseInt(String(order.no).replace('K-', ''), 10) || 0) + 1);
+      if (!result.pending) S.nextNo = 'K-' + pad((parseInt(String(order.no).replace('K-', ''), 10) || 0) + 1);
       S.pendingOrder = null;
       S.cart = blankCart(); saveCart();
       openPay(false); S.method = 'cash';
       renderAll(); showSlip(order);
-      refreshSharedData();
+      if (result.pending) toast('Sale saved on this device · waiting to sync');
+      else refreshSharedData();
     }).catch(function (error) {
       err.textContent = 'Sale was not saved. Your cart is safe. ' + error.message;
     }).finally(function () {
@@ -639,15 +729,59 @@
       var isVoid=o.status==='void',isOnline=o.source==='online';
       var type=isOnline?(o.fulfillmentType==='delivery'?'Delivery':'Pickup'):(o.type==='dine'?'Dine-in'+(o.table?' · T'+esc(o.table):''):'Take-out');
       var status=isVoid?'<span class="pill void">Void</span>':o.status==='unpaid'?'<span class="pill unpaid">Unpaid</span>':'<span class="pill paid">Paid'+(isOnline?' · '+(o.method==='ewallet'?'E-wallet':'Cash'):'')+'</span>';
-      h+='<tr class="'+(isVoid?'is-void':o.status==='unpaid'?'is-unpaid':'')+'"><td class="mono">'+esc(o.no)+'</td><td class="mono">'+timeOf(o.ts)+'</td><td>'+(isOnline?'<strong>'+esc(o.customerName||'Customer')+'</strong><small class="order-source">Online</small>':'POS')+'</td><td class="hide-sm">'+type+'</td><td class="hide-sm">'+o.lines.map(function(l){return l.qty+'× '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name));}).join(', ')+'</td><td>'+status+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td><td class="num"><div class="row-actions">'+(isOnline&&o.status==='paid'?'<span class="hint">Cash received</span>':'')+(!isOnline?'<button type="button" class="btn small" data-slip="'+esc(o.no)+'">Slip</button>':'')+(isVoid?'':pendingVoid===o.no?'<span class="confirm">Void '+esc(o.no)+'? <button type="button" class="btn small danger" data-void-yes="'+esc(o.no)+'">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>':'<button type="button" class="btn small danger" data-void="'+esc(o.no)+'">Void</button>')+'</div></td></tr>';
+      h+='<tr class="'+(isVoid?'is-void':o.status==='unpaid'?'is-unpaid':'')+'"><td class="mono">'+esc(o.no)+'</td><td class="mono">'+timeOf(o.ts)+'</td><td>'+(isOnline?'<strong>'+esc(o.customerName||'Customer')+'</strong><small class="order-source">Online</small>':'POS')+'</td><td class="hide-sm">'+type+'</td><td class="hide-sm">'+o.lines.map(function(l){return l.qty+'× '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name));}).join(', ')+'</td><td>'+status+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td><td class="num"><div class="row-actions">'+(isOnline&&o.status==='paid'?'<span class="hint">Cash received</span>':'')+(!isOnline?'<button type="button" class="btn small" data-slip="'+esc(o.id)+'">Slip</button>':'')+(isVoid?'':pendingVoid===o.id?'<span class="confirm">Void '+esc(o.no)+'? <button type="button" class="btn small danger" data-void-yes="'+esc(o.id)+'">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>':'<button type="button" class="btn small danger" data-void="'+esc(o.id)+'">Void</button>')+'</div></td></tr>';
     });
     $('ordersTable').innerHTML=h+'</tbody>';
   }
 
-  function findOrder(no) { return S.orders.filter(function (o) { return o.no === no; })[0]; }
+  function findOrderById(id) { return S.orders.filter(function (o) { return o.id === id; })[0]; }
 
   // ---------- calendar-based reporting ----------
   var reportLoadSequence=0,lastReportRefresh=0;
+  function localPendingOrder(record) {
+    if (!record || !record.payload) return null;
+    var p = record.payload, ts = Date.parse(record.createdAt || record.queuedAt || '') || Date.now();
+    var date = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Manila', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date(ts));
+    return {
+      id: record.id,
+      no: 'PENDING SYNC',
+      ts: ts,
+      reportDate: date,
+      type: p.type,
+      table: p.table || '',
+      lines: clone(p.lines || []),
+      totals: clone(p.totals || {}),
+      method: p.method,
+      tendered: p.tendered,
+      change: (Number(p.tendered) || 0) - (Number(p.totals && p.totals.total) || 0),
+      ref: p.ref || '',
+      status: 'paid',
+      localPending: true,
+      syncStatus: record.syncStatus || 'pending',
+      hasPaymentProof: !!p.paymentProof
+    };
+  }
+  function getLocalPendingOrders() {
+    var offline = window.KaheraOfflineDB;
+    if (!offline) return Promise.resolve([]);
+    return offline.getAll('transactions').then(function (records) {
+      return records.filter(function (record) {
+        return record.syncStatus === 'pending' || record.syncStatus === 'needs-review';
+      }).map(localPendingOrder).filter(Boolean);
+    }).catch(function (error) {
+      console.warn('Could not restore local pending sales:', error);
+      return [];
+    });
+  }
+  function mergeOrdersById(primary, extra) {
+    var merged = (primary || []).slice(), seen = {};
+    merged.forEach(function (order) { seen[order.id] = true; });
+    (extra || []).forEach(function (order) {
+      if (!seen[order.id]) { merged.push(order); seen[order.id] = true; }
+    });
+    return merged;
+  }
+
   function loadReportData(){
     lastReportRefresh=Date.now();
     var sequence=++reportLoadSequence,period=reportRange(),month=monthBounds(S.calendarMonth);
@@ -658,9 +792,12 @@
     byId('reportFrom').value=S.customFrom;byId('reportTo').value=S.customTo;
     $('reportPeriodModes').querySelectorAll('[data-report-mode]').forEach(function(b){b.setAttribute('aria-pressed',String(b.getAttribute('data-report-mode')===S.reportMode));});
     $('reportLoading').hidden=false;
-    return cloud.getReports(from,to).then(function(data){
+    return Promise.all([cloud.getReports(from,to).catch(function(error){if(cloud.isNetworkError&&cloud.isNetworkError(error))return {days:[],orders:[],localOnly:true};throw error;}), getLocalPendingOrders()]).then(function(results){
       if(sequence!==reportLoadSequence)return;
-      S.reportDays=data.days||[];S.calendarOrders=data.orders||[];S.reportOrders=S.calendarOrders.slice();
+      var data=results[0],localOrders=results[1].filter(function(o){return o.reportDate>=from&&o.reportDate<=to;});
+      S.reportDays=data.days||[];
+      S.calendarOrders=mergeOrdersById(data.orders||[],localOrders);
+      S.reportOrders=S.calendarOrders.slice();
       var current=reportRange();S.reportOrders=S.reportOrders.filter(function(o){return o.reportDate>=current.from&&o.reportDate<=current.to;});
       $('reportLoading').hidden=true;renderShift();
     }).catch(function(error){if(sequence!==reportLoadSequence)return;$('reportLoading').hidden=true;toast('Could not load reports: '+error.message);});
@@ -1199,11 +1336,11 @@
     $('ordersTable').addEventListener('click', function (e) {
       var t = e.target.closest('button');
       if (!t) return;
-      if (t.hasAttribute('data-slip')) showSlip(findOrder(t.getAttribute('data-slip')));
+      if (t.hasAttribute('data-slip')) { var slipOrder = findOrderById(t.getAttribute('data-slip')); if (slipOrder) showSlip(slipOrder); }
       if (t.hasAttribute('data-void')) { pendingVoid = t.getAttribute('data-void'); renderOrders(); }
       if (t.hasAttribute('data-void-no')) { pendingVoid = null; renderOrders(); }
       if (t.hasAttribute('data-void-yes')) {
-        var o = findOrder(t.getAttribute('data-void-yes'));
+        var o = findOrderById(t.getAttribute('data-void-yes'));
         if (o) { cloud.voidOrder(o.id).then(function (updated) { S.orders = S.orders.map(function (x) { return x.id === updated.id ? updated : x; }); renderOrders(); renderShift(); renderBrand(); toast(updated.no + ' voided'); }).catch(function (error) { toast('Could not void order: ' + error.message); }); }
         pendingVoid = null; renderOrders();
       }
@@ -1570,8 +1707,18 @@
     setView(S.view);
     tick(); setInterval(tick, 30000);
     refreshSharedData().catch(function (error) { toast('Cloud sync unavailable: ' + error.message); });
+    syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } });
+    window.addEventListener('online', function () { syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } }); });
     if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
+    refreshInterval = setInterval(function () {
+      refreshSharedData().catch(function () {});
+      syncPendingTransactions().then(function (synced) {
+        if (synced.length) {
+          toast(synced.length + ' offline sale(s) synced');
+          refreshSharedData();
+        }
+      });
+    }, 7000);
   }
 
   var refreshInFlight = false;
@@ -1584,11 +1731,16 @@
       S.shift = shift || null;
       return Promise.all([cloud.getOrders(S.shift ? S.shift.id : null), cloud.getNextNo()]);
     }).then(function (results) {
-      var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
-      var incoming=onlineOrdersInitialized ? results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;}) : [];
-      onlineOrdersInitialized = true;
-      S.orders = results[0];
-      S.nextNo = results[1];
+      return getLocalPendingOrders().then(function (localOrders) {
+        var previousOnlineIds=S.orders.filter(function(o){return o.source==='online'&&o.status==='unpaid';}).map(function(o){return o.id;});
+        var incoming=onlineOrdersInitialized ? results[0].filter(function(o){return o.source==='online'&&o.status==='unpaid'&&previousOnlineIds.indexOf(o.id)===-1;}) : [];
+        onlineOrdersInitialized = true;
+        S.orders = mergeOrdersById(results[0], localOrders);
+        S.nextNo = results[1];
+        return { incoming: incoming };
+      });
+    }).then(function (meta) {
+      var incoming=meta.incoming;
       syncOrderAlertAcknowledgement();
       lastSuccessfulSyncAt = Date.now();
       if (S.view === 'settings') $('lastSyncStatus').textContent = new Date(lastSuccessfulSyncAt).toLocaleString('en-PH',{dateStyle:'medium',timeStyle:'short'});
