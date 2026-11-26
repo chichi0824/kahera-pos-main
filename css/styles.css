@@ -5942,7 +5942,7 @@ body::before {
 #view-menu .menu-card-delete { padding:5px 8px; font-size:.68rem; }
 #view-menu .menu-card-empty { padding:36px 16px; text-align:center; color:var(--muted); }
 @media(max-width:1250px) {
-  #view-menu .menu-item-card-grid { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  #view-menu .menu-item-card-grid { grid-template-columns:repeat(4,minmax(0,1fr)); }
 }
 @media(max-width:1050px) {
   #view-menu .menu-admin { grid-template-columns:minmax(0,1fr); grid-template-areas:"catalog" "add"; }
