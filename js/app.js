@@ -549,10 +549,12 @@
     $('complete').textContent = 'Complete sale · ' + M.peso(t.total);
   }
 
+  var pendingSyncInFlight = null;
   function syncPendingTransactions() {
     var offline = window.KaheraOfflineDB;
+    if (pendingSyncInFlight) return pendingSyncInFlight;
     if (!offline || !navigator.onLine || !cloud.checkSession) return Promise.resolve([]);
-    return cloud.checkSession().then(function (authenticated) {
+    pendingSyncInFlight = cloud.checkSession().then(function (authenticated) {
       if (!authenticated) return [];
       return offline.getPendingTransactions().then(function (records) {
         return records.reduce(function (chain, record) {
@@ -587,7 +589,10 @@
     }).catch(function (error) {
       console.warn('Pending transaction sync could not run:', error);
       return [];
+    }).finally(function () {
+      pendingSyncInFlight = null;
     });
+    return pendingSyncInFlight;
   }
 
   function completeSale() {
@@ -724,12 +729,12 @@
       var isVoid=o.status==='void',isOnline=o.source==='online';
       var type=isOnline?(o.fulfillmentType==='delivery'?'Delivery':'Pickup'):(o.type==='dine'?'Dine-in'+(o.table?' · T'+esc(o.table):''):'Take-out');
       var status=isVoid?'<span class="pill void">Void</span>':o.status==='unpaid'?'<span class="pill unpaid">Unpaid</span>':'<span class="pill paid">Paid'+(isOnline?' · '+(o.method==='ewallet'?'E-wallet':'Cash'):'')+'</span>';
-      h+='<tr class="'+(isVoid?'is-void':o.status==='unpaid'?'is-unpaid':'')+'"><td class="mono">'+esc(o.no)+'</td><td class="mono">'+timeOf(o.ts)+'</td><td>'+(isOnline?'<strong>'+esc(o.customerName||'Customer')+'</strong><small class="order-source">Online</small>':'POS')+'</td><td class="hide-sm">'+type+'</td><td class="hide-sm">'+o.lines.map(function(l){return l.qty+'× '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name));}).join(', ')+'</td><td>'+status+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td><td class="num"><div class="row-actions">'+(isOnline&&o.status==='paid'?'<span class="hint">Cash received</span>':'')+(!isOnline?'<button type="button" class="btn small" data-slip="'+esc(o.no)+'">Slip</button>':'')+(isVoid?'':pendingVoid===o.no?'<span class="confirm">Void '+esc(o.no)+'? <button type="button" class="btn small danger" data-void-yes="'+esc(o.no)+'">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>':'<button type="button" class="btn small danger" data-void="'+esc(o.no)+'">Void</button>')+'</div></td></tr>';
+      h+='<tr class="'+(isVoid?'is-void':o.status==='unpaid'?'is-unpaid':'')+'"><td class="mono">'+esc(o.no)+'</td><td class="mono">'+timeOf(o.ts)+'</td><td>'+(isOnline?'<strong>'+esc(o.customerName||'Customer')+'</strong><small class="order-source">Online</small>':'POS')+'</td><td class="hide-sm">'+type+'</td><td class="hide-sm">'+o.lines.map(function(l){return l.qty+'× '+(l.variantName?esc(l.name)+' · '+esc(l.variantName):(l.portion==='half'?'Half ':'')+esc(l.name));}).join(', ')+'</td><td>'+status+'</td><td class="num mono">'+M.peso(o.totals.total)+'</td><td class="num"><div class="row-actions">'+(isOnline&&o.status==='paid'?'<span class="hint">Cash received</span>':'')+(!isOnline?'<button type="button" class="btn small" data-slip="'+esc(o.id)+'">Slip</button>':'')+(isVoid?'':pendingVoid===o.id?'<span class="confirm">Void '+esc(o.no)+'? <button type="button" class="btn small danger" data-void-yes="'+esc(o.id)+'">Void</button><button type="button" class="btn small" data-void-no>Keep</button></span>':'<button type="button" class="btn small danger" data-void="'+esc(o.id)+'">Void</button>')+'</div></td></tr>';
     });
     $('ordersTable').innerHTML=h+'</tbody>';
   }
 
-  function findOrder(no) { return S.orders.filter(function (o) { return o.no === no; })[0]; }
+  function findOrderById(id) { return S.orders.filter(function (o) { return o.id === id; })[0]; }
 
   // ---------- calendar-based reporting ----------
   var reportLoadSequence=0,lastReportRefresh=0;
@@ -1331,11 +1336,11 @@
     $('ordersTable').addEventListener('click', function (e) {
       var t = e.target.closest('button');
       if (!t) return;
-      if (t.hasAttribute('data-slip')) showSlip(findOrder(t.getAttribute('data-slip')));
+      if (t.hasAttribute('data-slip')) { var slipOrder = findOrderById(t.getAttribute('data-slip')); if (slipOrder) showSlip(slipOrder); }
       if (t.hasAttribute('data-void')) { pendingVoid = t.getAttribute('data-void'); renderOrders(); }
       if (t.hasAttribute('data-void-no')) { pendingVoid = null; renderOrders(); }
       if (t.hasAttribute('data-void-yes')) {
-        var o = findOrder(t.getAttribute('data-void-yes'));
+        var o = findOrderById(t.getAttribute('data-void-yes'));
         if (o) { cloud.voidOrder(o.id).then(function (updated) { S.orders = S.orders.map(function (x) { return x.id === updated.id ? updated : x; }); renderOrders(); renderShift(); renderBrand(); toast(updated.no + ' voided'); }).catch(function (error) { toast('Could not void order: ' + error.message); }); }
         pendingVoid = null; renderOrders();
       }
@@ -1705,7 +1710,15 @@
     syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } });
     window.addEventListener('online', function () { syncPendingTransactions().then(function (synced) { if (synced.length) { toast(synced.length + ' offline sale(s) synced'); refreshSharedData(); } }); });
     if (refreshInterval) clearInterval(refreshInterval);
-    refreshInterval = setInterval(function () { refreshSharedData().catch(function () {}); }, 7000);
+    refreshInterval = setInterval(function () {
+      refreshSharedData().catch(function () {});
+      syncPendingTransactions().then(function (synced) {
+        if (synced.length) {
+          toast(synced.length + ' offline sale(s) synced');
+          refreshSharedData();
+        }
+      });
+    }, 7000);
   }
 
   var refreshInFlight = false;
